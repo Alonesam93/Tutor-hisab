@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#087f5b">
+<title>Tutor Hisab</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f1f5f3;color:#18352b;font-family:Arial,sans-serif}
+header{background:#087f5b;color:white;padding:20px 15px;text-align:center}
+header h2{margin:0 0 6px}
+main{max-width:700px;margin:auto;padding:14px}
+.card{background:white;padding:16px;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 8px #0001}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#e4f5ed;padding:13px;border-radius:10px;text-align:center}
+.stat b{display:block;font-size:21px;margin-top:7px}
+input,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ccd8d1;border-radius:8px;font-size:16px}
+button{background:#087f5b;color:white;border:0;font-weight:bold}
+button.secondary{background:#52665d}
+button.danger{background:#c0392b}
+h3{margin-top:0}
+.student{border:1px solid #dce5df;padding:12px;border-radius:9px;margin:10px 0}
+.small{font-size:13px;color:#60756b}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+hr{border:0;border-top:1px solid #eee;margin:12px 0}
+</style>
+</head>
+<body>
+<header>
+<h2>📚 Tutor Hisab</h2>
+আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব
+</header>
+<main>
+<div class="card stats">
+<div class="stat">মোট শিক্ষার্থী<b id="count">০</b></div>
+<div class="stat">মোট জমা<b id="paid">৳০</b></div>
+<div class="stat">মোট বকেয়া<b id="due">৳০</b></div>
+<div class="stat">মাসিক নির্ধারিত বেতন<b id="monthly">৳০</b></div>
+</div>
+
+<div class="card">
+<h3>➕ নতুন শিক্ষার্থী যোগ করুন</h3>
+<input id="name" placeholder="শিক্ষার্থীর নাম">
+<input id="className" placeholder="শ্রেণি">
+<input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel">
+<input id="fee" type="number" min="0" placeholder="মাসিক বেতন">
+<label>বেতন গণনা শুরুর মাস</label>
+<input id="start" type="month">
+<input id="opening" type="number" min="0" value="0" placeholder="আগের বকেয়া (টাকা)">
+<button onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
+</div>
+
+<div class="card">
+<h3>💰 বেতন জমা করুন</h3>
+<select id="payStudent"><option value="">শিক্ষার্থী নির্বাচন করুন</option></select>
+<input id="payAmount" type="number" min="1" placeholder="জমার পরিমাণ">
+<label>কোন মাসের বেতন</label>
+<input id="payMonth" type="month">
+<label>জমার তারিখ</label>
+<input id="payDate" type="date">
+<button onclick="addPayment()">জমা সংরক্ষণ করুন</button>
+</div>
+
+<div class="card">
+<h3>👨‍🎓 শিক্ষার্থীদের তালিকা</h3>
+<div id="students">এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।</div>
+</div>
+
+<div class="card">
+<h3>📊 মাসিক রিপোর্ট</h3>
+<input id="reportMonth" type="month">
+<button onclick="report()">রিপোর্ট দেখুন</button>
+<div id="reportResult"></div>
+</div>
+
+<div class="card">
+<h3>💾 ব্যাকআপ ও রিস্টোর</h3>
+<button onclick="backup()">ব্যাকআপ ডাউনলোড করুন</button>
+<label>ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন</label>
+<input type="file" id="restoreFile" accept=".json">
+<button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
+</div>
+</main>
+
+<script>
+let data=JSON.parse(localStorage.getItem("tutorHisabData")||'{"students":[],"payments":[]}');
+const $=id=>document.getElementById(id);
+const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD");
+const today=new Date();
+const currentMonth=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0");
+$("start").value=currentMonth;
+$("payMonth").value=currentMonth;
+$("reportMonth").value=currentMonth;
+$("payDate").value=today.toISOString().slice(0,10);
+
+function save(){localStorage.setItem("tutorHisabData",JSON.stringify(data));render()}
+function monthsBetween(a,b){
+ if(!a||a>b)return 0;
+ let [y1,m1]=a.split("-").map(Number),[y2,m2]=b.split("-").map(Number);
+ return (y2-y1)*12+m2-m1+1;
+}
+function paidFor(id,month=null){
+ return data.payments.filter(p=>p.studentId===id&&(!month||p.month===month))
+ .reduce((s,p)=>s+Number(p.amount),0);
+}
+function dueFor(s,upto=currentMonth){
+ return Math.max(0,Number(s.opening||0)+Number(s.fee)*monthsBetween(s.start,upto)-data.payments.filter(p=>p.studentId===s.id&&p.month<=upto).reduce((v,p)=>v+Number(p.amount),0));
+}
+function addStudent(){
+ let name=$("name").value.trim(),fee=Number($("fee").value),start=$("start").value;
+ if(!name||!fee||!start){alert("নাম, বেতন ও শুরুর মাস লিখুন।");return}
+ if(data.students.length>=20){alert("সর্বোচ্চ ২০ জন শিক্ষার্থী যোগ করা যাবে।");return}
+ data.students.push({id:Date.now().toString(),name,className:$("className").value,phone:$("phone").value,fee,start,opening:Number($("opening").value||0)});
+ ["name","className","phone","fee","opening"].forEach(id=>$(id).value="");
+ save();
+}
+function addPayment(){
+ let id=$("payStudent").value,amount=Number($("payAmount").value),month=$("payMonth").value,date=$("payDate").value;
+ if(!id||!amount||!month||!date){alert("সব তথ্য পূরণ করুন।");return}
+ data.payments.push({studentId:id,amount,month,date});
+ $("payAmount").value="";
+ save();
+ alert("জমা সংরক্ষণ হয়েছে।");
+}
+function removeStudent(id){
+ if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;
+ data.students=data.students.filter(s=>s.id!==id);
+ data.payments=data.payments.filter(p=>p.studentId!==id);
+ save();
+}
+function render(){
+ let totalPaid=data.payments.reduce((s,p)=>s+Number(p.amount),0);
+ let totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
+ $("count").textContent=data.students.length.toLocaleString("bn-BD");
+ $("paid").textContent=money(totalPaid);
+ $("due").textContent=money(totalDue);
+ $("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee),0));
+ $("students").innerHTML=data.students.length?data.students.map(s=>`
+ <div class="student">
+ <b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
+ <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div>
+ <div>মাসিক বেতন: ${money(s.fee)}</div>
+ <div>মোট জমা: ${money(paidFor(s.id))}</div>
+ <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div>
+ <div class="small">হিসাব শুরুর মাস: ${s.start} | আগের বকেয়া: ${money(s.opening)}</div>
+ <button class="danger" onclick="removeStudent('${s.id}')">শিক্ষার্থী মুছুন</button>
+ </div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
+ $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function report(){
+ let m=$("reportMonth").value;
+ if(!m){alert("মাস নির্বাচন করুন");return}
+ let rows=data.students.map(s=>({name:s.name,paid:paidFor(s.id,m),due:dueFor(s,m)}));
+ $("reportResult").innerHTML=rows.map(r=>`<hr><b>${esc(r.name)}</b><br>এই মাসে জমা: ${money(r.paid)}<br>এই মাস পর্যন্ত বকেয়া: ${money(r.due)}`).join("")||"কোনো তথ্য নেই";
+}
+function backup(){
+ let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tutor-hisab-backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+function restore(){
+ let file=$("restoreFile").files[0];if(!file){alert("ব্যাকআপ ফাইল নির্বাচন করুন");return}
+ let reader=new FileReader();
+ reader.onload=()=>{try{let d=JSON.parse(reader.result);if(!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error();data=d;save();alert("ব্যাকআপ রিস্টোর হয়েছে");}catch(e){alert("সঠিক ব্যাকআপ ফাইল নয়");}};
+ reader.readAsText(file);
+}
+render();
+</script>
+</body>
+</html>
