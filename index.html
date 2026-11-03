@@ -22,7 +22,7 @@ button.danger{background:#c0392b}
 h3{margin-top:0}
 .student{border:1px solid #dce5df;padding:12px;border-radius:9px;margin:10px 0}
 .small{font-size:13px;color:#60756b}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.notice{background:#fff4d6;padding:10px;border-radius:8px;margin:8px 0;font-size:14px}
 hr{border:0;border-top:1px solid #eee;margin:12px 0}
 </style>
 </head>
@@ -38,132 +38,122 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div class="stat">মোট বকেয়া<b id="due">৳০</b></div>
 <div class="stat">মাসিক নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
-
 <div class="card">
 <h3>➕ নতুন শিক্ষার্থী যোগ করুন</h3>
-<input id="name" placeholder="শিক্ষার্থীর নাম">
-<input id="className" placeholder="শ্রেণি">
-<input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel">
-<input id="fee" type="number" min="0" placeholder="মাসিক বেতন">
+<input id="name" placeholder="শিক্ষার্থীর নাম" maxlength="100">
+<input id="className" placeholder="শ্রেণি" maxlength="50">
+<input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel" maxlength="20">
+<input id="fee" type="number" min="1" step="0.01" placeholder="মাসিক বেতন">
 <label>বেতন গণনা শুরুর মাস</label>
 <input id="start" type="month">
-<input id="opening" type="number" min="0" value="0" placeholder="আগের বকেয়া (টাকা)">
+<input id="opening" type="number" min="0" step="0.01" value="0" placeholder="আগের বকেয়া (টাকা)">
 <button onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
 </div>
-
 <div class="card">
 <h3>💰 বেতন জমা করুন</h3>
 <select id="payStudent"><option value="">শিক্ষার্থী নির্বাচন করুন</option></select>
-<input id="payAmount" type="number" min="1" placeholder="জমার পরিমাণ">
+<input id="payAmount" type="number" min="0.01" step="0.01" placeholder="জমার পরিমাণ">
 <label>কোন মাসের বেতন</label>
 <input id="payMonth" type="month">
 <label>জমার তারিখ</label>
 <input id="payDate" type="date">
+<div class="notice">একাধিক মাসের বকেয়া থাকলে নির্বাচিত মাস পর্যন্ত মোট বকেয়ার মধ্যে জমা নেওয়া হবে।</div>
 <button onclick="addPayment()">জমা সংরক্ষণ করুন</button>
 </div>
-
 <div class="card">
 <h3>👨‍🎓 শিক্ষার্থীদের তালিকা</h3>
 <div id="students">এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।</div>
 </div>
-
 <div class="card">
 <h3>📊 মাসিক রিপোর্ট</h3>
 <input id="reportMonth" type="month">
 <button onclick="report()">রিপোর্ট দেখুন</button>
 <div id="reportResult"></div>
 </div>
-
 <div class="card">
 <h3>💾 ব্যাকআপ ও রিস্টোর</h3>
 <button onclick="backup()">ব্যাকআপ ডাউনলোড করুন</button>
 <label>ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন</label>
-<input type="file" id="restoreFile" accept=".json">
+<input type="file" id="restoreFile" accept=".json,application/json">
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
 </main>
-
 <script>
-let data=JSON.parse(localStorage.getItem("tutorHisabData")||'{"students":[],"payments":[]}');
+const STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
-const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD");
+const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
 const today=new Date();
-const currentMonth=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0");
-$("start").value=currentMonth;
-$("payMonth").value=currentMonth;
-$("reportMonth").value=currentMonth;
-$("payDate").value=today.toISOString().slice(0,10);
-
-function save(){localStorage.setItem("tutorHisabData",JSON.stringify(data));render()}
-function monthsBetween(a,b){
- if(!a||a>b)return 0;
- let [y1,m1]=a.split("-").map(Number),[y2,m2]=b.split("-").map(Number);
- return (y2-y1)*12+m2-m1+1;
+const localDate=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
+const currentMonth=localDate.slice(0,7);
+function emptyData(){return {students:[],payments:[]};}
+function loadData(){
+ try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return emptyData();const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.students)||!Array.isArray(parsed.payments))return emptyData();return parsed;}
+ catch(e){return emptyData();}
 }
-function paidFor(id,month=null){
- return data.payments.filter(p=>p.studentId===id&&(!month||p.month===month))
- .reduce((s,p)=>s+Number(p.amount),0);
-}
+let data=loadData();
+$("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
+function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
+function validDate(v){return typeof v==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v+"T00:00:00"));}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
+function monthsBetween(a,b){if(!validMonth(a)||!validMonth(b)||a>b)return 0;const [y1,m1]=a.split("-").map(Number),[y2,m2]=b.split("-").map(Number);return (y2-y1)*12+m2-m1+1;}
+function paidFor(id,month=null){return data.payments.filter(p=>p.studentId===id&&(!month||p.month===month)).reduce((s,p)=>s+Number(p.amount||0),0);}
 function dueFor(s,upto=currentMonth){
- return Math.max(0,Number(s.opening||0)+Number(s.fee)*monthsBetween(s.start,upto)-data.payments.filter(p=>p.studentId===s.id&&p.month<=upto).reduce((v,p)=>v+Number(p.amount),0));
+ const accrued=Number(s.opening||0)+Number(s.fee||0)*monthsBetween(s.start,upto);
+ const paid=data.payments.filter(p=>p.studentId===s.id&&validMonth(p.month)&&p.month<=upto).reduce((v,p)=>v+Number(p.amount||0),0);
+ return Math.max(0,accrued-paid);
 }
 function addStudent(){
- let name=$("name").value.trim(),fee=Number($("fee").value),start=$("start").value;
- if(!name||!fee||!start){alert("নাম, বেতন ও শুরুর মাস লিখুন।");return}
- if(data.students.length>=20){alert("সর্বোচ্চ ২০ জন শিক্ষার্থী যোগ করা যাবে।");return}
- data.students.push({id:Date.now().toString(),name,className:$("className").value,phone:$("phone").value,fee,start,opening:Number($("opening").value||0)});
- ["name","className","phone","fee","opening"].forEach(id=>$(id).value="");
- save();
+ const name=$("name").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
+ if(!name||!Number.isFinite(fee)||fee<=0||!validMonth(start)){alert("নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন।");return;}
+ if(!Number.isFinite(opening)||opening<0){alert("আগের বকেয়া শূন্য বা তার বেশি হতে হবে।");return;}
+ if(data.students.length>=20){alert("সর্বোচ্চ ২০ জন শিক্ষার্থী যোগ করা যাবে।");return;}
+ data.students.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString()+"-"+Math.random().toString(36).slice(2),name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
+ ["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";save();
 }
 function addPayment(){
- let id=$("payStudent").value,amount=Number($("payAmount").value),month=$("payMonth").value,date=$("payDate").value;
- if(!id||!amount||!month||!date){alert("সব তথ্য পূরণ করুন।");return}
- data.payments.push({studentId:id,amount,month,date});
- $("payAmount").value="";
- save();
- alert("জমা সংরক্ষণ হয়েছে।");
+ const id=$("payStudent").value,amount=Number($("payAmount").value),month=$("payMonth").value,date=$("payDate").value,student=data.students.find(s=>s.id===id);
+ if(!student||!Number.isFinite(amount)||amount<=0||!validMonth(month)||!validDate(date)){alert("শিক্ষার্থী, সঠিক জমার পরিমাণ, মাস ও তারিখ দিন।");return;}
+ if(month<student.start){alert("শিক্ষার্থীর বেতন গণনা শুরুর মাসের আগের মাসে জমা নেওয়া যাবে না।");return;}
+ const outstanding=dueFor(student,month);
+ if(outstanding<=0){alert("নির্বাচিত মাস পর্যন্ত কোনো বকেয়া নেই।");return;}
+ if(amount>outstanding){alert("এই মাস পর্যন্ত বকেয়া "+money(outstanding)+"। এর বেশি জমা নেওয়া যাবে না।");return;}
+ data.payments.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(),studentId:id,amount,month,date});
+ $("payAmount").value="";save();alert("জমা সংরক্ষণ হয়েছে।");
 }
-function removeStudent(id){
- if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;
- data.students=data.students.filter(s=>s.id!==id);
- data.payments=data.payments.filter(p=>p.studentId!==id);
- save();
-}
+function removeStudent(id){if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;data.students=data.students.filter(s=>s.id!==id);data.payments=data.payments.filter(p=>p.studentId!==id);save();}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
- let totalPaid=data.payments.reduce((s,p)=>s+Number(p.amount),0);
- let totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
- $("count").textContent=data.students.length.toLocaleString("bn-BD");
- $("paid").textContent=money(totalPaid);
- $("due").textContent=money(totalDue);
- $("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee),0));
+ const totalPaid=data.payments.reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
+ $("count").textContent=data.students.length.toLocaleString("bn-BD");$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
  $("students").innerHTML=data.students.length?data.students.map(s=>`
- <div class="student">
- <b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
- <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div>
- <div>মাসিক বেতন: ${money(s.fee)}</div>
- <div>মোট জমা: ${money(paidFor(s.id))}</div>
- <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div>
- <div class="small">হিসাব শুরুর মাস: ${s.start} | আগের বকেয়া: ${money(s.opening)}</div>
- <button class="danger" onclick="removeStudent('${s.id}')">শিক্ষার্থী মুছুন</button>
- </div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
- $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+ <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
+ <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div><div>মাসিক বেতন: ${money(s.fee)}</div><div>মোট জমা: ${money(paidFor(s.id))}</div>
+ <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div><div class="small">হিসাব শুরুর মাস: ${esc(s.start)} | আগের বকেয়া: ${money(s.opening)}</div>
+ <button class="danger" data-remove-id="${esc(s.id)}">শিক্ষার্থী মুছুন</button></div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
+ $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
 }
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("students").addEventListener("click",e=>{const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
 function report(){
- let m=$("reportMonth").value;
- if(!m){alert("মাস নির্বাচন করুন");return}
- let rows=data.students.map(s=>({name:s.name,paid:paidFor(s.id,m),due:dueFor(s,m)}));
- $("reportResult").innerHTML=rows.map(r=>`<hr><b>${esc(r.name)}</b><br>এই মাসে জমা: ${money(r.paid)}<br>এই মাস পর্যন্ত বকেয়া: ${money(r.due)}`).join("")||"কোনো তথ্য নেই";
+ const m=$("reportMonth").value;if(!validMonth(m)){alert("সঠিক মাস নির্বাচন করুন");return;}
+ const rows=data.students.map(s=>({name:s.name,paid:paidFor(s.id,m),due:dueFor(s,m)}));
+ $("reportResult").innerHTML=rows.map(r=>`<hr><b>${esc(r.name)}</b><br>এই মাসে জমা: ${money(r.paid)}<br>এই মাস পর্যন্ত মোট বকেয়া: ${money(r.due)}`).join("")||"কোনো তথ্য নেই";
 }
 function backup(){
- let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
- let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tutor-hisab-backup.json";a.click();URL.revokeObjectURL(a.href);
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="tutor-hisab-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function restore(){
- let file=$("restoreFile").files[0];if(!file){alert("ব্যাকআপ ফাইল নির্বাচন করুন");return}
- let reader=new FileReader();
- reader.onload=()=>{try{let d=JSON.parse(reader.result);if(!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error();data=d;save();alert("ব্যাকআপ রিস্টোর হয়েছে");}catch(e){alert("সঠিক ব্যাকআপ ফাইল নয়");}};
- reader.readAsText(file);
+ const file=$("restoreFile").files[0];if(!file){alert("ব্যাকআপ ফাইল নির্বাচন করুন");return;}
+ const reader=new FileReader();reader.onload=()=>{
+  try{
+   const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error("invalid");
+   const ids=new Set();
+   for(const s of d.students){if(!s||typeof s.id!=="string"||!s.id||ids.has(s.id)||typeof s.name!=="string"||!s.name.trim()||!validMonth(s.start)||!Number.isFinite(Number(s.fee))||Number(s.fee)<=0||!Number.isFinite(Number(s.opening||0))||Number(s.opening||0)<0)throw Error("student");ids.add(s.id);}
+   for(const p of d.payments){if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date))throw Error("payment");}
+   if(!confirm("বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?"))return;
+   data=d;save();alert("ব্যাকআপ রিস্টোর হয়েছে।");
+  }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
+ };reader.readAsText(file);
 }
 render();
 </script>
