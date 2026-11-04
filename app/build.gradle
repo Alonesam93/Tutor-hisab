@@ -8,9 +8,14 @@ android {
 
     defaultConfig {
         applicationId 'com.tutorhisab.app'
-        minSdk 23
+        minSdk 24
         targetSdk 35
         versionCode 1
         versionName '1.0'
     }
+}
+
+dependencies {
+    // Google Mobile Ads Next-Gen SDK (preferred Android SDK)
+    implementation 'com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0'
 }
