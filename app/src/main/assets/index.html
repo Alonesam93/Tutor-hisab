@@ -334,6 +334,110 @@ if(firebaseAuth){
  });
 }else $("authStatus").textContent="Firebase SDK লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।";
 function chooseBangla(){saveAppLanguage('bn')}function chooseEnglish(){saveAppLanguage('en')}function saveAppLanguage(v){localStorage.setItem('tutorHisabLanguage',v);document.documentElement.lang=v;$('languageGate').classList.add('hidden');$('profileLanguage').value=v}function changeProfileLanguage(){saveAppLanguage($('profileLanguage').value)}function storeComingSoon(){alert('পেমেন্ট ব্যবস্থা চালু হলে কেনা যাবে।')}function showAppTab(t){$('dashboardPage').classList.toggle('hidden',t!=='home');$('storePage').classList.toggle('hidden',t!=='store');$('profilePage').classList.toggle('hidden',t!=='profile');['Home','Store','Profile'].forEach(x=>{let b=$('nav'+x);if(b)b.classList.toggle('active',t===x.toLowerCase())});window.scrollTo(0,0)}function goHomeTab(){showAppTab('home')}function goStoreTab(){showAppTab('store')}function goProfileTab(){showAppTab('profile')}function saveProfilePhoto(f){if(!f)return;if(f.size>2097152){alert('ছবির সাইজ ২ MB-এর কম রাখুন।');return}let rd=new FileReader();rd.onload=()=>{localStorage.setItem('tutorHisabProfilePhoto',rd.result);$('profileAvatar').src=rd.result};rd.readAsDataURL(f)}$('profilePhotoInput').addEventListener('change',e=>saveProfilePhoto(e.target.files[0]));let p=localStorage.getItem('tutorHisabProfilePhoto');if(p)$('profileAvatar').src=p;let l=localStorage.getItem('tutorHisabLanguage');if(l){$('languageGate').classList.add('hidden');$('profileLanguage').value=l}else $('languageGate').classList.remove('hidden');if(firebaseAuth)firebaseAuth.onAuthStateChanged(u=>{if(u){$('authPage').classList.add('hidden');$('profilePage').classList.add('hidden');$('dashboardPage').classList.remove('hidden');$('storePage').classList.add('hidden');$('bottomNav').classList.remove('hidden');$('globalAdBanner').classList.remove('hidden');showAppTab('home')}else{$('bottomNav').classList.add('hidden');$('globalAdBanner').classList.add('hidden');$('storePage').classList.add('hidden')}});
+
+/* Complete Bangla/English UI text layer */
+const UI_EN = {
+"আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব":"Manage your students and monthly fees",
+"মোট শিক্ষার্থী":"Total Students","মোট জমা":"Total Collected","মোট বকেয়া":"Total Due","মাসিক নির্ধারিত বেতন":"Monthly Fees",
+"স্বাগতম! Tutor Hisab-এ প্রবেশ করুন":"Welcome to Tutor Hisab",
+"Firebase সংযোগ প্রস্তুত করা হচ্ছে...":"Connecting to Firebase...",
+"ইমেইল ঠিকানা":"Email address","পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)":"Password (at least 6 characters)",
+"লগইন করুন":"Sign In","নতুন শিক্ষক অ্যাকাউন্ট তৈরি করুন":"Create New Teacher Account",
+"আপনার অ্যাকাউন্টে প্রবেশ না করা পর্যন্ত শিক্ষার্থী ও পেমেন্টের তথ্য দেখা বা পরিবর্তন করা যাবে না।":"You must sign in to view or change student and payment records.",
+"শিক্ষক প্রোফাইল":"Teacher Profile","আমার প্রোফাইল":"My Profile","আপনি সফলভাবে লগইন করেছেন।":"You are signed in successfully.",
+"শিক্ষকের নাম":"Teacher name","আপনার নাম":"Your name","অ্যাকাউন্টের ইমেইল":"Account email",
+"প্রোফাইল সংরক্ষণ করুন":"Save Profile","লগআউট":"Sign Out","প্রোফাইল ছবি":"Profile photo","ভাষা নির্বাচন":"Language",
+"নতুন শিক্ষার্থী যোগ করুন":"Add New Student","শিক্ষার্থীর নাম":"Student name","শ্রেণি":"Class / Grade","মোবাইল নম্বর":"Mobile number",
+"মাসিক বেতন":"Monthly fee","বেতন গণনা শুরুর মাস":"Fee calculation start month","আগের বকেয়া (টাকা)":"Previous due (BDT)",
+"শিক্ষার্থী সংরক্ষণ করুন":"Save Student","সম্পাদনা বাতিল করুন":"Cancel Editing","বেতন জমা করুন":"Record a Payment",
+"শিক্ষার্থী নির্বাচন করুন":"Select a student","জমার পরিমাণ":"Payment amount","কোন মাসের বেতন":"Fee month","জমার তারিখ":"Payment date",
+"একাধিক মাসের বকেয়া থাকলে নির্বাচিত মাস পর্যন্ত মোট বকেয়ার মধ্যে জমা নেওয়া হবে।":"For multiple overdue months, payment is applied against the total due up to the selected month.",
+"জমা সংরক্ষণ করুন":"Save Payment","শিক্ষার্থীদের তালিকা":"Student List","এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।":"No students have been added yet.",
+"মাসিক রিপোর্ট":"Monthly Report","রিপোর্ট দেখুন":"View Report","ব্যাকআপ ও রিস্টোর":"Backup & Restore",
+"ব্যাকআপ ডাউনলোড করুন":"Download Backup","ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন":"Restore data from a backup file",
+"ব্যাকআপ রিস্টোর করুন":"Restore Backup","Tutor Hisab Store":"Tutor Hisab Store","SMS প্যাকেজ":"SMS Packages",
+"মাসিক SMS":"Monthly SMS","বাৎসরিক SMS":"Annual SMS","বিজ্ঞাপন সরান":"Remove Ads",
+"সাপ্তাহিক / মাসিক / বাৎসরিক":"Weekly / Monthly / Yearly","মূল্য শিগগির জানানো হবে":"Pricing will be announced soon",
+"শিগগির আসছে":"Coming Soon","ব্যানার বিজ্ঞাপনের স্থান":"Banner Ad Space",
+"বাংলা":"Bangla","English":"English","ভাষা নির্বাচন করুন":"Choose your language",
+"হোম":"Home","স্টোর":"Store","আমার প্রোফাইল":"My Profile",
+"মোবাইল:":"Mobile:","নেই":"Not provided","মাসিক বেতন:":"Monthly fee:","মোট জমা:":"Total paid:",
+"বর্তমান বকেয়া:":"Current due:","হিসাব শুরুর মাস:":"Fee starts:","আগের বকেয়া:":"Previous due:",
+"সম্পাদনা":"Edit","শিক্ষার্থী মুছুন":"Delete Student","এই মাসে জমা:":"Paid this month:",
+"এই মাস পর্যন্ত মোট বকেয়া:":"Total due through this month:","কোনো তথ্য নেই":"No records found",
+"অ্যাকাউন্ট তৈরি হয়েছে। এখন আপনার প্রোফাইল পূরণ করুন।":"Account created. Please complete your profile.",
+"সঠিক ইমেইল এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।":"Enter a valid email and a password of at least 6 characters.",
+"ইমেইল ও পাসওয়ার্ড দিন।":"Enter your email and password.",
+"Firebase সংযোগ পাওয়া যায়নি। ইন্টারনেট পরীক্ষা করুন।":"Firebase is unavailable. Check your internet connection.",
+"সঠিক নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন।":"Enter a name, valid monthly fee, and start month.",
+"নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন।":"Enter a name, valid monthly fee, and start month.",
+"সঠিক মাস নির্বাচন করুন":"Choose a valid month",
+"ব্যাকআপ ফাইল নির্বাচন করুন":"Select a backup file",
+"বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?":"The backup will replace the current data. Continue?",
+"ব্যাকআপ রিস্টোর হয়েছে।":"Backup restored successfully.",
+"ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।":"The backup file is invalid or contains incorrect data.",
+"শিক্ষার্থী, সঠিক জমার পরিমাণ, মাস ও তারিখ দিন।":"Select a student and enter a valid amount, month, and date.",
+"নির্বাচিত মাস পর্যন্ত কোনো বকেয়া নেই।":"There is no outstanding balance through the selected month.",
+"জমা সংরক্ষণ হয়েছে।":"Payment saved successfully.",
+"শিক্ষার্থীর তথ্য সম্পাদনা করে সংরক্ষণ করা হয়েছে।":"Student details updated successfully.",
+"শিক্ষার্থীর তথ্য সম্পাদনা করুন":"Edit Student Details","পরিবর্তন সংরক্ষণ করুন":"Save Changes",
+"শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?":"Delete this student and their payment records?",
+"শিক্ষার্থীর নাম লিখুন":"Enter student name","শিক্ষার্থীর বেতন গণনা শুরুর মাসের আগের মাসে জমা নেওয়া যাবে না।":"Payment cannot be recorded before the student's fee start month.",
+"এই মাস পর্যন্ত বকেয়া ":"Due through this month: ",
+"এর বেশি জমা নেওয়া যাবে না।":" You cannot collect more than this amount.",
+"প্রোফাইল সংরক্ষণ হয়েছে।":"Profile saved successfully.",
+"প্রোফাইল সংরক্ষণ হয়নি: ":"Profile could not be saved: ",
+"ক্লাউড সিঙ্ক প্রস্তুত।":"Cloud sync is ready.",
+"ক্লাউডে সিঙ্ক হয়নি। ইন্টারনেট চালু হলে আবার সংরক্ষণ করুন। আপনার ফোনের তথ্য নিরাপদে আছে।":"Cloud sync failed. Check your internet and save again. Your data remains on this phone.",
+"ক্লাউড থেকে তথ্য আনা যায়নি। ফোনের তথ্য দেখানো হচ্ছে; ইন্টারনেট/Firestore Rules পরীক্ষা করুন।":"Could not load cloud data. Showing local data; check your internet connection and Firestore rules.",
+"ক্লাউড সংযোগে সমস্যা হয়েছে। ফোনের স্থানীয় তথ্য অক্ষত আছে। পরে আবার চেষ্টা করুন।":"Cloud connection failed. Your local data is safe. Please try again later.",
+"লগইন করতে ইমেইল ও পাসওয়ার্ড দিন।":"Enter your email and password to sign in.",
+"Firebase SDK লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন。":"Firebase SDK did not load. Check your internet connection.",
+"আগের বকেয়া শূন্য বা তার বেশি হতে হবে।":"Previous due must be zero or greater.",
+"সর্বোচ্চ ২০ জন শিক্ষার্থী যোগ করা যাবে।":"You can add up to 20 students.",
+"এই অ্যাকাউন্টে ক্লাউডের তথ্য এবং ফোনের পুরোনো তথ্য—দুটিই আছে। OK চাপলে ক্লাউডের তথ্য ফোনে আসবে; Cancel চাপলে ফোনের তথ্য ক্লাউডে আপলোড হয়ে ক্লাউডের আগের তালিকা প্রতিস্থাপন করবে。":"Both cloud and local records exist. Choose OK to load cloud data, or Cancel to replace cloud data with this phone's records.",
+"ক্লাউডে এখনো কোনো শিক্ষার্থী/পেমেন্ট নেই। এই ফোনের তথ্য কি আপনার অ্যাকাউন্টের ক্লাউডে আপলোড করবেন?":"There are no students or payments in the cloud yet. Upload this phone's records to your account?",
+"এই ফোনে আগের Tutor Hisab-এর তথ্য পাওয়া গেছে। এই অ্যাকাউন্টে সেগুলো যুক্ত করবেন?":"Previous Tutor Hisab records were found on this phone. Add them to this account?"
+};
+const UI_BN = Object.fromEntries(Object.entries(UI_EN).map(([a,b])=>[b,a]));
+function localizeText(value,lang){
+ let out=String(value);
+ const dict=lang==="en"?UI_EN:UI_BN;
+ Object.keys(dict).sort((a,b)=>b.length-a.length).forEach(k=>{out=out.split(k).join(dict[k]);});
+ return out;
+}
+function applyLanguage(lang){
+ document.documentElement.lang=lang;
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+ let node;
+ while((node=walker.nextNode())){
+  if(node.parentElement && !["SCRIPT","STYLE"].includes(node.parentElement.tagName)){
+   node.nodeValue=localizeText(node.nodeValue,lang);
+  }
+ }
+ document.querySelectorAll("input[placeholder],button[title],option").forEach(el=>{
+  if(el.placeholder)el.placeholder=localizeText(el.placeholder,lang);
+  if(el.title)el.title=localizeText(el.title,lang);
+  if(el.tagName==="OPTION")el.textContent=localizeText(el.textContent,lang);
+ });
+ const langSelect=document.getElementById("profileLanguage");
+ if(langSelect)langSelect.value=lang;
+}
+function saveAppLanguage(v){
+ localStorage.setItem("tutorHisabLanguage",v);
+ applyLanguage(v);
+ const gate=document.getElementById("languageGate");
+ if(gate)gate.classList.add("hidden");
+}
+const originalAlert=window.alert.bind(window);
+window.alert=function(message){originalAlert(localizeText(message,localStorage.getItem("tutorHisabLanguage")||"bn"));};
+const originalConfirm=window.confirm.bind(window);
+window.confirm=function(message){return originalConfirm(localizeText(message,localStorage.getItem("tutorHisabLanguage")||"bn"));};
+const langObserver=new MutationObserver(()=>{const l=localStorage.getItem("tutorHisabLanguage")||"bn";if(l==="en")applyLanguage("en");});
+langObserver.observe(document.body,{childList:true,subtree:true});
+const initialLang=localStorage.getItem("tutorHisabLanguage");
+if(initialLang==="en")applyLanguage("en");
+
 </script>
 </body>
 </html>
