@@ -111,6 +111,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const FIREBASE_CONFIG = {
  apiKey: "AIzaSyCafBcI740GbEfMOIbR8dWhNpaypH-Z8Vw",
@@ -122,9 +123,12 @@ const FIREBASE_CONFIG = {
  measurementId: "G-FCVHMRE8G6"
 };
 let firebaseAuth = null;
+let firestoreDb = null;
+let cloudReady = false;
+let cloudSyncQueue = Promise.resolve();
 try {
  if (window.firebase && !firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
- if (window.firebase) firebaseAuth = firebase.auth();
+ if (window.firebase) { firebaseAuth = firebase.auth(); firestoreDb = firebase.firestore(); }
 } catch (e) { console.warn("Firebase initialization failed", e); }
 function createTeacherAccount() {
  if (!firebaseAuth) { alert("Firebase সংযোগ পাওয়া যায়নি। ইন্টারনেট পরীক্ষা করুন।"); return; }
@@ -146,7 +150,7 @@ function openProfile(){ $("dashboardPage").classList.add("hidden"); $("profilePa
 function saveTeacherProfile(){
  const user=firebaseAuth&&firebaseAuth.currentUser;if(!user)return;
  const name=$("profileName").value.trim();
- user.updateProfile({displayName:name}).then(()=>alert("প্রোফাইল সংরক্ষণ হয়েছে।")).catch(e=>alert("প্রোফাইল সংরক্ষণ হয়নি: "+e.message));
+ user.updateProfile({displayName:name}).then(()=>firestoreDb.collection("users").doc(user.uid).set({displayName:name,email:user.email||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})).then(()=>alert("প্রোফাইল সংরক্ষণ হয়েছে।")).catch(e=>alert("প্রোফাইল সংরক্ষণ হয়নি: "+e.message));
 }
 let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
@@ -164,7 +168,58 @@ let editingStudentId=null;
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
 function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
-function save(){if(!firebaseAuth||!firebaseAuth.currentUser){alert("তথ্য সংরক্ষণের আগে লগইন করুন।");return;}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
+function save(){
+ if(!firebaseAuth||!firebaseAuth.currentUser){alert("তথ্য সংরক্ষণের আগে লগইন করুন।");return;}
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
+ if(cloudReady) queueCloudSync();
+}
+function queueCloudSync(){
+ const user=firebaseAuth&&firebaseAuth.currentUser;if(!user||!firestoreDb||!cloudReady)return;
+ const snapshot=JSON.parse(JSON.stringify(data));
+ cloudSyncQueue=cloudSyncQueue.then(()=>syncSnapshotToCloud(user.uid,snapshot)).catch(e=>{
+  console.error("Cloud sync failed",e);
+  $("authStatus").textContent="ক্লাউডে সিঙ্ক হয়নি। ইন্টারনেট চালু হলে আবার সংরক্ষণ করুন। আপনার ফোনের তথ্য নিরাপদে আছে।";
+ });
+}
+async function syncSnapshotToCloud(uid,snapshot){
+ const root=firestoreDb.collection("users").doc(uid);
+ await root.set({email:(firebaseAuth.currentUser&&firebaseAuth.currentUser.email)||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+ for(const kind of ["students","payments"]){
+  const col=root.collection(kind), remote=await col.get();
+  const wanted=new Map(snapshot[kind].map(item=>[String(item.id),item]));
+  let batch=firestoreDb.batch(),count=0;
+  for(const doc of remote.docs){if(!wanted.has(doc.id)){batch.delete(doc.ref);count++;}}
+  for(const item of snapshot[kind]){
+   if(!item||!item.id)continue;
+   batch.set(col.doc(String(item.id)),item);count++;
+   if(count>=400){await batch.commit();batch=firestoreDb.batch();count=0;}
+  }
+  if(count)await batch.commit();
+ }
+}
+async function loadCloudForTeacher(user){
+ cloudReady=false;
+ const root=firestoreDb.collection("users").doc(user.uid);
+ const [studentSnap,paymentSnap]=await Promise.all([root.collection("students").get(),root.collection("payments").get()]);
+ const remote={students:studentSnap.docs.map(d=>d.data()),payments:paymentSnap.docs.map(d=>d.data())};
+ const local=loadData(STORAGE_KEY);
+ const localHas=local.students.length>0||local.payments.length>0;
+ const remoteHas=remote.students.length>0||remote.payments.length>0;
+ if(remoteHas&&localHas){
+  if(confirm("এই অ্যাকাউন্টে ক্লাউডের তথ্য এবং ফোনের পুরোনো তথ্য—দুটিই আছে। OK চাপলে ক্লাউডের তথ্য ফোনে আসবে; Cancel চাপলে ফোনের তথ্য ক্লাউডে আপলোড হয়ে ক্লাউডের আগের তালিকা প্রতিস্থাপন করবে।")){
+   data=remote;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  }else data=local;
+ }else if(remoteHas){
+  data=remote;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ }else{
+  data=local;
+  if(localHas && confirm("ক্লাউডে এখনো কোনো শিক্ষার্থী/পেমেন্ট নেই। এই ফোনের তথ্য কি আপনার অ্যাকাউন্টের ক্লাউডে আপলোড করবেন?")){
+   await syncSnapshotToCloud(user.uid,data);
+  }
+ }
+ cloudReady=true;
+ render();
+}
 function monthsBetween(a,b){if(!validMonth(a)||!validMonth(b)||a>b)return 0;const [y1,m1]=a.split("-").map(Number),[y2,m2]=b.split("-").map(Number);return (y2-y1)*12+m2-m1+1;}
 function paidFor(id,month=null){return data.payments.filter(p=>p.studentId===id&&(!month||p.month===month)).reduce((s,p)=>s+Number(p.amount||0),0);}
 function dueFor(s,upto=currentMonth){
@@ -249,7 +304,8 @@ function restore(){
 }
 render();
 if(firebaseAuth){
- firebaseAuth.onAuthStateChanged(user=>{
+ firebaseAuth.onAuthStateChanged(async user=>{
+  cloudReady=false;
   if(user){
    STORAGE_KEY="tutorHisabData_"+user.uid;
    const hasUserData=localStorage.getItem(STORAGE_KEY)!==null;
@@ -263,8 +319,10 @@ if(firebaseAuth){
    $("profileUid").textContent=user.uid;
    $("profileName").value=user.displayName||"";
    render();
+   try{await loadCloudForTeacher(user);$("authStatus").textContent="ক্লাউড সিঙ্ক প্রস্তুত।";}
+   catch(e){console.error("Cloud load failed",e);cloudReady=false;$("authStatus").textContent="ক্লাউড থেকে তথ্য আনা যায়নি। ফোনের তথ্য দেখানো হচ্ছে; ইন্টারনেট/Firestore Rules পরীক্ষা করুন।";alert("ক্লাউড সংযোগে সমস্যা হয়েছে। ফোনের স্থানীয় তথ্য অক্ষত আছে। পরে আবার চেষ্টা করুন।");}
   }else{
-   data=emptyData();
+   cloudReady=false;data=emptyData();
    $("authPage").classList.remove("hidden");
    $("profilePage").classList.add("hidden");
    $("dashboardPage").classList.add("hidden");
