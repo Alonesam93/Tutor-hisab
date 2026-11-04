@@ -1,16 +1,9 @@
 name: Deploy Tutor Hisab Preview
 
 on:
-  workflow_dispatch:
-    inputs:
-      channel_id:
-        description: "Firebase Hosting preview channel"
-        required: true
-        default: "tutor-hisab-test"
-      expire_days:
-        description: "Preview channel lifetime in days"
-        required: true
-        default: "7"
+  push:
+    branches:
+      - fix/audit-and-data-integrity
 
 jobs:
   preview:
@@ -26,8 +19,8 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TUTOR_HISAB }}
           projectId: tutor-hisab
-          channelId: ${{ inputs.channel_id }}
-          expires: ${{ inputs.expire_days }}d
+          channelId: tutor-hisab-test
+          expires: 7d
 
       - name: Show preview URL
         run: echo "Preview URL: ${{ steps.deploy.outputs.details_url }}"
