@@ -156,8 +156,14 @@ function report(){
  $("reportResult").innerHTML=rows.map(r=>`<hr><b>${esc(r.name)}</b><br>এই মাসে জমা: ${money(r.paid)}<br>এই মাস পর্যন্ত মোট বকেয়া: ${money(r.due)}`).join("")||"কোনো তথ্য নেই";
 }
 function backup(){
- const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download="tutor-hisab-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const json=JSON.stringify(data,null,2);
+ if(window.Android&&typeof window.Android.saveBackup==="function"){
+  window.Android.saveBackup(json);
+  return;
+ }
+ const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="tutor-hisab-backup.json";document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
 function restore(){
  const file=$("restoreFile").files[0];if(!file){alert("ব্যাকআপ ফাইল নির্বাচন করুন");return;}
