@@ -154,7 +154,7 @@ function saveTeacherProfile(){
 }
 let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
-const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
+const money=n=>(localStorage.getItem("tutorHisabLanguage")==="en"?"BDT ":"৳")+Number(n||0).toLocaleString(localStorage.getItem("tutorHisabLanguage")==="en"?"en-US":"bn-BD",{maximumFractionDigits:2});
 const today=new Date();
 const localDate=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
 const currentMonth=localDate.slice(0,7);
@@ -267,7 +267,7 @@ function removeStudent(id){if(!confirm("শিক্ষার্থী ও ত�
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
  const totalPaid=data.payments.reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
- $("count").textContent=data.students.length.toLocaleString("bn-BD");$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
+ $("count").textContent=data.students.length.toLocaleString(localStorage.getItem("tutorHisabLanguage")==="en"?"en-US":"bn-BD");$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
  $("students").innerHTML=data.students.length?data.students.map(s=>`
  <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
  <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div><div>মাসিক বেতন: ${money(s.fee)}</div><div>মোট জমা: ${money(paidFor(s.id))}</div>
@@ -399,6 +399,49 @@ const UI_EN = {
 "ক্লাউডে এখনো কোনো শিক্ষার্থী/পেমেন্ট নেই। এই ফোনের তথ্য কি আপনার অ্যাকাউন্টের ক্লাউডে আপলোড করবেন?":"There are no students or payments in the cloud yet. Upload this phone's records to your account?",
 "এই ফোনে আগের Tutor Hisab-এর তথ্য পাওয়া গেছে। এই অ্যাকাউন্টে সেগুলো যুক্ত করবেন?":"Previous Tutor Hisab records were found on this phone. Add them to this account?"
 };
+Object.assign(UI_EN,{
+"অ্যাকাউন্ট আইডি: ":"Account ID: ",
+"অ্যাকাউন্ট তৈরি হয়নি: ":"Account creation failed: ",
+"লগইন হয়নি: ":"Sign in failed: ",
+"তথ্য সংরক্ষণের আগে লগইন করুন।":"Please sign in before saving data.",
+"শিক্ষার্থীটি পাওয়া যায়নি।":"Student not found.",
+"নতুন বেতন বা শুরুর মাসের কারণে আগের জমার হিসাব অসামঞ্জস্য হবে। আগের পেমেন্টের হিসাব ঠিক রেখে তথ্য পরিবর্তন করুন।":"These changes would make previous payments inconsistent. Keep the existing payment history consistent when editing.",
+"সঠিক মাস নির্বাচন করুন":"Select a valid month.",
+"শিক্ষার্থীর নাম লিখুন":"Enter student name",
+"প্রবেশ করুন":"Sign In",
+"নতুন অ্যাকাউন্ট তৈরি করুন":"Create Account",
+"হিসাবের ড্যাশবোর্ড খুলুন":"Open Dashboard",
+"SMS প্যাকেজ":"SMS Packages",
+"বাৎসরিক SMS":"Annual SMS",
+"মূল্য শিগগির জানানো হবে":"Pricing will be announced soon",
+"শিক্ষার্থী নির্বাচন করুন":"Select a student",
+"প্রোফাইল ছবি":"Profile Photo",
+"ভাষা":"Language",
+"বাংলা":"Bangla",
+"হোম":"Home",
+"স্টোর":"Store",
+"আমার প্রোফাইল":"My Profile",
+"শিক্ষার্থীর নাম":"Student name",
+"শ্রেণি":"Class / Grade",
+"মোবাইল নম্বর":"Mobile number",
+"মাসিক বেতন":"Monthly fee",
+"আগের বকেয়া (টাকা)":"Previous due (BDT)",
+"জমার পরিমাণ":"Payment amount",
+"শিক্ষার্থী সংরক্ষণ করুন":"Save Student",
+"বেতন জমা করুন":"Record Payment",
+"জমা সংরক্ষণ করুন":"Save Payment",
+"ব্যাকআপ ডাউনলোড করুন":"Download Backup",
+"ব্যাকআপ রিস্টোর করুন":"Restore Backup",
+"শিক্ষার্থীদের তালিকা":"Student List",
+"শিক্ষার্থী মুছুন":"Delete Student",
+"সম্পাদনা":"Edit",
+"লগআউট":"Sign Out",
+"প্রোফাইল সংরক্ষণ করুন":"Save Profile",
+"আপনার নাম":"Your name",
+"অ্যাকাউন্টের ইমেইল":"Account email",
+"কোনো তথ্য নেই":"No records found",
+"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।":"No students have been added yet."
+});
 const UI_BN = Object.fromEntries(Object.entries(UI_EN).map(([a,b])=>[b,a]));
 function localizeText(value,lang){
  let out=String(value);
