@@ -39,7 +39,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div class="stat">মাসিক নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
 <div class="card">
-<h3>➕ নতুন শিক্ষার্থী যোগ করুন</h3>
+<h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
 <input id="name" placeholder="শিক্ষার্থীর নাম" maxlength="100">
 <input id="className" placeholder="শ্রেণি" maxlength="50">
 <input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel" maxlength="20">
@@ -47,7 +47,8 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <label>বেতন গণনা শুরুর মাস</label>
 <input id="start" type="month">
 <input id="opening" type="number" min="0" step="0.01" value="0" placeholder="আগের বকেয়া (টাকা)">
-<button onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
+<button id="studentSaveBtn" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
+<button id="studentCancelBtn" class="secondary" style="display:none" onclick="cancelStudentEdit()">সম্পাদনা বাতিল করুন</button>
 </div>
 <div class="card">
 <h3>💰 বেতন জমা করুন</h3>
@@ -91,6 +92,7 @@ function loadData(){
  catch(e){return emptyData();}
 }
 let data=loadData();
+let editingStudentId=null;
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
 function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
@@ -106,6 +108,14 @@ function addStudent(){
  const name=$("name").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
  if(!name||!Number.isFinite(fee)||fee<=0||!validMonth(start)){alert("নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন।");return;}
  if(!Number.isFinite(opening)||opening<0){alert("আগের বকেয়া শূন্য বা তার বেশি হতে হবে।");return;}
+ if(editingStudentId){
+  const old=data.students.find(s=>s.id===editingStudentId);if(!old){alert("শিক্ষার্থীটি পাওয়া যায়নি।");cancelStudentEdit();return;}
+  const related=data.payments.filter(p=>p.studentId===editingStudentId);
+  const paymentMonths=[...new Set(related.map(p=>p.month))].sort();
+  for(const m of paymentMonths){const accrued=opening+fee*monthsBetween(start,m);const paid=related.filter(p=>p.month<=m).reduce((sum,p)=>sum+Number(p.amount||0),0);if(m<start||paid>accrued){alert("নতুন বেতন বা শুরুর মাসের কারণে আগের জমার হিসাব অসামঞ্জস্য হবে। আগের পেমেন্টের হিসাব ঠিক রেখে তথ্য পরিবর্তন করুন।");return;}}
+  Object.assign(old,{name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
+  cancelStudentEdit();save();alert("শিক্ষার্থীর তথ্য সম্পাদনা করে সংরক্ষণ করা হয়েছে।");return;
+ }
  if(data.students.length>=20){alert("সর্বোচ্চ ২০ জন শিক্ষার্থী যোগ করা যাবে।");return;}
  data.students.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString()+"-"+Math.random().toString(36).slice(2),name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
  ["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";save();
@@ -120,6 +130,13 @@ function addPayment(){
  data.payments.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(),studentId:id,amount,month,date});
  $("payAmount").value="";save();alert("জমা সংরক্ষণ হয়েছে।");
 }
+function editStudent(id){
+ const s=data.students.find(x=>x.id===id);if(!s)return;
+ editingStudentId=id;$("name").value=s.name;$("className").value=s.className||"";$("phone").value=s.phone||"";$("fee").value=s.fee;$("start").value=s.start;$("opening").value=Number(s.opening||0);
+ $("studentFormTitle").textContent="✏️ শিক্ষার্থীর তথ্য সম্পাদনা করুন";$("studentSaveBtn").textContent="পরিবর্তন সংরক্ষণ করুন";$("studentCancelBtn").style.display="block";
+ $("name").scrollIntoView({behavior:"smooth",block:"center"});
+}
+function cancelStudentEdit(){editingStudentId=null;["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";$("studentFormTitle").textContent="➕ নতুন শিক্ষার্থী যোগ করুন";$("studentSaveBtn").textContent="শিক্ষার্থী সংরক্ষণ করুন";$("studentCancelBtn").style.display="none";}
 function removeStudent(id){if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;data.students=data.students.filter(s=>s.id!==id);data.payments=data.payments.filter(p=>p.studentId!==id);save();}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
@@ -129,10 +146,10 @@ function render(){
  <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
  <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div><div>মাসিক বেতন: ${money(s.fee)}</div><div>মোট জমা: ${money(paidFor(s.id))}</div>
  <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div><div class="small">হিসাব শুরুর মাস: ${esc(s.start)} | আগের বকেয়া: ${money(s.opening)}</div>
- <button class="danger" data-remove-id="${esc(s.id)}">শিক্ষার্থী মুছুন</button></div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
+ <button class="secondary" data-edit-id="${esc(s.id)}">সম্পাদনা</button><button class="danger" data-remove-id="${esc(s.id)}">শিক্ষার্থী মুছুন</button></div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
  $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
 }
-$("students").addEventListener("click",e=>{const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
+$("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data-edit-id]");if(editBtn){editStudent(editBtn.dataset.editId);return;}const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
 function report(){
  const m=$("reportMonth").value;if(!validMonth(m)){alert("সঠিক মাস নির্বাচন করুন");return;}
  const rows=data.students.map(s=>({name:s.name,paid:paidFor(s.id,m),due:dueFor(s,m)}));
