@@ -265,7 +265,13 @@ async function syncCloud(){
    if(upload){await writeCloudData(currentUser.uid,local);cloudMessage("এই ডিভাইসের তথ্য Cloud-এ সংরক্ষণ হয়েছে।");}
    else{data=cloud;save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে আনা হয়েছে।");}
   }else if(localHas){await writeCloudData(currentUser.uid,local);cloudMessage("ডিভাইসের তথ্য Cloud-এ সংরক্ষণ হয়েছে।");}
-  else if(cloudHas){data=cloud;save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে আনা হয়েছে।");}
+  else if(cloudHas){
+   if(confirm("এই ডিভাইসে কোনো তথ্য নেই, কিন্তু Cloud-এ তথ্য আছে। OK চাপলে Cloud-এর তথ্য এই ডিভাইসে আসবে।")){
+    data=cloud;save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে আনা হয়েছে।");
+   }else if(confirm("সতর্কতা: এই ডিভাইসে কোনো তথ্য নেই। Cloud-এর সব শিক্ষার্থী ও পেমেন্ট স্থায়ীভাবে মুছে ফেলবেন?")){
+    await writeCloudData(currentUser.uid,{students:[],payments:[]});cloudMessage("Cloud-এর সব শিক্ষার্থী ও পেমেন্ট মুছে ফেলা হয়েছে।");
+   }else{cloudMessage("Cloud Sync বাতিল করা হয়েছে।");}
+  }
   else{cloudMessage("এখনো কোনো শিক্ষার্থী বা পেমেন্টের তথ্য নেই।");}
  }catch(e){console.error(e);cloudMessage("Cloud Sync হয়নি: "+e.message);}
 }
