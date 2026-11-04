@@ -412,13 +412,13 @@ function applyLanguage(lang){
  let node;
  while((node=walker.nextNode())){
   if(node.parentElement && !["SCRIPT","STYLE"].includes(node.parentElement.tagName)){
-   node.nodeValue=localizeText(node.nodeValue,lang);
+   const translated=localizeText(node.nodeValue,lang);if(translated!==node.nodeValue)node.nodeValue=translated;
   }
  }
  document.querySelectorAll("input[placeholder],button[title],option").forEach(el=>{
-  if(el.placeholder)el.placeholder=localizeText(el.placeholder,lang);
-  if(el.title)el.title=localizeText(el.title,lang);
-  if(el.tagName==="OPTION")el.textContent=localizeText(el.textContent,lang);
+  if(el.placeholder){const p=localizeText(el.placeholder,lang);if(p!==el.placeholder)el.placeholder=p;}
+  if(el.title){const t=localizeText(el.title,lang);if(t!==el.title)el.title=t;}
+  if(el.tagName==="OPTION"){const t=localizeText(el.textContent,lang);if(t!==el.textContent)el.textContent=t;}
  });
  const langSelect=document.getElementById("profileLanguage");
  if(langSelect)langSelect.value=lang;
