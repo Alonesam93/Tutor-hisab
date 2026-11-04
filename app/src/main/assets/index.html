@@ -188,13 +188,16 @@ async function syncSnapshotToCloud(uid,snapshot){
   const col=root.collection(kind), remote=await col.get();
   const wanted=new Map(snapshot[kind].map(item=>[String(item.id),item]));
   let batch=firestoreDb.batch(),count=0;
-  for(const doc of remote.docs){if(!wanted.has(doc.id)){batch.delete(doc.ref);count++;}}
+  const flush=async()=>{if(count){await batch.commit();batch=firestoreDb.batch();count=0;}};
+  for(const doc of remote.docs){
+   if(!wanted.has(doc.id)){batch.delete(doc.ref);count++;if(count>=400)await flush();}
+  }
   for(const item of snapshot[kind]){
    if(!item||!item.id)continue;
    batch.set(col.doc(String(item.id)),item);count++;
-   if(count>=400){await batch.commit();batch=firestoreDb.batch();count=0;}
+   if(count>=400)await flush();
   }
-  if(count)await batch.commit();
+  await flush();
  }
 }
 async function loadCloudForTeacher(user){
