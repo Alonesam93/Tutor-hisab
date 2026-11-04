@@ -7,6 +7,7 @@
 <title>Tutor Hisab</title>
 <style>
 *{box-sizing:border-box}
+.hidden{display:none!important}
 body{margin:0;background:#f1f5f3;color:#18352b;font-family:Arial,sans-serif}
 header{background:#087f5b;color:white;padding:20px 15px;text-align:center}
 header h2{margin:0 0 6px}
@@ -38,15 +39,33 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div class="stat">মোট বকেয়া<b id="due">৳০</b></div>
 <div class="stat">মাসিক নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
-<div class="card">
-<h3>🔐 শিক্ষক অ্যাকাউন্ট</h3>
+<div id="authPage" class="card">
+<h3>🔐 Tutor Hisab-এ প্রবেশ করুন</h3>
 <div id="authStatus" class="notice">Firebase সংযোগ প্রস্তুত করা হচ্ছে...</div>
 <input id="authEmail" type="email" placeholder="ইমেইল ঠিকানা" autocomplete="email">
 <input id="authPassword" type="password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" autocomplete="current-password">
-<button onclick="createTeacherAccount()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
-<button class="secondary" onclick="signInTeacher()">লগইন করুন</button>
-<button class="secondary" id="signOutBtn" style="display:none" onclick="signOutTeacher()">লগআউট</button>
-<div class="small">প্রথম ধাপে ইমেইল অ্যাকাউন্ট যাচাই করা হচ্ছে। ক্লাউডে তথ্য সিঙ্ক চালু করার আগে নিরাপত্তা নিয়ম পরীক্ষা করা হবে।</div>
+<button onclick="signInTeacher()">লগইন করুন</button>
+<button class="secondary" onclick="createTeacherAccount()">নতুন শিক্ষক অ্যাকাউন্ট তৈরি করুন</button>
+<div class="small">আপনার অ্যাকাউন্টে প্রবেশ না করা পর্যন্ত শিক্ষার্থী ও পেমেন্টের তথ্য দেখা বা পরিবর্তন করা যাবে না।</div>
+</div>
+<div id="profilePage" class="card hidden">
+<h3>👤 শিক্ষক প্রোফাইল</h3>
+<div class="notice">আপনি সফলভাবে লগইন করেছেন।</div>
+<label>শিক্ষকের নাম</label>
+<input id="profileName" placeholder="আপনার নাম" maxlength="80">
+<label>অ্যাকাউন্টের ইমেইল</label>
+<div id="profileEmail" class="notice"></div>
+<div class="small">অ্যাকাউন্ট আইডি: <span id="profileUid"></span></div>
+<button onclick="saveTeacherProfile()">প্রোফাইল সংরক্ষণ করুন</button>
+<button onclick="openDashboard()">হিসাবের ড্যাশবোর্ড খুলুন</button>
+<button class="secondary" onclick="signOutTeacher()">লগআউট</button>
+</div>
+<div id="dashboardPage" class="hidden">
+<div class="card">
+<div style="display:flex;gap:8px">
+<button class="secondary" onclick="openProfile()">👤 প্রোফাইল</button>
+<button class="secondary" onclick="signOutTeacher()">লগআউট</button>
+</div>
 </div>
 <div class="card">
 <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
@@ -88,6 +107,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <input type="file" id="restoreFile" accept=".json,application/json">
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
+</div>
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -98,57 +118,53 @@ const FIREBASE_CONFIG = {
  projectId: "tutor-hisab",
  storageBucket: "tutor-hisab.firebasestorage.app",
  messagingSenderId: "910571768792",
- appId: "1:910571768792:web:5e01f9a066b3d40ec600ad"
+ appId: "1:910571768792:web:5e01f9a066b3d40ec600ad",
+ measurementId: "G-FCVHMRE8G6"
 };
 let firebaseAuth = null;
 try {
  if (window.firebase && !firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
- if (window.firebase) {
-  firebaseAuth = firebase.auth();
-  firebaseAuth.onAuthStateChanged(user => {
-   $("authStatus").textContent = user ? "লগইন হয়েছে: " + user.email : "এখনো লগইন করা হয়নি।";
-   $("signOutBtn").style.display = user ? "block" : "none";
-  });
- }
-} catch (e) {
- console.warn("Firebase initialization failed", e);
-}
+ if (window.firebase) firebaseAuth = firebase.auth();
+} catch (e) { console.warn("Firebase initialization failed", e); }
 function createTeacherAccount() {
- if (!firebaseAuth) { alert("ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।"); return; }
+ if (!firebaseAuth) { alert("Firebase সংযোগ পাওয়া যায়নি। ইন্টারনেট পরীক্ষা করুন।"); return; }
  const email=$("authEmail").value.trim(), password=$("authPassword").value;
  if(!email || password.length<6){alert("সঠিক ইমেইল এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");return;}
  firebaseAuth.createUserWithEmailAndPassword(email,password)
-  .then(()=>alert("অ্যাকাউন্ট তৈরি হয়েছে।"))
+  .then(()=>alert("অ্যাকাউন্ট তৈরি হয়েছে। এখন আপনার প্রোফাইল পূরণ করুন।"))
   .catch(e=>alert("অ্যাকাউন্ট তৈরি হয়নি: "+e.message));
 }
 function signInTeacher() {
- if (!firebaseAuth) { alert("ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।"); return; }
+ if (!firebaseAuth) { alert("Firebase সংযোগ পাওয়া যায়নি। ইন্টারনেট পরীক্ষা করুন।"); return; }
  const email=$("authEmail").value.trim(), password=$("authPassword").value;
  if(!email || !password){alert("ইমেইল ও পাসওয়ার্ড দিন।");return;}
- firebaseAuth.signInWithEmailAndPassword(email,password)
-  .then(()=>alert("লগইন সফল হয়েছে।"))
-  .catch(e=>alert("লগইন হয়নি: "+e.message));
+ firebaseAuth.signInWithEmailAndPassword(email,password).catch(e=>alert("লগইন হয়নি: "+e.message));
 }
-function signOutTeacher() {
- if(firebaseAuth) firebaseAuth.signOut();
+function signOutTeacher() { if(firebaseAuth) firebaseAuth.signOut(); }
+function openDashboard(){ $("profilePage").classList.add("hidden"); $("dashboardPage").classList.remove("hidden"); window.scrollTo(0,0); }
+function openProfile(){ $("dashboardPage").classList.add("hidden"); $("profilePage").classList.remove("hidden"); window.scrollTo(0,0); }
+function saveTeacherProfile(){
+ const user=firebaseAuth&&firebaseAuth.currentUser;if(!user)return;
+ const name=$("profileName").value.trim();
+ user.updateProfile({displayName:name}).then(()=>alert("প্রোফাইল সংরক্ষণ হয়েছে।")).catch(e=>alert("প্রোফাইল সংরক্ষণ হয়নি: "+e.message));
 }
-const STORAGE_KEY="tutorHisabData";
+let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
 const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
 const today=new Date();
 const localDate=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
 const currentMonth=localDate.slice(0,7);
 function emptyData(){return {students:[],payments:[]};}
-function loadData(){
- try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return emptyData();const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.students)||!Array.isArray(parsed.payments))return emptyData();return parsed;}
+function loadData(key=STORAGE_KEY){
+ try{const raw=localStorage.getItem(key);if(!raw)return emptyData();const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.students)||!Array.isArray(parsed.payments))return emptyData();return parsed;}
  catch(e){return emptyData();}
 }
-let data=loadData();
+let data=emptyData();
 let editingStudentId=null;
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
 function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
+function save(){if(!firebaseAuth||!firebaseAuth.currentUser){alert("তথ্য সংরক্ষণের আগে লগইন করুন।");return;}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
 function monthsBetween(a,b){if(!validMonth(a)||!validMonth(b)||a>b)return 0;const [y1,m1]=a.split("-").map(Number),[y2,m2]=b.split("-").map(Number);return (y2-y1)*12+m2-m1+1;}
 function paidFor(id,month=null){return data.payments.filter(p=>p.studentId===id&&(!month||p.month===month)).reduce((s,p)=>s+Number(p.amount||0),0);}
 function dueFor(s,upto=currentMonth){
@@ -232,6 +248,30 @@ function restore(){
  };reader.readAsText(file);
 }
 render();
+if(firebaseAuth){
+ firebaseAuth.onAuthStateChanged(user=>{
+  if(user){
+   STORAGE_KEY="tutorHisabData_"+user.uid;
+   const hasUserData=localStorage.getItem(STORAGE_KEY)!==null;
+   const legacy=localStorage.getItem("tutorHisabData");
+   if(!hasUserData && legacy && confirm("এই ফোনে আগের Tutor Hisab-এর তথ্য পাওয়া গেছে। এই অ্যাকাউন্টে সেগুলো যুক্ত করবেন?")) localStorage.setItem(STORAGE_KEY,legacy);
+   data=loadData(STORAGE_KEY);
+   $("authPage").classList.add("hidden");
+   $("profilePage").classList.remove("hidden");
+   $("dashboardPage").classList.add("hidden");
+   $("profileEmail").textContent=user.email||"";
+   $("profileUid").textContent=user.uid;
+   $("profileName").value=user.displayName||"";
+   render();
+  }else{
+   data=emptyData();
+   $("authPage").classList.remove("hidden");
+   $("profilePage").classList.add("hidden");
+   $("dashboardPage").classList.add("hidden");
+   $("authStatus").textContent="লগইন করতে ইমেইল ও পাসওয়ার্ড দিন।";
+  }
+ });
+}else $("authStatus").textContent="Firebase SDK লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।";
 </script>
 </body>
 </html>
