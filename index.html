@@ -93,7 +93,7 @@ function loadData(){
 let data=loadData();
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
-function validDate(v){return typeof v==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v+"T00:00:00"));}
+function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
 function monthsBetween(a,b){if(!validMonth(a)||!validMonth(b)||a>b)return 0;const [y1,m1]=a.split("-").map(Number),[y2,m2]=b.split("-").map(Number);return (y2-y1)*12+m2-m1+1;}
 function paidFor(id,month=null){return data.payments.filter(p=>p.studentId===id&&(!month||p.month===month)).reduce((s,p)=>s+Number(p.amount||0),0);}
@@ -149,7 +149,8 @@ function restore(){
    const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error("invalid");
    const ids=new Set();
    for(const s of d.students){if(!s||typeof s.id!=="string"||!s.id||ids.has(s.id)||typeof s.name!=="string"||!s.name.trim()||!validMonth(s.start)||!Number.isFinite(Number(s.fee))||Number(s.fee)<=0||!Number.isFinite(Number(s.opening||0))||Number(s.opening||0)<0)throw Error("student");ids.add(s.id);}
-   for(const p of d.payments){if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date))throw Error("payment");}
+   for(const p of d.payments){const student=d.students.find(s=>s.id===p.studentId);if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date)||p.month<student.start)throw Error("payment");}
+   for(const s of d.students){const months=[...new Set(d.payments.filter(p=>p.studentId===s.id).map(p=>p.month))].sort();for(const m of months){const accrued=Number(s.opening||0)+Number(s.fee)*monthsBetween(s.start,m);const paid=d.payments.filter(p=>p.studentId===s.id&&p.month<=m).reduce((sum,p)=>sum+Number(p.amount),0);if(paid>accrued)throw Error("overpaid");}}
    if(!confirm("বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?"))return;
    data=d;save();alert("ব্যাকআপ রিস্টোর হয়েছে।");
   }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
