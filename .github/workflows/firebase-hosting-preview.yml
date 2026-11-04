@@ -1,0 +1,27 @@
+name: Deploy Tutor Hisab Preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/audit-and-data-integrity
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Deploy preview only (never live)
+        id: deploy
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TUTOR_HISAB }}
+          projectId: tutor-hisab
+          channelId: tutor-hisab-test
+          expires: 7d
+
+      - name: Show preview URL
+        run: echo "Preview URL: ${{ steps.deploy.outputs.details_url }}"
