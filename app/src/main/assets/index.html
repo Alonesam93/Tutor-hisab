@@ -39,6 +39,16 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div class="stat">মাসিক নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
 <div class="card">
+<h3>🔐 শিক্ষক অ্যাকাউন্ট</h3>
+<div id="authStatus" class="notice">Firebase সংযোগ প্রস্তুত করা হচ্ছে...</div>
+<input id="authEmail" type="email" placeholder="ইমেইল ঠিকানা" autocomplete="email">
+<input id="authPassword" type="password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" autocomplete="current-password">
+<button onclick="createTeacherAccount()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+<button class="secondary" onclick="signInTeacher()">লগইন করুন</button>
+<button class="secondary" id="signOutBtn" style="display:none" onclick="signOutTeacher()">লগআউট</button>
+<div class="small">প্রথম ধাপে ইমেইল অ্যাকাউন্ট যাচাই করা হচ্ছে। ক্লাউডে তথ্য সিঙ্ক চালু করার আগে নিরাপত্তা নিয়ম পরীক্ষা করা হবে।</div>
+</div>
+<div class="card">
 <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
 <input id="name" placeholder="শিক্ষার্থীর নাম" maxlength="100">
 <input id="className" placeholder="শ্রেণি" maxlength="50">
@@ -79,7 +89,49 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
 </main>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script>
+const FIREBASE_CONFIG = {
+ apiKey: "AIzaSyCafBcI740GbEfMOIbR8dWhNpaypH-Z8Vw",
+ authDomain: "tutor-hisab.firebaseapp.com",
+ projectId: "tutor-hisab",
+ storageBucket: "tutor-hisab.firebasestorage.app",
+ messagingSenderId: "910571768792",
+ appId: "1:910571768792:web:5e01f9a066b3d40ec600ad"
+};
+let firebaseAuth = null;
+try {
+ if (window.firebase && !firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+ if (window.firebase) {
+  firebaseAuth = firebase.auth();
+  firebaseAuth.onAuthStateChanged(user => {
+   $("authStatus").textContent = user ? "লগইন হয়েছে: " + user.email : "এখনো লগইন করা হয়নি।";
+   $("signOutBtn").style.display = user ? "block" : "none";
+  });
+ }
+} catch (e) {
+ console.warn("Firebase initialization failed", e);
+}
+function createTeacherAccount() {
+ if (!firebaseAuth) { alert("ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।"); return; }
+ const email=$("authEmail").value.trim(), password=$("authPassword").value;
+ if(!email || password.length<6){alert("সঠিক ইমেইল এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");return;}
+ firebaseAuth.createUserWithEmailAndPassword(email,password)
+  .then(()=>alert("অ্যাকাউন্ট তৈরি হয়েছে।"))
+  .catch(e=>alert("অ্যাকাউন্ট তৈরি হয়নি: "+e.message));
+}
+function signInTeacher() {
+ if (!firebaseAuth) { alert("ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।"); return; }
+ const email=$("authEmail").value.trim(), password=$("authPassword").value;
+ if(!email || !password){alert("ইমেইল ও পাসওয়ার্ড দিন।");return;}
+ firebaseAuth.signInWithEmailAndPassword(email,password)
+  .then(()=>alert("লগইন সফল হয়েছে।"))
+  .catch(e=>alert("লগইন হয়নি: "+e.message));
+}
+function signOutTeacher() {
+ if(firebaseAuth) firebaseAuth.signOut();
+}
 const STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
 const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
