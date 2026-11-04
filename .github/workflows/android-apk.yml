@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - fix/audit-and-data-integrity
+      - feature/firebase-cloud-sync
 
 jobs:
   build:
