@@ -1,6 +1,7 @@
 name: Deploy Tutor Hisab Preview
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - fix/audit-and-data-integrity
