@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Each signed-in teacher can access only their own profile and records.
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null
+                                  && request.auth.uid == userId;
+      allow delete: if false;
+
+      match /students/{studentId} {
+        allow read, create, update, delete: if request.auth != null
+                                            && request.auth.uid == userId;
+      }
+
+      match /payments/{paymentId} {
+        allow read, create, update, delete: if request.auth != null
+                                            && request.auth.uid == userId;
+      }
+    }
+  }
+}
