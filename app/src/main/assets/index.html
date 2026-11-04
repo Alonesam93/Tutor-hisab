@@ -25,7 +25,7 @@ h3{margin-top:0}
 .small{font-size:13px;color:#60756b}
 .notice{background:#fff4d6;padding:10px;border-radius:8px;margin:8px 0;font-size:14px}
 hr{border:0;border-top:1px solid #eee;margin:12px 0}
-</style>
+body{background:#f5f7fb;color:#172b4d;padding-bottom:82px}header{background:linear-gradient(135deg,#075e48,#0b9b70);text-align:left}main{max-width:760px}.card{border:1px solid #e8edf3;border-radius:18px;box-shadow:0 5px 18px #102a430d}.stat{background:#fff;border:1px solid #e8edf3;border-radius:16px;text-align:left}.stat b{color:#075e48}.bottom-nav{position:fixed;z-index:30;left:0;right:0;bottom:0;display:flex;gap:4px;padding:8px;background:#fff;border-top:1px solid #e7edf0}.bottom-nav button{flex:1;margin:0;background:transparent;color:#718096;box-shadow:none;padding:8px 3px;font-size:12px}.bottom-nav button.active{color:#087f5b;background:#eaf6f0}.ad-banner{margin:12px auto;min-height:52px;border:1px dashed #b9c9c1;border-radius:12px;background:#f8fbf9;color:#819188;display:flex;align-items:center;justify-content:center;font-size:12px}.language-gate{position:fixed;inset:0;z-index:100;background:linear-gradient(145deg,#075e48,#0a9b70);display:flex;align-items:center;justify-content:center;padding:24px}.language-panel{width:100%;max-width:380px;background:white;border-radius:24px;padding:26px;text-align:center}.store-plan{border:1px solid #e3ebe6;border-radius:15px;padding:15px;margin:12px 0;background:white}</style>
 </head>
 <body>
 <header>
@@ -49,7 +49,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div class="small">আপনার অ্যাকাউন্টে প্রবেশ না করা পর্যন্ত শিক্ষার্থী ও পেমেন্টের তথ্য দেখা বা পরিবর্তন করা যাবে না।</div>
 </div>
 <div id="profilePage" class="card hidden">
-<h3>👤 শিক্ষক প্রোফাইল</h3>
+<h3>👤 আমার প্রোফাইল</h3><img id="profileAvatar" alt="প্রোফাইল ছবি" style="width:78px;height:78px;border-radius:50%;object-fit:cover"><label>প্রোফাইল ছবি</label><input id="profilePhotoInput" type="file" accept="image/*"><label>ভাষা</label><select id="profileLanguage" onchange="changeProfileLanguage()"><option value="bn">বাংলা</option><option value="en">English</option></select>
 <div class="notice">আপনি সফলভাবে লগইন করেছেন।</div>
 <label>শিক্ষকের নাম</label>
 <input id="profileName" placeholder="আপনার নাম" maxlength="80">
@@ -57,7 +57,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div id="profileEmail" class="notice"></div>
 <div class="small">অ্যাকাউন্ট আইডি: <span id="profileUid"></span></div>
 <button onclick="saveTeacherProfile()">প্রোফাইল সংরক্ষণ করুন</button>
-<button onclick="openDashboard()">হিসাবের ড্যাশবোর্ড খুলুন</button>
+
 <button class="secondary" onclick="signOutTeacher()">লগআউট</button>
 </div>
 <div id="dashboardPage" class="hidden">
@@ -108,7 +108,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
 </div>
-</main>
+<div id="storePage" class="hidden"><div class="card"><h3>🛍️ Tutor Hisab Store</h3><h4>SMS প্যাকেজ</h4><div class="store-plan"><b>মাসিক SMS</b><p>মূল্য শিগগির জানানো হবে</p><button class="secondary" onclick="storeComingSoon()">শিগগির আসছে</button></div><div class="store-plan"><b>বাৎসরিক SMS</b><p>মূল্য শিগগির জানানো হবে</p><button class="secondary" onclick="storeComingSoon()">শিগগির আসছে</button></div><h4>বিজ্ঞাপন সরান</h4><div class="store-plan"><b>সাপ্তাহিক / মাসিক / বাৎসরিক</b><p>মূল্য শিগগির জানানো হবে</p><button class="secondary" onclick="storeComingSoon()">শিগগির আসছে</button></div></div><div class="ad-banner">ব্যানার বিজ্ঞাপনের স্থান</div></div><nav id="bottomNav" class="bottom-nav hidden"><button id="navHome" class="active" onclick="goHomeTab()">⌂<br>হোম</button><button id="navStore" onclick="goStoreTab()">🛍️<br>স্টোর</button><button id="navProfile" onclick="goProfileTab()">👤<br>আমার প্রোফাইল</button></nav><div id="globalAdBanner" class="ad-banner hidden">ব্যানার বিজ্ঞাপনের স্থান</div><div id="languageGate" class="language-gate"><div class="language-panel"><div style="font-size:40px">📚</div><h2>Tutor Hisab</h2><h3>ভাষা নির্বাচন করুন</h3><button onclick="chooseBangla()">🇧🇩 বাংলা</button><button class="secondary" onclick="chooseEnglish()">🇬🇧 English</button></div></div></main>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -333,6 +333,7 @@ if(firebaseAuth){
   }
  });
 }else $("authStatus").textContent="Firebase SDK লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।";
+function chooseBangla(){saveAppLanguage('bn')}function chooseEnglish(){saveAppLanguage('en')}function saveAppLanguage(v){localStorage.setItem('tutorHisabLanguage',v);document.documentElement.lang=v;$('languageGate').classList.add('hidden');$('profileLanguage').value=v}function changeProfileLanguage(){saveAppLanguage($('profileLanguage').value)}function storeComingSoon(){alert('পেমেন্ট ব্যবস্থা চালু হলে কেনা যাবে।')}function showAppTab(t){$('dashboardPage').classList.toggle('hidden',t!=='home');$('storePage').classList.toggle('hidden',t!=='store');$('profilePage').classList.toggle('hidden',t!=='profile');['Home','Store','Profile'].forEach(x=>{let b=$('nav'+x);if(b)b.classList.toggle('active',t===x.toLowerCase())});window.scrollTo(0,0)}function goHomeTab(){showAppTab('home')}function goStoreTab(){showAppTab('store')}function goProfileTab(){showAppTab('profile')}function saveProfilePhoto(f){if(!f)return;if(f.size>2097152){alert('ছবির সাইজ ২ MB-এর কম রাখুন।');return}let rd=new FileReader();rd.onload=()=>{localStorage.setItem('tutorHisabProfilePhoto',rd.result);$('profileAvatar').src=rd.result};rd.readAsDataURL(f)}$('profilePhotoInput').addEventListener('change',e=>saveProfilePhoto(e.target.files[0]));let p=localStorage.getItem('tutorHisabProfilePhoto');if(p)$('profileAvatar').src=p;let l=localStorage.getItem('tutorHisabLanguage');if(l){$('languageGate').classList.add('hidden');$('profileLanguage').value=l}else $('languageGate').classList.remove('hidden');if(firebaseAuth)firebaseAuth.onAuthStateChanged(u=>{if(u){$('authPage').classList.add('hidden');$('profilePage').classList.add('hidden');$('dashboardPage').classList.remove('hidden');$('storePage').classList.add('hidden');$('bottomNav').classList.remove('hidden');$('globalAdBanner').classList.remove('hidden');showAppTab('home')}else{$('bottomNav').classList.add('hidden');$('globalAdBanner').classList.add('hidden');$('storePage').classList.add('hidden')}});
 </script>
 </body>
 </html>
