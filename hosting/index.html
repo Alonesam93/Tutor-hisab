@@ -90,14 +90,6 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
   <input id="gatePassword" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
   <button onclick="gateEmailSignIn()">ইমেইল দিয়ে লগইন</button>
   <button class="secondary" onclick="gateEmailSignUp()">ইমেইল দিয়ে নতুন অ্যাকাউন্ট</button>
-  <hr>
-  <input id="gatePhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="মোবাইল নম্বর (যেমন 01XXXXXXXXX)">
-  <button class="secondary" onclick="sendGatePhoneCode()">মোবাইলে OTP পাঠান</button>
-  <div id="phone-recaptcha"></div>
-  <div id="phoneOtpArea" hidden>
-   <input id="gateOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="SMS-এ পাওয়া ৬ সংখ্যার কোড">
-   <button onclick="verifyGatePhoneCode()">OTP যাচাই করে প্রবেশ করুন</button>
-  </div>
   <div id="gateStatus" class="auth-hint" aria-live="polite"></div>
   <button class="secondary" onclick="continueOffline()">অফলাইনে ব্যবহার করুন</button>
   <div class="gate-links"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="mailto:tutorhisab.support@gmail.com">Contact</a></div>
@@ -204,7 +196,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <script>
 let STORAGE_KEY="tutorHisabData";
 let currentLanguage=localStorage.getItem("tutorHisabLanguage")||"bn";
-let onboardingLanguage=null,onboardingNotification=null,phoneConfirmation=null,phoneVerifier=null;
+let onboardingLanguage=null,onboardingNotification=null;
 let offlineMode=localStorage.getItem("tutorHisabOfflineMode")==="true";
 const $=id=>document.getElementById(id);
 const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
@@ -363,15 +355,6 @@ async function setNotificationsFromSettings(value){
 function updateNotificationStatus(){const enabled=localStorage.getItem("tutorHisabNotifications")==="on";const el=$("notificationStatusText");if(el)el.textContent=currentLanguage==="en"?(enabled?"Notifications: On":"Notifications: Off"):(enabled?"নোটিফিকেশন পছন্দ: চালু":"নোটিফিকেশন পছন্দ: বন্ধ");}
 function gateEmailSignIn(){$("authEmail").value=$("gateEmail").value;$("authPassword").value=$("gatePassword").value;emailSignIn();}
 function gateEmailSignUp(){$("authEmail").value=$("gateEmail").value;$("authPassword").value=$("gatePassword").value;emailSignUp();}
-function normalizeBangladeshPhone(value){let d=String(value||"").replace(/[^0-9]/g,"");if(d.startsWith("00880"))d=d.slice(2);if(d.startsWith("880"))return "+"+d;if(d.startsWith("0"))return "+88"+d;if(d.length===10)return "+880"+d;return "";}
-async function sendGatePhoneCode(){
- if(!auth){$("gateStatus").textContent="Firebase সংযোগ পাওয়া যায়নি।";return;}
- const phone=normalizeBangladeshPhone($("gatePhone").value);
- if(!/^\+8801[3-9]\d{8}$/.test(phone)){alert("সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন।");return;}
- try{if(!phoneVerifier)phoneVerifier=new firebase.auth.RecaptchaVerifier("phone-recaptcha",{size:"invisible"});phoneConfirmation=await auth.signInWithPhoneNumber(phone,phoneVerifier);$("phoneOtpArea").hidden=false;$("gateStatus").textContent="SMS-এ OTP পাঠানো হয়েছে।";}
- catch(e){$("gateStatus").textContent="OTP পাঠানো যায়নি: "+e.message;if(phoneVerifier){try{phoneVerifier.clear();}catch(ignore){}phoneVerifier=null;}}
-}
-async function verifyGatePhoneCode(){const code=$("gateOtp").value.trim();if(!phoneConfirmation||!/^\d{6}$/.test(code)){alert("SMS-এ পাওয়া ৬ সংখ্যার OTP লিখুন।");return;}try{await phoneConfirmation.confirm(code);phoneConfirmation=null;$("gateStatus").textContent="লগইন সফল।";}catch(e){$("gateStatus").textContent="OTP সঠিক নয় বা মেয়াদ শেষ হয়েছে: "+e.message;}}
 function cloudMessage(message){const el=$("cloudStatus");if(el)el.textContent=message;}
 function authMessage(message){const el=$("authStatus");if(el)el.textContent=message;}
 function hasRecords(d){return !!(d&&(d.students?.length||d.payments?.length));}
