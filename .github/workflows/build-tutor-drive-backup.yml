@@ -1,0 +1,38 @@
+name: Build TutorDriveBackup Extension
+
+on:
+  push:
+    branches:
+      - feature/manual-drive-backup
+    paths:
+      - extensions/tutor-drive-backup/**
+      - .github/workflows/build-tutor-drive-backup.yml
+  pull_request:
+    paths:
+      - extensions/tutor-drive-backup/**
+      - .github/workflows/build-tutor-drive-backup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rush 2 and JDK
+        uses: shreyashsaitwal/rush-cli@v2
+
+      - name: Build AIX
+        working-directory: extensions/tutor-drive-backup
+        run: rush build
+
+      - name: Upload AIX and documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: TutorDriveBackup-AIX
+          path: extensions/tutor-drive-backup/out/
+          if-no-files-found: error
