@@ -1,0 +1,31 @@
+name: Temporary TextDocSaf reference inspection
+
+on:
+  push:
+    branches:
+      - feature/manual-drive-backup
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download public TextDocSaf example
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/TIMAI2/SimpleSaf/main/aia/textdocsaf.aia" -o /tmp/textdocsaf.aia
+          echo "===== SAMPLE AIA FILE LIST ====="
+          unzip -l /tmp/textdocsaf.aia
+          mkdir -p /tmp/sample
+          unzip -q /tmp/textdocsaf.aia -d /tmp/sample
+          echo "===== COMPONENT DESIGN ====="
+          find /tmp/sample/src -name '*.scm' -maxdepth 8 -type f -print -exec cat {} \;
+          echo "===== BLOCKS ====="
+          find /tmp/sample/src -name '*.bky' -maxdepth 8 -type f -print -exec cat {} \;
+          echo "===== PROJECT SETTINGS ====="
+          cat /tmp/sample/youngandroidproject/project.properties
+          echo "===== EXTENSION FILES ====="
+          find /tmp/sample -type f | grep -E '\.(aix|jar)$' || true
