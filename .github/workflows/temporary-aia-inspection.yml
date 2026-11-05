@@ -1,0 +1,36 @@
+name: Temporary AIA inspection
+
+on:
+  push:
+    branches:
+      - feature/manual-drive-backup
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out backup branch
+        uses: actions/checkout@v4
+      - name: Read App Inventor project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARCHIVE="TutorHisab_AppInventor_v1_2.aia.zip"
+          test -f "$ARCHIVE"
+          echo "===== PROJECT FILE LIST ====="
+          unzip -l "$ARCHIVE"
+          for FILE in \
+            "README_IMPORT_BN.txt" \
+            "src/appinventor/ai_ubamongmarma/TutorHisab_AppInventor_v1_2/Screen1.scm" \
+            "src/appinventor/ai_ubamongmarma/TutorHisab_AppInventor_v1_2/Screen1.bky" \
+            "youngandroidproject/project.properties" \
+            "assets/Tutor_Hisab_v1.html"
+          do
+            echo "===== BEGIN $FILE ====="
+            unzip -p "$ARCHIVE" "$FILE" || true
+            echo
+            echo "===== END $FILE ====="
+          done
