@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/audit-and-data-integrity
+      - feature/onboarding-navigation-ui
 
 jobs:
   preview:
