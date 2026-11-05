@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/audit-and-data-integrity
+      - fix/safe-cloud-sync
 
 jobs:
   preview:
