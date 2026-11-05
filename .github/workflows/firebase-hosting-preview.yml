@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - fix/audit-and-data-integrity
+      - fix/safe-cloud-sync
+  pull_request:
+    branches:
+      - feature/onboarding-navigation-ui
+      - fix/audit-and-data-integrity
 
 jobs:
   preview:

@@ -377,22 +377,58 @@ async function emailSignOut(){if(auth&&currentUser){await auth.signOut();}}
 async function readCloudData(uid){
  const base=db.collection("users").doc(uid);
  const [ss,ps]=await Promise.all([base.collection("students").get(),base.collection("payments").get()]);
- return {students:ss.docs.map(x=>({id:x.id,...x.data()})),payments:ps.docs.map(x=>({id:x.id,...x.data()}))};
+ return {students:ss.docs.map(x=>({...x.data(),id:x.id})),payments:ps.docs.map(x=>({...x.data(),id:x.id}))};
 }
+function stableCloudValue(value){
+ if(Array.isArray(value))return value.map(stableCloudValue);
+ if(value&&typeof value==="object"){
+  const out={};
+  Object.keys(value).sort().forEach(k=>{out[k]=stableCloudValue(value[k]);});
+  return out;
+ }
+ return value;
+}
+function sameCloudRecord(a,b){
+ return JSON.stringify(stableCloudValue(a))===JSON.stringify(stableCloudValue(b));
+}
+// Safe merge: add missing records only. Never delete Cloud records or silently
+// overwrite a record whose same ID has different content.
 async function writeCloudData(uid,d){
  const base=db.collection("users").doc(uid);
- const oldS=await base.collection("students").get(),oldP=await base.collection("payments").get();
+ const cloud=await readCloudData(uid);
+ const conflicts=[];
+ for(const kind of ["students","payments"]){
+  const cloudById=new Map(cloud[kind].map(x=>[String(x.id),x]));
+  for(const item of d[kind]){
+   const existing=cloudById.get(String(item.id));
+   if(existing&&!sameCloudRecord(item,existing)){
+    conflicts.push((kind==="students"?"শিক্ষার্থী ":"পেমেন্ট ")+String(item.id));
+   }
+  }
+ }
+ if(conflicts.length){
+  const preview=conflicts.slice(0,3).join(", ")+(conflicts.length>3?"সহ আরও "+(conflicts.length-3)+"টি":"");
+  const error=new Error("একই রেকর্ডের স্থানীয় ও Cloud তথ্যে অমিল পাওয়া গেছে ("+preview+")। কোনো তথ্য পরিবর্তন করা হয়নি। আগে ব্যাকআপ নিন, তারপর দুই জায়গার তথ্য মিলিয়ে নিন।");
+  error.code="TUTOR_HISAB_SYNC_CONFLICT";
+  throw error;
+ }
  const ops=[];
- oldS.docs.forEach(x=>ops.push({ref:x.ref,del:true}));
- oldP.docs.forEach(x=>ops.push({ref:x.ref,del:true}));
- d.students.forEach(x=>ops.push({ref:base.collection("students").doc(String(x.id)),data:x}));
- d.payments.forEach(x=>ops.push({ref:base.collection("payments").doc(String(x.id)),data:x}));
+ for(const kind of ["students","payments"]){
+  const collection=base.collection(kind);
+  const cloudIds=new Set(cloud[kind].map(x=>String(x.id)));
+  for(const item of d[kind]){
+   if(!cloudIds.has(String(item.id))){
+    ops.push({ref:collection.doc(String(item.id)),data:item});
+   }
+  }
+ }
  for(let i=0;i<ops.length;i+=400){
   const batch=db.batch();
-  ops.slice(i,i+400).forEach(op=>op.del?batch.delete(op.ref):batch.set(op.ref,op.data));
+  ops.slice(i,i+400).forEach(op=>batch.set(op.ref,op.data));
   await batch.commit();
  }
  await base.set({email:currentUser.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+ return {added:ops.length};
 }
 async function syncCloud(){
  if(!currentUser||!db){alert("Cloud Sync করতে আগে ইমেইল দিয়ে লগইন করুন।");return;}
@@ -401,19 +437,36 @@ async function syncCloud(){
   const cloud=await readCloudData(currentUser.uid),local=JSON.parse(JSON.stringify(data));
   const localHas=hasRecords(local),cloudHas=hasRecords(cloud);
   if(localHas&&cloudHas){
-   const upload=confirm("এই ডিভাইসের তথ্য ও Cloud—দুই জায়গাতেই তথ্য আছে। OK চাপলে এই ডিভাইসের তথ্য Cloud-এ যাবে এবং Cloud-এর আগের তালিকা প্রতিস্থাপিত হবে। Cancel চাপলে Cloud-এর তথ্য এই ডিভাইসে আসবে।");
-   if(upload){await writeCloudData(currentUser.uid,local);cloudMessage("এই ডিভাইসের তথ্য Cloud-এ সংরক্ষণ হয়েছে।");}
-   else{data=cloud;save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে আনা হয়েছে।");}
-  }else if(localHas){await writeCloudData(currentUser.uid,local);cloudMessage("ডিভাইসের তথ্য Cloud-এ সংরক্ষণ হয়েছে।");}
-  else if(cloudHas){
-   if(confirm("এই ডিভাইসে কোনো তথ্য নেই, কিন্তু Cloud-এ তথ্য আছে। OK চাপলে Cloud-এর তথ্য এই ডিভাইসে আসবে।")){
+   const result=await writeCloudData(currentUser.uid,local);
+   // Pull Cloud-only records after the safe add-only push so both sides converge.
+   const mergedCloud=await readCloudData(currentUser.uid);
+   const studentIds=new Set(data.students.map(s=>String(s.id)));
+   const paymentIds=new Set(data.payments.map(p=>String(p.id)));
+   data.students.push(...mergedCloud.students.filter(s=>!studentIds.has(String(s.id))));
+   data.payments.push(...mergedCloud.payments.filter(p=>!paymentIds.has(String(p.id))));
+   save();
+   cloudMessage("নিরাপদ দ্বিমুখী Cloud Sync সম্পন্ন। নতুন Cloud রেকর্ড যোগ হয়েছে: "+result.added+"। Cloud-এর পুরোনো বা অতিরিক্ত রেকর্ড মুছে ফেলা হয়নি; দুই পাশের নতুন রেকর্ড একত্র করা হয়েছে।");
+  }else if(localHas){
+   const result=await writeCloudData(currentUser.uid,local);
+   const mergedCloud=await readCloudData(currentUser.uid);
+   const studentIds=new Set(data.students.map(s=>String(s.id)));
+   const paymentIds=new Set(data.payments.map(p=>String(p.id)));
+   data.students.push(...mergedCloud.students.filter(s=>!studentIds.has(String(s.id))));
+   data.payments.push(...mergedCloud.payments.filter(p=>!paymentIds.has(String(p.id))));
+   save();
+   cloudMessage("ডিভাইস ও Cloud-এর তথ্য নিরাপদে একত্র হয়েছে। নতুন Cloud রেকর্ড: "+result.added+"। কোনো Cloud রেকর্ড মুছে ফেলা হয়নি।");
+  }else if(cloudHas){
+   if(confirm("এই ডিভাইসে কোনো শিক্ষার্থী বা পেমেন্ট নেই, কিন্তু Cloud-এ তথ্য আছে। OK চাপলে Cloud-এর তথ্য এই ডিভাইসে আনা হবে।")){
     data=cloud;save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে আনা হয়েছে।");
-   }else if(confirm("সতর্কতা: এই ডিভাইসে কোনো তথ্য নেই। Cloud-এর সব শিক্ষার্থী ও পেমেন্ট স্থায়ীভাবে মুছে ফেলবেন?")){
-    await writeCloudData(currentUser.uid,{students:[],payments:[]});cloudMessage("Cloud-এর সব শিক্ষার্থী ও পেমেন্ট মুছে ফেলা হয়েছে।");
-   }else{cloudMessage("Cloud Sync বাতিল করা হয়েছে।");}
+   }else{cloudMessage("Cloud থেকে তথ্য আনা বাতিল করা হয়েছে।");}
+  }else{
+   cloudMessage("এখনো কোনো শিক্ষার্থী বা পেমেন্টের তথ্য নেই।");
   }
-  else{cloudMessage("এখনো কোনো শিক্ষার্থী বা পেমেন্টের তথ্য নেই।");}
- }catch(e){console.error(e);cloudMessage("Cloud Sync হয়নি: "+e.message);}
+ }catch(e){
+  console.error(e);
+  cloudMessage("Cloud Sync হয়নি: "+e.message);
+  if(e.code==="TUTOR_HISAB_SYNC_CONFLICT")alert(e.message);
+ }
 }
 function shareApp(){
  const url=(location.protocol==="file:")?"https://tutor-hisab.web.app/":location.href;
