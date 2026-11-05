@@ -438,10 +438,23 @@ async function syncCloud(){
   const localHas=hasRecords(local),cloudHas=hasRecords(cloud);
   if(localHas&&cloudHas){
    const result=await writeCloudData(currentUser.uid,local);
-   cloudMessage("নিরাপদ Cloud Sync সম্পন্ন। নতুন রেকর্ড যোগ হয়েছে: "+result.added+"। Cloud-এর পুরোনো বা অতিরিক্ত রেকর্ড মুছে ফেলা হয়নি।");
+   // Pull Cloud-only records after the safe add-only push so both sides converge.
+   const mergedCloud=await readCloudData(currentUser.uid);
+   const studentIds=new Set(data.students.map(s=>String(s.id)));
+   const paymentIds=new Set(data.payments.map(p=>String(p.id)));
+   data.students.push(...mergedCloud.students.filter(s=>!studentIds.has(String(s.id))));
+   data.payments.push(...mergedCloud.payments.filter(p=>!paymentIds.has(String(p.id))));
+   save();
+   cloudMessage("নিরাপদ দ্বিমুখী Cloud Sync সম্পন্ন। নতুন Cloud রেকর্ড যোগ হয়েছে: "+result.added+"। Cloud-এর পুরোনো বা অতিরিক্ত রেকর্ড মুছে ফেলা হয়নি; দুই পাশের নতুন রেকর্ড একত্র করা হয়েছে।");
   }else if(localHas){
    const result=await writeCloudData(currentUser.uid,local);
-   cloudMessage("ডিভাইসের তথ্য Cloud-এ নিরাপদে সংরক্ষণ হয়েছে। নতুন রেকর্ড: "+result.added+"।");
+   const mergedCloud=await readCloudData(currentUser.uid);
+   const studentIds=new Set(data.students.map(s=>String(s.id)));
+   const paymentIds=new Set(data.payments.map(p=>String(p.id)));
+   data.students.push(...mergedCloud.students.filter(s=>!studentIds.has(String(s.id))));
+   data.payments.push(...mergedCloud.payments.filter(p=>!paymentIds.has(String(p.id))));
+   save();
+   cloudMessage("ডিভাইস ও Cloud-এর তথ্য নিরাপদে একত্র হয়েছে। নতুন Cloud রেকর্ড: "+result.added+"। কোনো Cloud রেকর্ড মুছে ফেলা হয়নি।");
   }else if(cloudHas){
    if(confirm("এই ডিভাইসে কোনো শিক্ষার্থী বা পেমেন্ট নেই, কিন্তু Cloud-এ তথ্য আছে। OK চাপলে Cloud-এর তথ্য এই ডিভাইসে আনা হবে।")){
     data=cloud;save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে আনা হয়েছে।");
