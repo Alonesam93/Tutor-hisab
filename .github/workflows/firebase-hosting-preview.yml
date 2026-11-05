@@ -1,31 +1,16 @@
 name: Deploy Tutor Hisab Preview
 
 on:
-  workflow_dispatch:
-    inputs:
-      source_branch:
-        description: "Branch to deploy to the preview channel"
-        required: true
-        default: "fix/audit-and-data-integrity"
-        type: string
   push:
     branches:
       - fix/audit-and-data-integrity
-      - feature/onboarding-navigation-ui
-
-permissions:
-  contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
   preview:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out selected source branch
+      - name: Check out source
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.source_branch || github.ref }}
 
       - name: Deploy preview only (never live)
         id: deploy
@@ -38,7 +23,4 @@ jobs:
           expires: 7d
 
       - name: Show preview URL
-        env:
-          PREVIEW_URL: ${{ steps.deploy.outputs.details_url }}
-        run: |
-          echo "Preview URL: $PREVIEW_URL"
+        run: echo "Preview URL: ${{ steps.deploy.outputs.details_url }}"
