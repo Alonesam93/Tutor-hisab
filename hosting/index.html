@@ -24,6 +24,28 @@ h3{margin-top:0}
 .small{font-size:13px;color:#60756b}
 .notice{background:#fff4d6;padding:10px;border-radius:8px;margin:8px 0;font-size:14px}
 hr{border:0;border-top:1px solid #eee;margin:12px 0}
+[hidden]{display:none!important}
+#welcomeScreen,#authGate{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:#edf5f0;overflow:auto}
+.welcome-card,.auth-card{width:100%;max-width:460px;background:#fff;padding:22px;border-radius:18px;box-shadow:0 8px 30px #1232}
+.welcome-card h2,.auth-card h2{margin:0 0 8px;color:#087f5b;text-align:center}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.choice-button{min-height:64px;background:#e5f4ec;color:#14583f;border:2px solid #b8dfc9}
+.choice-button.selected{border-color:#087f5b;background:#d2efdf}
+.welcome-note{text-align:center;color:#60756b;font-size:13px}
+#appMain{padding-bottom:86px}
+#bottomNav{position:fixed;z-index:900;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dce5df;display:flex;justify-content:space-around;padding:7px 3px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -3px 12px #0001}
+#bottomNav button{width:20%;margin:0;padding:8px 2px;background:transparent;color:#52665d;font-size:11px;border-radius:8px}
+#bottomNav button.active{background:#e4f5ed;color:#087f5b}
+#bottomNav button span{display:block;font-size:19px;margin-bottom:3px}
+.tab-panel{display:none}
+.store-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.store-item{border:1px solid #dce5df;border-radius:12px;padding:14px}
+.store-item h4{margin:0 0 6px;color:#087f5b}
+.store-item .price{font-weight:bold;margin:8px 0}
+.store-item button{background:#87978f}
+.gate-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:13px;margin-top:14px}
+.gate-links a{color:#087f5b}
+.auth-hint{font-size:13px;color:#60756b;text-align:center;margin:8px 0}
 .legal-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:8px 0 18px;font-size:14px}.legal-links a{color:#087f5b;font-weight:bold}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -35,8 +57,54 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <h2>📚 Tutor Hisab</h2>
 আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব
 </header>
-<main>
-<div class="card" id="accountCard">
+<div id="welcomeScreen">
+ <div class="welcome-card">
+  <h2>📚 Tutor Hisab</h2>
+  <p class="welcome-note" id="welcomeIntro">শুরু করার আগে আপনার পছন্দ নির্বাচন করুন</p>
+  <section id="languageStep">
+   <h3 style="text-align:center">ভাষা নির্বাচন করুন / Choose language</h3>
+   <div class="choice-grid">
+    <button class="choice-button" id="chooseBangla" onclick="chooseWelcomeLanguage('bn')">🇧🇩 বাংলা</button>
+    <button class="choice-button" id="chooseEnglish" onclick="chooseWelcomeLanguage('en')">🇬🇧 English</button>
+   </div>
+   <button id="languageNextBtn" onclick="goToNotificationStep()" disabled>পরবর্তী ধাপ</button>
+  </section>
+  <section id="notificationStep" hidden>
+   <h3 id="notificationTitle" style="text-align:center">নোটিফিকেশন চালু রাখতে চান?</h3>
+   <p class="welcome-note" id="notificationHelp">আপনি চাইলে পরে Settings থেকে পরিবর্তন করতে পারবেন।</p>
+   <div class="choice-grid">
+    <button class="choice-button" id="notifyOn" onclick="chooseNotifications('on')">🔔 চালু</button>
+    <button class="choice-button" id="notifyOff" onclick="chooseNotifications('off')">🔕 বন্ধ</button>
+   </div>
+   <button id="finishWelcomeBtn" onclick="finishOnboarding()" disabled>শুরু করুন</button>
+   <button class="secondary" onclick="backToLanguageStep()">পেছনে যান</button>
+  </section>
+ </div>
+</div>
+<div id="authGate" hidden>
+ <div class="auth-card">
+  <h2>📚 Tutor Hisab</h2>
+  <h3 id="gateTitle" style="text-align:center">লগইন অথবা নতুন অ্যাকাউন্ট তৈরি করুন</h3>
+  <p class="auth-hint" id="gateHint">ইমেইল অথবা মোবাইল নম্বর দিয়ে প্রবেশ করুন।</p>
+  <input id="gateEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল">
+  <input id="gatePassword" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
+  <button onclick="gateEmailSignIn()">ইমেইল দিয়ে লগইন</button>
+  <button class="secondary" onclick="gateEmailSignUp()">ইমেইল দিয়ে নতুন অ্যাকাউন্ট</button>
+  <hr>
+  <input id="gatePhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="মোবাইল নম্বর (যেমন 01XXXXXXXXX)">
+  <button class="secondary" onclick="sendGatePhoneCode()">মোবাইলে OTP পাঠান</button>
+  <div id="phone-recaptcha"></div>
+  <div id="phoneOtpArea" hidden>
+   <input id="gateOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="SMS-এ পাওয়া ৬ সংখ্যার কোড">
+   <button onclick="verifyGatePhoneCode()">OTP যাচাই করে প্রবেশ করুন</button>
+  </div>
+  <div id="gateStatus" class="auth-hint" aria-live="polite"></div>
+  <button class="secondary" onclick="continueOffline()">অফলাইনে ব্যবহার করুন</button>
+  <div class="gate-links"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="mailto:tutorhisab.support@gmail.com">Contact</a></div>
+ </div>
+</div>
+<main id="appMain">
+<div class="card" id="accountCard" data-tab-section="profile">
 <h3>👤 ইমেইল অ্যাকাউন্ট ও Cloud Sync</h3>
 <div id="authStatus" class="small">অ্যাকাউন্টে প্রবেশ না করেও স্থানীয়ভাবে অ্যাপ ব্যবহার করতে পারবেন। ক্লাউডে তথ্য রাখতে ইমেইল দিয়ে লগইন করুন।</div>
 <input id="authEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল">
@@ -47,20 +115,20 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <button onclick="syncCloud()">এখনই Cloud Sync করুন</button>
 <div id="cloudStatus" class="small">Cloud Sync করতে ইন্টারনেট ও ইমেইল অ্যাকাউন্ট প্রয়োজন।</div>
 </div>
-<div class="card">
+<div class="card" data-tab-section="profile">
 <h3>📲 শেয়ার ও যোগাযোগ</h3>
 <button onclick="shareApp()">Share App</button>
 <button class="secondary" onclick="rateUs()">Rate Us</button>
 <button class="secondary" onclick="sendFeedback()">Feedback পাঠান</button>
 <div class="legal-links"><a href="privacy.html">গোপনীয়তা নীতি</a><a href="terms.html">ব্যবহারের শর্তাবলি</a><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></div>
 </div>
-<div class="card stats">
+<div class="card stats" data-tab-section="home">
 <div class="stat">মোট শিক্ষার্থী<b id="count">০</b></div>
 <div class="stat">মোট জমা<b id="paid">৳০</b></div>
 <div class="stat">মোট বকেয়া<b id="due">৳০</b></div>
 <div class="stat">মাসিক নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
-<div class="card">
+<div class="card" data-tab-section="home">
 <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
 <input id="name" placeholder="শিক্ষার্থীর নাম" maxlength="100">
 <input id="className" placeholder="শ্রেণি" maxlength="50">
@@ -72,7 +140,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <button id="studentSaveBtn" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
 <button id="studentCancelBtn" class="secondary" style="display:none" onclick="cancelStudentEdit()">সম্পাদনা বাতিল করুন</button>
 </div>
-<div class="card">
+<div class="card" data-tab-section="home">
 <h3>💰 বেতন জমা করুন</h3>
 <select id="payStudent"><option value="">শিক্ষার্থী নির্বাচন করুন</option></select>
 <input id="payAmount" type="number" min="0.01" step="0.01" placeholder="জমার পরিমাণ">
@@ -83,27 +151,61 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div class="notice">একাধিক মাসের বকেয়া থাকলে নির্বাচিত মাস পর্যন্ত মোট বকেয়ার মধ্যে জমা নেওয়া হবে।</div>
 <button onclick="addPayment()">জমা সংরক্ষণ করুন</button>
 </div>
-<div class="card">
+<div class="card" data-tab-section="home">
 <h3>👨‍🎓 শিক্ষার্থীদের তালিকা</h3>
 <div id="students">এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।</div>
 </div>
-<div class="card">
+<div class="card" data-tab-section="home">
 <h3>📊 মাসিক রিপোর্ট</h3>
 <input id="reportMonth" type="month">
 <button onclick="report()">রিপোর্ট দেখুন</button>
 <div id="reportResult"></div>
 </div>
-<div class="card">
+<div class="card" data-tab-section="settings">
 <h3>💾 ব্যাকআপ ও রিস্টোর</h3>
 <button onclick="backup()">ব্যাকআপ ডাউনলোড করুন</button>
 <label>ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন</label>
 <input type="file" id="restoreFile" accept=".json,application/json">
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
+<div class="card tab-panel" id="storePanel" data-tab-section="store">
+ <h3>🛍️ Tutor Hisab Store</h3>
+ <p class="small">মূল শিক্ষার্থী ও বেতনের হিসাব বিনামূল্যে থাকবে। অতিরিক্ত সুবিধা ঐচ্ছিকভাবে নেওয়া যাবে।</p>
+ <div class="store-grid">
+  <div class="store-item"><h4>📩 SMS প্যাকেজ</h4><p>প্রতি SMS হিসেবে অথবা মাসিক প্যাকেজ বেছে নিতে পারবেন। মূল্য ও শর্ত আগে দেখানো হবে।</p><div class="price">মূল্য পরে ঘোষণা করা হবে</div><button disabled>শিগগির আসছে</button></div>
+  <div class="store-item"><h4>⭐ VIP</h4><p>শুরুর পর্যায়ের অতিরিক্ত সুবিধা ও উন্নত ব্যবহার অভিজ্ঞতা।</p><div class="price">মাসিক/বার্ষিক মূল্য পরে ঘোষণা</div><button disabled>শিগগির আসছে</button></div>
+  <div class="store-item"><h4>🚀 Pro</h4><p>VIP-এর সুবিধাসহ আরও উন্নত রিপোর্ট ও ব্যবস্থাপনা সুবিধা।</p><div class="price">মাসিক/বার্ষিক মূল্য পরে ঘোষণা</div><button disabled>শিগগির আসছে</button></div>
+  <div class="store-item"><h4>👑 Elite</h4><p>Pro-এর সব সুবিধাসহ সর্বোচ্চ স্তরের অতিরিক্ত সুবিধা।</p><div class="price">মাসিক/বার্ষিক মূল্য পরে ঘোষণা</div><button disabled>শিগগির আসছে</button></div>
+ </div>
+</div>
+<div class="card tab-panel" id="notificationsPanel" data-tab-section="notifications">
+ <h3>🔔 Notifications</h3><p id="notificationStatusText">নোটিফিকেশন পছন্দ: বন্ধ</p>
+ <p class="small">ব্রাউজার বা ডিভাইসের অনুমতি থাকলে নোটিফিকেশন দেখানো যাবে।</p>
+ <button onclick="setNotificationsFromSettings('on')">নোটিফিকেশন চালু করুন</button>
+ <button class="secondary" onclick="setNotificationsFromSettings('off')">নোটিফিকেশন বন্ধ করুন</button>
+</div>
+<div class="card tab-panel" id="settingsPanel" data-tab-section="settings">
+ <h3>⚙️ Settings</h3><p>ভাষা পরিবর্তন করুন</p>
+ <div class="choice-grid"><button class="choice-button" onclick="changeLanguage('bn')">🇧🇩 বাংলা</button><button class="choice-button" onclick="changeLanguage('en')">🇬🇧 English</button></div>
+ <p>নোটিফিকেশন পছন্দ</p>
+ <button onclick="setNotificationsFromSettings('on')">🔔 চালু</button><button class="secondary" onclick="setNotificationsFromSettings('off')">🔕 বন্ধ</button>
+ <button class="secondary" onclick="openAccountGate()">অ্যাকাউন্টে লগইন / অ্যাকাউন্ট পরিবর্তন</button>
+ <button class="secondary" onclick="emailSignOut()">লগআউট</button>
+</div>
 </main>
+<nav id="bottomNav" aria-label="Main navigation">
+ <button class="active" data-tab="home" onclick="showTab('home')"><span>🏠</span>Home</button>
+ <button data-tab="store" onclick="showTab('store')"><span>🛍️</span>Store</button>
+ <button data-tab="profile" onclick="showTab('profile')"><span>👤</span>My Profile</button>
+ <button data-tab="notifications" onclick="showTab('notifications')"><span>🔔</span>Notifications</button>
+ <button data-tab="settings" onclick="showTab('settings')"><span>⚙️</span>Settings</button>
+</nav>
 <footer class="legal-links"><a href="privacy.html">গোপনীয়তা নীতি</a><a href="terms.html">ব্যবহারের শর্তাবলি</a><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></footer>
 <script>
 let STORAGE_KEY="tutorHisabData";
+let currentLanguage=localStorage.getItem("tutorHisabLanguage")||"bn";
+let onboardingLanguage=null,onboardingNotification=null,phoneConfirmation=null,phoneVerifier=null;
+let offlineMode=localStorage.getItem("tutorHisabOfflineMode")==="true";
 const $=id=>document.getElementById(id);
 const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
 const today=new Date();
@@ -170,6 +272,7 @@ function render(){
  <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div><div class="small">হিসাব শুরুর মাস: ${esc(s.start)} | আগের বকেয়া: ${money(s.opening)}</div>
  <button class="secondary" data-edit-id="${esc(s.id)}">সম্পাদনা</button><button class="danger" data-remove-id="${esc(s.id)}">শিক্ষার্থী মুছুন</button></div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
  $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+ translateUi(currentLanguage);
 }
 $("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data-edit-id]");if(editBtn){editStudent(editBtn.dataset.editId);return;}const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
 function report(){
@@ -209,6 +312,66 @@ let auth=null,db=null,currentUser=null;
 try{
  if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}
 }catch(e){console.error("Firebase init:",e);}
+function translateUi(lang=currentLanguage){
+ currentLanguage=lang;document.documentElement.lang=lang==="bn"?"bn":"en";
+ const bnToEn={
+ "আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব":"Manage your students and monthly tuition fees",
+ "👤 ইমেইল অ্যাকাউন্ট ও Cloud Sync":"👤 Email Account & Cloud Sync",
+ "ইমেইল দিয়ে লগইন":"Sign in with Email","নতুন অ্যাকাউন্ট তৈরি":"Create Account","লগআউট":"Sign Out","এখনই Cloud Sync করুন":"Sync to Cloud Now",
+ "📲 শেয়ার ও যোগাযোগ":"📲 Share & Contact","Feedback পাঠান":"Send Feedback","গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact",
+ "মোট শিক্ষার্থী":"Total Students","মোট জমা":"Total Paid","মোট বকেয়া":"Total Due","মাসিক নির্ধারিত বেতন":"Monthly Fees",
+ "➕ নতুন শিক্ষার্থী যোগ করুন":"➕ Add New Student","শিক্ষার্থীর নাম":"Student Name","শ্রেণি":"Class","মোবাইল নম্বর":"Mobile Number","মাসিক বেতন":"Monthly Fee","বেতন গণনা শুরুর মাস":"Fee Start Month","আগের বকেয়া (টাকা)":"Previous Due (BDT)",
+ "শিক্ষার্থী সংরক্ষণ করুন":"Save Student","সম্পাদনা বাতিল করুন":"Cancel Edit","💰 বেতন জমা করুন":"💰 Record Payment","শিক্ষার্থী নির্বাচন করুন":"Select Student","জমার পরিমাণ":"Payment Amount","কোন মাসের বেতন":"Fee Month","জমার তারিখ":"Payment Date","জমা সংরক্ষণ করুন":"Save Payment",
+ "👨‍🎓 শিক্ষার্থীদের তালিকা":"👨‍🎓 Student List","এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।":"No students added yet.","📊 মাসিক রিপোর্ট":"📊 Monthly Report","রিপোর্ট দেখুন":"View Report","💾 ব্যাকআপ ও রিস্টোর":"💾 Backup & Restore","ব্যাকআপ ডাউনলোড করুন":"Download Backup","ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন":"Restore data from backup file","ব্যাকআপ রিস্টোর করুন":"Restore Backup",
+ "শিক্ষার্থীর তথ্য সম্পাদনা করুন":"Edit Student Details","পরিবর্তন সংরক্ষণ করুন":"Save Changes","শিক্ষার্থী মুছুন":"Delete Student","সম্পাদনা":"Edit",
+ "শুরু করার আগে আপনার পছন্দ নির্বাচন করুন":"Choose your preferences before starting","পরবর্তী ধাপ":"Next","নোটিফিকেশন চালু রাখতে চান?":"Would you like to enable notifications?","আপনি চাইলে পরে Settings থেকে পরিবর্তন করতে পারবেন।":"You can change this later in Settings.","🔔 চালু":"🔔 On","🔕 বন্ধ":"🔕 Off","শুরু করুন":"Get Started","পেছনে যান":"Back",
+ "লগইন অথবা নতুন অ্যাকাউন্ট তৈরি করুন":"Sign in or create an account","ইমেইল অথবা মোবাইল নম্বর দিয়ে প্রবেশ করুন।":"Continue with email or mobile number.","আপনার ইমেইল":"Your email","পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)":"Password (at least 6 characters)","ইমেইল দিয়ে নতুন অ্যাকাউন্ট":"Create account with email","মোবাইলে OTP পাঠান":"Send OTP to Mobile","SMS-এ পাওয়া ৬ সংখ্যার কোড":"6-digit code from SMS","OTP যাচাই করে প্রবেশ করুন":"Verify OTP and Continue","অফলাইনে ব্যবহার করুন":"Continue Offline",
+ "🛍️ Tutor Hisab Store":"🛍️ Tutor Hisab Store","মূল শিক্ষার্থী ও বেতনের হিসাব বিনামূল্যে থাকবে। অতিরিক্ত সুবিধা ঐচ্ছিকভাবে নেওয়া যাবে।":"Core student and fee tracking stays free. Extras are optional.","📩 SMS প্যাকেজ":"📩 SMS Packages","⭐ VIP":"⭐ VIP","🚀 Pro":"🚀 Pro","👑 Elite":"👑 Elite","মূল্য পরে ঘোষণা করা হবে":"Pricing to be announced","শিগগির আসছে":"Coming Soon",
+ "🔔 Notifications":"🔔 Notifications","নোটিফিকেশন পছন্দ: বন্ধ":"Notifications: Off","নোটিফিকেশন চালু করুন":"Enable Notifications","নোটিফিকেশন বন্ধ করুন":"Turn Notifications Off","⚙️ Settings":"⚙️ Settings","ভাষা পরিবর্তন করুন":"Change Language","নোটিফিকেশন পছন্দ":"Notification Preference","অ্যাকাউন্টে লগইন / অ্যাকাউন্ট পরিবর্তন":"Sign in / Change Account"
+ };
+ const enToBn=Object.fromEntries(Object.entries(bnToEn).map(([a,b])=>[b,a]));
+ const map=lang==="en"?bnToEn:enToBn;
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),nodes=[];
+ while(walker.nextNode())nodes.push(walker.currentNode);
+ nodes.forEach(node=>{const t=node.nodeValue.trim();if(map[t])node.nodeValue=node.nodeValue.replace(t,map[t]);});
+ document.querySelectorAll("input[placeholder]").forEach(el=>{const t=el.getAttribute("placeholder");if(map[t])el.setAttribute("placeholder",map[t]);});
+}
+function showTab(tab){
+ document.querySelectorAll("[data-tab-section]").forEach(el=>{el.style.display=el.dataset.tabSection===tab?"block":"none";});
+ document.querySelectorAll("#bottomNav button").forEach(el=>el.classList.toggle("active",el.dataset.tab===tab));
+ translateUi(currentLanguage);window.scrollTo({top:0,behavior:"smooth"});
+}
+function chooseWelcomeLanguage(lang){onboardingLanguage=lang;$("chooseBangla").classList.toggle("selected",lang==="bn");$("chooseEnglish").classList.toggle("selected",lang==="en");$("languageNextBtn").disabled=false;}
+function goToNotificationStep(){if(!onboardingLanguage)return;translateUi(onboardingLanguage);$("languageStep").hidden=true;$("notificationStep").hidden=false;}
+function chooseNotifications(value){onboardingNotification=value;$("notifyOn").classList.toggle("selected",value==="on");$("notifyOff").classList.toggle("selected",value==="off");$("finishWelcomeBtn").disabled=false;}
+function backToLanguageStep(){$("notificationStep").hidden=true;$("languageStep").hidden=false;}
+async function finishOnboarding(){
+ if(!onboardingLanguage||!onboardingNotification)return;
+ currentLanguage=onboardingLanguage;localStorage.setItem("tutorHisabLanguage",currentLanguage);localStorage.setItem("tutorHisabNotifications",onboardingNotification);localStorage.setItem("tutorHisabSetupV1","done");
+ $("welcomeScreen").hidden=true;$("appMain").style.display="block";
+ if(onboardingNotification==="on"&&"Notification" in window&&Notification.permission==="default"){try{await Notification.requestPermission();}catch(e){}}
+ $("authGate").hidden=offlineMode;showTab("home");translateUi(currentLanguage);updateNotificationStatus();
+}
+function continueOffline(){offlineMode=true;localStorage.setItem("tutorHisabOfflineMode","true");$("authGate").hidden=true;$("appMain").style.display="block";showTab("home");}
+function openAccountGate(){offlineMode=false;localStorage.setItem("tutorHisabOfflineMode","false");$("authGate").hidden=false;}
+function changeLanguage(lang){currentLanguage=lang;localStorage.setItem("tutorHisabLanguage",lang);translateUi(lang);}
+async function setNotificationsFromSettings(value){
+ localStorage.setItem("tutorHisabNotifications",value);
+ if(value==="on"&&"Notification" in window&&Notification.permission==="default"){try{await Notification.requestPermission();}catch(e){}}
+ updateNotificationStatus();translateUi(currentLanguage);
+}
+function updateNotificationStatus(){const enabled=localStorage.getItem("tutorHisabNotifications")==="on";const el=$("notificationStatusText");if(el)el.textContent=currentLanguage==="en"?(enabled?"Notifications: On":"Notifications: Off"):(enabled?"নোটিফিকেশন পছন্দ: চালু":"নোটিফিকেশন পছন্দ: বন্ধ");}
+function gateEmailSignIn(){$("authEmail").value=$("gateEmail").value;$("authPassword").value=$("gatePassword").value;emailSignIn();}
+function gateEmailSignUp(){$("authEmail").value=$("gateEmail").value;$("authPassword").value=$("gatePassword").value;emailSignUp();}
+function normalizeBangladeshPhone(value){let d=String(value||"").replace(/[^0-9]/g,"");if(d.startsWith("00880"))d=d.slice(2);if(d.startsWith("880"))return "+"+d;if(d.startsWith("0"))return "+88"+d;if(d.length===10)return "+880"+d;return "";}
+async function sendGatePhoneCode(){
+ if(!auth){$("gateStatus").textContent="Firebase সংযোগ পাওয়া যায়নি।";return;}
+ const phone=normalizeBangladeshPhone($("gatePhone").value);
+ if(!/^\+8801[3-9]\d{8}$/.test(phone)){alert("সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন।");return;}
+ try{if(!phoneVerifier)phoneVerifier=new firebase.auth.RecaptchaVerifier("phone-recaptcha",{size:"invisible"});phoneConfirmation=await auth.signInWithPhoneNumber(phone,phoneVerifier);$("phoneOtpArea").hidden=false;$("gateStatus").textContent="SMS-এ OTP পাঠানো হয়েছে।";}
+ catch(e){$("gateStatus").textContent="OTP পাঠানো যায়নি: "+e.message;if(phoneVerifier){try{phoneVerifier.clear();}catch(ignore){}phoneVerifier=null;}}
+}
+async function verifyGatePhoneCode(){const code=$("gateOtp").value.trim();if(!phoneConfirmation||!/^\d{6}$/.test(code)){alert("SMS-এ পাওয়া ৬ সংখ্যার OTP লিখুন।");return;}try{await phoneConfirmation.confirm(code);phoneConfirmation=null;$("gateStatus").textContent="লগইন সফল।";}catch(e){$("gateStatus").textContent="OTP সঠিক নয় বা মেয়াদ শেষ হয়েছে: "+e.message;}}
 function cloudMessage(message){const el=$("cloudStatus");if(el)el.textContent=message;}
 function authMessage(message){const el=$("authStatus");if(el)el.textContent=message;}
 function hasRecords(d){return !!(d&&(d.students?.length||d.payments?.length));}
@@ -290,16 +453,18 @@ if(auth){
  auth.onAuthStateChanged(async user=>{
   currentUser=user||null;
   if(user){
+   offlineMode=false;localStorage.setItem("tutorHisabOfflineMode","false");$("authGate").hidden=true;$("appMain").style.display="block";
    const guestData=data;
    STORAGE_KEY="tutorHisabData_"+user.uid;
    const saved=localStorage.getItem(STORAGE_KEY);
    data=saved?loadData():guestData;
    if(!saved)save();else render();
-   authMessage("লগইন: "+user.email+" — আপনার তথ্য এই অ্যাকাউন্টের জন্য আলাদা রাখা হবে।");
+   authMessage("লগইন: "+(user.email||user.phoneNumber||"অ্যাকাউন্ট")+" — আপনার তথ্য এই অ্যাকাউন্টের জন্য আলাদা রাখা হবে।");
    cloudMessage("লগইন সফল। Cloud Sync শুরু হচ্ছে…");
    await syncCloud();
   }else{
    currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();
+   if(localStorage.getItem("tutorHisabSetupV1")==="done"&&!offlineMode)$("authGate").hidden=false;
    authMessage("লগইন করা নেই। স্থানীয় তথ্য এই ডিভাইসে থাকবে।");
    cloudMessage("Cloud Sync করতে ইমেইল দিয়ে লগইন করুন।");
   }
@@ -307,6 +472,12 @@ if(auth){
 }
 
 render();
+(function initializeAppShell(){
+ const done=localStorage.getItem("tutorHisabSetupV1")==="done";
+ if(done){$("welcomeScreen").hidden=true;$("appMain").style.display="block";$("authGate").hidden=offlineMode;showTab("home");}
+ else{$("welcomeScreen").hidden=false;$("authGate").hidden=true;$("appMain").style.display="none";}
+ translateUi(currentLanguage);updateNotificationStatus();
+})();
 </script>
 </body>
 </html>
