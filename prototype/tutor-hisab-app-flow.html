@@ -36,7 +36,7 @@ h3{margin:0 0 15px;font-size:20px;font-weight:800}.primary{width:auto;min-width:
 <header><h2>📚 প্রাইভেট টিউটর হিসাব</h2><p id="tagline">শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়া—সব হিসাব এক জায়গায়</p></header>
 <main>
 <section id="permission" class="screen active">
- <div class="card"><h3>🔔 নোটিফিকেশন অনুমতি</h3><p>বেতন, বকেয়া ও গুরুত্বপূর্ণ অ্যাপ আপডেটের নোটিফিকেশন পেতে অনুমতি দিন।</p><button class="primary" onclick="choosePermission(true)">Allow</button><button class="primary alt" onclick="choosePermission(false)">Don't Allow</button><small>এটি প্রিভিউ স্ক্রিন। Android-এর আসল নোটিফিকেশন অনুমতি APK-তে যুক্ত করতে হবে।</small></div>
+ <div class="card"><h3>Allow Tutor Hisab to send you notifications?</h3><p>বেতন, বকেয়া ও গুরুত্বপূর্ণ অ্যাপ আপডেটের নোটিফিকেশন পেতে অনুমতি দিন।</p><button class="primary" onclick="choosePermission(true)">Allow</button><button class="primary alt" onclick="choosePermission(false)">Don't Allow</button><small>এটি প্রিভিউ স্ক্রিন। Android-এর আসল নোটিফিকেশন অনুমতি APK-তে যুক্ত করতে হবে।</small></div>
 </section>
 <section id="language" class="screen"><div class="card"><h3>ভাষা নির্বাচন করুন / Choose Language</h3><button class="primary" onclick="setLang('bn')">🇧🇩 বাংলা</button><button class="primary alt" onclick="setLang('en')">🇬🇧 English</button></div></section>
 <section id="auth" class="screen"><div class="card"><h3 id="authTitle">সাইন ইন</h3><div id="loginFields"><label>ইমেইল</label><input id="loginEmail" type="email" placeholder="আপনার ইমেইল"><label>পাসওয়ার্ড</label><input id="loginPass" type="password" placeholder="পাসওয়ার্ড"></div><div id="signupFields" class="hidden">
@@ -59,8 +59,16 @@ h3{margin:0 0 15px;font-size:20px;font-weight:800}.primary{width:auto;min-width:
 <div id="homePayments" class="card hidden"><h3>টাকা জমা</h3><p>শিক্ষার্থী নির্বাচন করে জমার তথ্য যুক্ত করার ফর্ম এখানে থাকবে।</p></div>
 <div id="homeReports" class="card hidden"><h3>হিসাব/রিপোর্ট</h3><p>মাসভিত্তিক জমা, বকেয়া ও আয়ের রিপোর্ট এখানে থাকবে।</p></div>
 </section>
-<section id="store" class="screen"><div class="card" style="text-align:center;padding:34px 18px"><div style="font-size:48px">🛍️</div><h3>My Store</h3><span class="tag">COMING SOON</span><p>SMS প্যাকেজ, Pro ও Elite সুবিধা শিগগিরই আসছে।</p><p class="muted">এই সংস্করণে কোনো পেমেন্ট বা সাবস্ক্রিপশন চালু নেই।</p></div></section>
-<section id="notifications" class="screen"><div class="card"><h3>🔔 Notification</h3><p>বেতন ও বকেয়ার রিমাইন্ডার, সাবস্ক্রিপশন সংক্রান্ত বার্তা এবং অ্যাপ আপডেট এখানে দেখা যাবে।</p><p class="muted">এখনো কোনো নোটিফিকেশন নেই।</p></div></section>
+<section id="store" class="screen"><div class="card"><h3>🛍️ My Store</h3><p class="muted">আপনার প্রয়োজন অনুযায়ী অতিরিক্ত সুবিধা বেছে নিন</p></div>
+<div class="card"><h3>📩 SMS Packages</h3><p>শিক্ষার্থীদের বেতন ও বকেয়ার SMS রিমাইন্ডার প্যাকেজ।</p><span class="tag">COMING SOON</span></div>
+<div class="card"><h3>⭐ Pro</h3><p>আরও উন্নত হিসাব ব্যবস্থাপনা ও অতিরিক্ত সুবিধা।</p><span class="tag">COMING SOON</span></div>
+<div class="card"><h3>👑 Elite</h3><p>প্রিমিয়াম ব্যবহারকারীদের জন্য বিশেষ সুবিধা।</p><span class="tag">COMING SOON</span></div>
+<p class="muted" style="text-align:center">এই সংস্করণে কোনো পেমেন্ট বা সাবস্ক্রিপশন চালু নেই।</p></section>
+<section id="notifications" class="screen"><div class="card"><h3>🔔 Notification</h3><p>আপনার গুরুত্বপূর্ণ নোটিফিকেশনগুলো এখানে দেখা যাবে।</p></div>
+<div class="card"><h3>💰 বেতনের নোটিফিকেশন</h3><p>শিক্ষার্থীদের বেতন জমা সংক্রান্ত বার্তা।</p><span class="tag">COMING SOON</span></div>
+<div class="card"><h3>⏰ বকেয়ার নোটিফিকেশন</h3><p>বকেয়া ও পেমেন্ট রিমাইন্ডার।</p><span class="tag">COMING SOON</span></div>
+<div class="card"><h3>📦 SMS / Pro / Elite আপডেট</h3><p>SMS প্যাকেজ অথবা Pro বা Elite সাবস্ক্রিপশন নিলে তার মেয়াদ ও অবস্থা সংক্রান্ত বার্তা।</p><span class="tag">COMING SOON</span></div>
+<div class="card"><h3>📢 অ্যাপ আপডেট</h3><p>Tutor Hisab-এর নতুন সংস্করণ ও গুরুত্বপূর্ণ ঘোষণা।</p><span class="tag">COMING SOON</span></div></section>
 <section id="profile" class="screen"><div class="card profile"><img id="profilePhoto" class="avatar" alt="Profile"><h3 id="profileName">আপনার প্রোফাইল</h3><p id="profileEmail" class="muted">ইমেইল</p></div><div class="card"><h3>ব্যক্তিগত তথ্য</h3><p id="profileDetails">একাউন্ট তৈরি করলে আপনার তথ্য এখানে দেখা যাবে।</p><button class="primary alt" onclick="show('settings')">Settings খুলুন</button></div></section>
 <section id="settings" class="screen"><div class="card"><h3>⚙️ Settings</h3><button class="primary alt" onclick="show('language')">🌐 Language / ভাষা</button><button class="primary alt" onclick="info('Save Your Progress')">💾 Save Your Progress</button><button class="primary alt" onclick="info('Guideline')">📖 Guideline</button><button class="primary alt" onclick="info('Rate Us')">⭐ Rate Us</button><button class="primary alt" onclick="info('Feedback')">✉️ Feedback</button><button class="primary alt" onclick="info('Privacy Policy')">🔒 Privacy Policy</button><button class="primary alt" onclick="info('Terms of Service')">📄 Terms of Service</button><button class="primary alt" onclick="info('Contact Us')">☎️ Contact Us</button><hr><small>App version: 1.0.0 (Preview)</small><button class="primary" onclick="logout()">Sign Out</button></div></section>
 </main>
