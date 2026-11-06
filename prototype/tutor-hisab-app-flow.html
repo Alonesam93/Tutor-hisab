@@ -10,11 +10,16 @@ button,input,select,textarea{font:inherit}button{border:0;border-radius:10px;pad
 button.alt{background:#e5f3ec;color:var(--g)}button.ghost{background:transparent;color:var(--g);padding:8px}
 input,select,textarea{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff;margin:6px 0 12px;color:var(--ink)}
 label{font-size:13px;font-weight:700;color:#40584d}small,.muted{color:var(--muted)}
-header{background:linear-gradient(130deg,#075b42,var(--g2));color:white;padding:20px 16px 22px;text-align:center}
-header h2{margin:0 0 6px}header p{margin:0;font-size:13px;opacity:.9}
-main{max-width:620px;margin:0 auto;padding:15px 14px 90px}
-.card{background:#fff;padding:17px;border-radius:15px;margin:0 0 13px;box-shadow:0 3px 12px #1232}
-h3{margin:0 0 13px;font-size:18px}.primary{width:100%;margin:5px 0 9px}
+header{background:linear-gradient(130deg,#075b42,#16834e);color:white;padding:24px 18px 28px;text-align:left;border-radius:0 0 28px 28px}
+header h2{margin:0 0 8px;font-size:25px;font-weight:800}header p{margin:0;font-size:14px;opacity:.95}
+main{max-width:760px;margin:0 auto;padding:16px 14px 90px}
+.card{background:#fff;padding:17px;border:1px solid #dce5df;border-radius:19px;margin:0 0 13px;box-shadow:0 2px 9px #1231}
+h3{margin:0 0 15px;font-size:20px;font-weight:800}.primary{width:auto;min-width:180px;margin:5px 0 9px}
+#home .stats{gap:12px}#home .stat{background:#fff;border:1px solid #dce5df;border-radius:19px;text-align:left;padding:17px;font-size:15px;box-shadow:0 2px 8px #1231}#home .stat b{color:#17231d;font-size:25px}
+.home-tabs{display:flex;gap:9px;overflow-x:auto;margin:20px 0 15px;padding-bottom:2px;scrollbar-width:none}.home-tabs button{white-space:nowrap;border-radius:28px;background:#fff;color:#34443b;border:1px solid #dce5df;font-size:15px;padding:13px 17px}.home-tabs button.active{background:#075b42;color:#fff;border-color:#075b42}
+#studentForm{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}#studentForm .wide{grid-column:1/-1}#studentForm label{display:block}#studentForm input,#studentForm textarea{font-size:16px;padding:14px;border-radius:12px}#studentForm textarea{min-height:78px}
+.student-filter{display:flex;gap:10px;align-items:center}.student-filter select{margin:0}
+.student-row{padding:13px 0;border-bottom:1px solid var(--line)}
 .linkrow{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:14px 0;color:var(--g);font-size:13px}
 .linkrow a{color:var(--g);text-decoration:none}.hidden{display:none!important}
 .screen{display:none}.screen.active{display:block}
@@ -28,7 +33,7 @@ h3{margin:0 0 13px;font-size:18px}.primary{width:100%;margin:5px 0 9px}
 @media(min-width:540px){main{padding-top:20px}.stats{grid-template-columns:repeat(4,1fr)}}
 </style></head>
 <body>
-<header><h2>📚 Tutor Hisab</h2><p id="tagline">শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়া—সব হিসাব এক জায়গায়</p></header>
+<header><h2>📚 প্রাইভেট টিউটর হিসাব</h2><p id="tagline">শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়া—সব হিসাব এক জায়গায়</p></header>
 <main>
 <section id="permission" class="screen active">
  <div class="card"><h3>🔔 নোটিফিকেশন অনুমতি</h3><p>বেতন, বকেয়া ও গুরুত্বপূর্ণ অ্যাপ আপডেটের নোটিফিকেশন পেতে অনুমতি দিন।</p><button class="primary" onclick="choosePermission(true)">Allow</button><button class="primary alt" onclick="choosePermission(false)">Don't Allow</button><small>এটি প্রিভিউ স্ক্রিন। Android-এর আসল নোটিফিকেশন অনুমতি APK-তে যুক্ত করতে হবে।</small></div>
@@ -40,18 +45,20 @@ h3{margin:0 0 13px;font-size:18px}.primary{width:100%;margin:5px 0 9px}
 <button class="primary" onclick="submitAuth()" id="authSubmit">সাইন ইন</button><button class="primary alt" onclick="toggleAuth()" id="switchAuth">নতুন একাউন্ট খুলুন</button>
 <div class="linkrow"><a href="#" onclick="info('গোপনীয়তা নীতি');return false">গোপনীয়তা নীতি</a><a href="#" onclick="info('যোগাযোগ');return false">যোগাযোগ</a><a href="#" onclick="info('আমাদের সম্পর্কে');return false">আমাদের সম্পর্কে</a></div>
 <div class="notice">প্রোটোটাইপ নোট: এই স্ক্রিনে প্রকৃত Firebase authentication এখনো সংযুক্ত নয়। নিরাপদ ইমেইল লগইন পরবর্তী সংযোগের কাজ।</div></div></section>
-<section id="home" class="screen"><div class="card"><h3>📊 Homepage</h3><p class="muted">আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব</p><div class="stats"><div class="stat">মোট শিক্ষার্থী<b id="studentCount">০</b></div><div class="stat">এই মাসে জমা<b>৳০</b></div><div class="stat">মোট বকেয়া<b>৳০</b></div><div class="stat">নির্ধারিত বেতন<b>৳০</b></div></div></div>
-<div class="card" id="addStudentCard"><h3>➕ নতুন শিক্ষার্থী যোগ করুন</h3>
-<label>শিক্ষার্থীর নাম</label><input id="studentName" placeholder="শিক্ষার্থীর পূর্ণ নাম">
-<label>শ্রেণি</label><input id="studentClass" placeholder="যেমন: ষষ্ঠ / দশম">
-<label>মোবাইল নম্বর</label><input id="studentMobile" inputmode="tel" placeholder="01XXXXXXXXX">
-<label>মাসিক বেতন (৳)</label><input id="studentFee" type="number" min="0" placeholder="যেমন: ২০০০">
-<label>যে মাস থেকে হিসাব শুরু হবে</label><input id="studentStart" type="month">
-<label>আগের বকেয়া (৳)</label><input id="studentOpeningDue" type="number" min="0" value="0">
-<button class="primary" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
-<p class="muted">শিক্ষার্থীর তথ্য এই প্রিভিউ ডিভাইসের ব্রাউজারে সংরক্ষিত হবে।</p></div>
-<div class="card"><h3>📚 শিক্ষার্থী তালিকা</h3><div id="studentList" class="muted">এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।</div></div>
-<div class="card"><h3>📚 শিক্ষার্থী ও হিসাব</h3><p>শিক্ষার্থী যোগ, বেতন জমা, মাসিক রিপোর্ট এবং ব্যাকআপ—আগের Tutor Hisab হিসাবের সুবিধাগুলো এখানেই থাকবে।</p><span class="tag">আগের হিসাবের ফিচার সংরক্ষিত থাকবে</span></div></section>
+<section id="home" class="screen"><div class="card"><p class="muted">আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব</p><div class="stats"><div class="stat">মোট শিক্ষার্থী<b id="studentCount">০</b></div><div class="stat">এই মাসে জমা<b>৳০</b></div><div class="stat">মোট বকেয়া<b>৳০</b></div><div class="stat">এই মাসের নির্ধারিত বেতন<b>৳০</b></div></div></div>
+<div class="home-tabs"><button class="active" onclick="homeTab('students',this)">শিক্ষার্থী</button><button onclick="homeTab('payments',this)">টাকা জমা</button><button onclick="homeTab('reports',this)">হিসাব/রিপোর্ট</button><button onclick="homeTab('backup',this)">ব্যাকআপ</button></div>
+<div id="homeStudents">
+<div class="card" id="addStudentCard"><h3>নতুন শিক্ষার্থী যোগ করুন</h3><div id="studentForm">
+<div><label>শিক্ষার্থীর নাম *</label><input id="studentName" placeholder="যেমন: রহিম" required></div>
+<div><label>শ্রেণি *</label><input id="studentClass" placeholder="যেমন: ৬ষ্ঠ" required></div>
+<div><label>মাসিক বেতন (টাকা) *</label><input id="studentFee" type="number" min="0" placeholder="১০০০" required></div>
+<div><label>মোবাইল নম্বর</label><input id="studentMobile" inputmode="tel" placeholder="ঐচ্ছিক"></div>
+<div class="wide"><label>নোট / ঠিকানা</label><textarea id="studentNote" placeholder="ঐচ্ছিক"></textarea></div>
+<div class="wide"><button class="primary" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ</button></div></div></div>
+<div class="card"><h3>শিক্ষার্থীদের তালিকা</h3><div class="student-filter"><span style="width:28px">☰</span><select id="classFilter" onchange="renderStudents()"><option value="">সব শ্রেণি</option></select></div><div id="studentList" class="muted" style="text-align:center;padding:24px 0">কোনো শিক্ষার্থী পাওয়া যায়নি। উপরের ফর্ম থেকে যোগ করুন।</div></div></div>
+<div id="homePayments" class="card hidden"><h3>টাকা জমা</h3><p>শিক্ষার্থী নির্বাচন করে জমার তথ্য যুক্ত করার ফর্ম এখানে থাকবে।</p></div>
+<div id="homeReports" class="card hidden"><h3>হিসাব/রিপোর্ট</h3><p>মাসভিত্তিক জমা, বকেয়া ও আয়ের রিপোর্ট এখানে থাকবে।</p></div>
+<div id="homeBackup" class="card hidden"><h3>ব্যাকআপ</h3><p>আপনার শিক্ষার্থী ও হিসাবের তথ্য ব্যাকআপ ও পুনরুদ্ধারের সুবিধা এখানে থাকবে।</p></div></section>
 <section id="store" class="screen"><div class="card" style="text-align:center;padding:34px 18px"><div style="font-size:48px">🛍️</div><h3>My Store</h3><span class="tag">COMING SOON</span><p>SMS প্যাকেজ, Pro ও Elite সুবিধা শিগগিরই আসছে।</p><p class="muted">এই সংস্করণে কোনো পেমেন্ট বা সাবস্ক্রিপশন চালু নেই।</p></div></section>
 <section id="notifications" class="screen"><div class="card"><h3>🔔 Notification</h3><p>বেতন ও বকেয়ার রিমাইন্ডার, সাবস্ক্রিপশন সংক্রান্ত বার্তা এবং অ্যাপ আপডেট এখানে দেখা যাবে।</p><p class="muted">এখনো কোনো নোটিফিকেশন নেই।</p></div></section>
 <section id="profile" class="screen"><div class="card profile"><img id="profilePhoto" class="avatar" alt="Profile"><h3 id="profileName">আপনার প্রোফাইল</h3><p id="profileEmail" class="muted">ইমেইল</p></div><div class="card"><h3>ব্যক্তিগত তথ্য</h3><p id="profileDetails">একাউন্ট তৈরি করলে আপনার তথ্য এখানে দেখা যাবে।</p><button class="primary alt" onclick="show('settings')">Settings খুলুন</button></div></section>
@@ -62,9 +69,10 @@ h3{margin:0 0 13px;font-size:18px}.primary{width:100%;margin:5px 0 9px}
 <script>
 let lang='bn',signup=false,profile={};
 let students=JSON.parse(localStorage.getItem('th_preview_students')||'[]');
-function renderStudents(){const list=document.getElementById('studentList');if(!list)return;document.getElementById('studentCount').textContent=String(students.length);if(!students.length){list.textContent='এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।';return}list.innerHTML=students.map((s,i)=>'<div style="padding:12px 0;border-bottom:1px solid var(--line)"><b>'+escapeHtml(s.name)+'</b><div class="muted">'+escapeHtml(s.studentClass||'শ্রেণি উল্লেখ নেই')+' • '+escapeHtml(s.mobile||'মোবাইল নেই')+'</div><div>মাসিক বেতন: ৳'+Number(s.fee||0).toLocaleString('bn-BD')+' • আগের বকেয়া: ৳'+Number(s.openingDue||0).toLocaleString('bn-BD')+'</div></div>').join('')}
+function renderStudents(){const list=document.getElementById('studentList');if(!list)return;document.getElementById('studentCount').textContent=String(students.length);const filter=document.getElementById('classFilter');if(filter){const selected=filter.value;const classes=[...new Set(students.map(s=>s.studentClass).filter(Boolean))];filter.innerHTML='<option value="">সব শ্রেণি</option>'+classes.map(x=>'<option>'+escapeHtml(x)+'</option>').join('');filter.value=selected}const visible=filter&&filter.value?students.filter(s=>s.studentClass===filter.value):students;if(!visible.length){list.textContent='কোনো শিক্ষার্থী পাওয়া যায়নি। উপরের ফর্ম থেকে যোগ করুন।';return}list.innerHTML=visible.map(s=>'<div class="student-row"><b>'+escapeHtml(s.name)+'</b><div class="muted">'+escapeHtml(s.studentClass||'শ্রেণি উল্লেখ নেই')+' • '+escapeHtml(s.mobile||'মোবাইল নেই')+'</div><div>মাসিক বেতন: ৳'+Number(s.fee||0).toLocaleString('bn-BD')+'</div>'+(s.note?'<div class="muted">'+escapeHtml(s.note)+'</div>':'')+'</div>').join('')}
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-function addStudent(){const name=document.getElementById('studentName').value.trim(),fee=Number(document.getElementById('studentFee').value);if(!name||!document.getElementById('studentStart').value||document.getElementById('studentFee').value===''||fee<0){alert('শিক্ষার্থীর নাম, মাসিক বেতন এবং হিসাব শুরুর মাস দিন।');return}students.push({name,studentClass:document.getElementById('studentClass').value.trim(),mobile:document.getElementById('studentMobile').value.trim(),fee,startMonth:document.getElementById('studentStart').value,openingDue:Number(document.getElementById('studentOpeningDue').value||0)});localStorage.setItem('th_preview_students',JSON.stringify(students));['studentName','studentClass','studentMobile','studentFee','studentStart'].forEach(id=>document.getElementById(id).value='');document.getElementById('studentOpeningDue').value='0';renderStudents();alert('শিক্ষার্থী সংরক্ষণ হয়েছে।')}
+function addStudent(){const name=document.getElementById('studentName').value.trim(),fee=Number(document.getElementById('studentFee').value),studentClass=document.getElementById('studentClass').value.trim();if(!name||!studentClass||document.getElementById('studentFee').value===''||fee<0){alert('শিক্ষার্থীর নাম, শ্রেণি ও মাসিক বেতন দিন।');return}students.push({name,studentClass,mobile:document.getElementById('studentMobile').value.trim(),fee,note:document.getElementById('studentNote').value.trim()});localStorage.setItem('th_preview_students',JSON.stringify(students));['studentName','studentClass','studentMobile','studentFee','studentNote'].forEach(id=>document.getElementById(id).value='');renderStudents();alert('শিক্ষার্থী সংরক্ষণ হয়েছে।')}
+function homeTab(id,button){document.querySelectorAll('.home-tabs button').forEach(b=>b.classList.remove('active'));button.classList.add('active');['students','payments','reports','backup'].forEach(k=>document.getElementById('home'+k[0].toUpperCase()+k.slice(1)).classList.toggle('hidden',k!==id));}
 function show(id){document.querySelectorAll('main .screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.menu button').forEach(b=>b.classList.toggle('active',b.dataset.screen===id));if(id==='home')renderStudents();}
 function choosePermission(allowed){localStorage.setItem('th_notice_choice',allowed?'allow':'deny');show('language')}
 function setLang(v){lang=v;document.documentElement.lang=v;document.getElementById('tagline').textContent=v==='bn'?'শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়া—সব হিসাব এক জায়গায়':'Students, monthly fees, payments and dues in one place';show('auth')}
