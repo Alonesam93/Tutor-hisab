@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087f5b"><title>Tutor Hisab — App Flow Preview</title>
+<style>
+:root{--g:#087f5b;--g2:#0b966c;--bg:#f1f5f3;--ink:#18352b;--muted:#6a7d74;--line:#dce7e1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{border:0;border-radius:10px;padding:13px 15px;background:var(--g);color:white;font-weight:700;cursor:pointer}
+button.alt{background:#e5f3ec;color:var(--g)}button.ghost{background:transparent;color:var(--g);padding:8px}
+input,select,textarea{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff;margin:6px 0 12px;color:var(--ink)}
+label{font-size:13px;font-weight:700;color:#40584d}small,.muted{color:var(--muted)}
+header{background:linear-gradient(130deg,#075b42,var(--g2));color:white;padding:20px 16px 22px;text-align:center}
+header h2{margin:0 0 6px}header p{margin:0;font-size:13px;opacity:.9}
+main{max-width:620px;margin:0 auto;padding:15px 14px 90px}
+.card{background:#fff;padding:17px;border-radius:15px;margin:0 0 13px;box-shadow:0 3px 12px #1232}
+h3{margin:0 0 13px;font-size:18px}.primary{width:100%;margin:5px 0 9px}
+.linkrow{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:14px 0;color:var(--g);font-size:13px}
+.linkrow a{color:var(--g);text-decoration:none}.hidden{display:none!important}
+.screen{display:none}.screen.active{display:block}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#e4f5ed;border-radius:12px;padding:13px;text-align:center;font-size:13px}.stat b{display:block;font-size:21px;margin-top:7px;color:var(--g)}
+.menu{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 3px max(8px,env(safe-area-inset-bottom));z-index:5}
+.menu button{background:transparent;color:#52665d;padding:6px 4px;font-size:11px;flex:1;border-radius:8px}.menu button.active{color:var(--g);background:#e7f5ee}.menu span{display:block;font-size:20px;margin-bottom:3px}
+.avatar{width:76px;height:76px;border-radius:50%;object-fit:cover;background:#e4f5ed;display:block;margin:4px auto 12px;border:2px solid #b9ddcb}
+.profile{text-align:center}.notice{background:#fff8df;border:1px solid #f1df9b;border-radius:10px;padding:12px;font-size:13px;line-height:1.5}
+.permission{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:22px;z-index:10}.dialog{background:white;border-radius:18px;padding:22px;max-width:360px;width:100%;box-shadow:0 12px 40px #0003}.dialog h3{margin-bottom:8px}.dialog .actions{display:flex;gap:10px;margin-top:18px}.dialog button{flex:1}
+.tag{display:inline-block;background:#e5f3ec;color:var(--g);padding:5px 9px;border-radius:20px;font-size:12px;font-weight:700}
+@media(min-width:540px){main{padding-top:20px}.stats{grid-template-columns:repeat(4,1fr)}}
+</style></head>
+<body>
+<header><h2>📚 Tutor Hisab</h2><p id="tagline">শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়া—সব হিসাব এক জায়গায়</p></header>
+<main>
+<section id="permission" class="screen active">
+ <div class="card"><h3>🔔 নোটিফিকেশন অনুমতি</h3><p>বেতন, বকেয়া ও গুরুত্বপূর্ণ অ্যাপ আপডেটের নোটিফিকেশন পেতে অনুমতি দিন।</p><button class="primary" onclick="choosePermission(true)">Allow</button><button class="primary alt" onclick="choosePermission(false)">Don't Allow</button><small>এটি প্রিভিউ স্ক্রিন। Android-এর আসল নোটিফিকেশন অনুমতি APK-তে যুক্ত করতে হবে।</small></div>
+</section>
+<section id="language" class="screen"><div class="card"><h3>ভাষা নির্বাচন করুন / Choose Language</h3><button class="primary" onclick="setLang('bn')">🇧🇩 বাংলা</button><button class="primary alt" onclick="setLang('en')">🇬🇧 English</button></div></section>
+<section id="auth" class="screen"><div class="card"><h3 id="authTitle">সাইন ইন</h3><div id="loginFields"><label>ইমেইল</label><input id="loginEmail" type="email" placeholder="আপনার ইমেইল"><label>পাসওয়ার্ড</label><input id="loginPass" type="password" placeholder="পাসওয়ার্ড"></div><div id="signupFields" class="hidden">
+<label>প্রোফাইল ছবি</label><input id="photo" type="file" accept="image/*" onchange="previewPhoto(event)"><img id="photoPreview" class="avatar hidden" alt="Profile preview">
+<label>পূর্ণ নাম</label><input id="fullName" placeholder="আপনার নাম"><label>ইমেইল</label><input id="email" type="email" placeholder="আপনার ইমেইল"><label>পাসওয়ার্ড</label><input id="password" type="password" placeholder="কমপক্ষে ৬ অক্ষর"><label>মোবাইল নম্বর</label><input id="mobile" inputmode="tel" placeholder="01XXXXXXXXX"><label>প্রতিষ্ঠানের নাম</label><input id="institution" placeholder="প্রতিষ্ঠানের নাম (ঐচ্ছিক)"><label>পদবী</label><input id="designation" placeholder="যেমন: শিক্ষক / প্রাইভেট টিউটর"></div>
+<button class="primary" onclick="submitAuth()" id="authSubmit">সাইন ইন</button><button class="primary alt" onclick="toggleAuth()" id="switchAuth">নতুন একাউন্ট খুলুন</button>
+<div class="linkrow"><a href="#" onclick="info('গোপনীয়তা নীতি');return false">গোপনীয়তা নীতি</a><a href="#" onclick="info('যোগাযোগ');return false">যোগাযোগ</a><a href="#" onclick="info('আমাদের সম্পর্কে');return false">আমাদের সম্পর্কে</a></div>
+<div class="notice">প্রোটোটাইপ নোট: এই স্ক্রিনে প্রকৃত Firebase authentication এখনো সংযুক্ত নয়। নিরাপদ ইমেইল লগইন পরবর্তী সংযোগের কাজ।</div></div></section>
+<section id="home" class="screen"><div class="card"><h3>📊 Homepage</h3><p class="muted">আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব</p><div class="stats"><div class="stat">মোট শিক্ষার্থী<b>০</b></div><div class="stat">এই মাসে জমা<b>৳০</b></div><div class="stat">মোট বকেয়া<b>৳০</b></div><div class="stat">নির্ধারিত বেতন<b>৳০</b></div></div></div>
+<div class="card"><h3>📚 শিক্ষার্থী ও হিসাব</h3><p>শিক্ষার্থী যোগ, বেতন জমা, মাসিক রিপোর্ট এবং ব্যাকআপ—আগের Tutor Hisab হিসাবের সুবিধাগুলো এখানেই থাকবে।</p><span class="tag">আগের হিসাবের ফিচার সংরক্ষিত থাকবে</span></div></section>
+<section id="store" class="screen"><div class="card" style="text-align:center;padding:34px 18px"><div style="font-size:48px">🛍️</div><h3>My Store</h3><span class="tag">COMING SOON</span><p>SMS প্যাকেজ, Pro ও Elite সুবিধা শিগগিরই আসছে।</p><p class="muted">এই সংস্করণে কোনো পেমেন্ট বা সাবস্ক্রিপশন চালু নেই।</p></div></section>
+<section id="notifications" class="screen"><div class="card"><h3>🔔 Notification</h3><p>বেতন ও বকেয়ার রিমাইন্ডার, সাবস্ক্রিপশন সংক্রান্ত বার্তা এবং অ্যাপ আপডেট এখানে দেখা যাবে।</p><p class="muted">এখনো কোনো নোটিফিকেশন নেই।</p></div></section>
+<section id="profile" class="screen"><div class="card profile"><img id="profilePhoto" class="avatar" alt="Profile"><h3 id="profileName">আপনার প্রোফাইল</h3><p id="profileEmail" class="muted">ইমেইল</p></div><div class="card"><h3>ব্যক্তিগত তথ্য</h3><p id="profileDetails">একাউন্ট তৈরি করলে আপনার তথ্য এখানে দেখা যাবে।</p><button class="primary alt" onclick="show('settings')">Settings খুলুন</button></div></section>
+<section id="settings" class="screen"><div class="card"><h3>⚙️ Settings</h3><button class="primary alt" onclick="show('language')">🌐 Language / ভাষা</button><button class="primary alt" onclick="info('Save Your Progress')">💾 Save Your Progress</button><button class="primary alt" onclick="info('Guideline')">📖 Guideline</button><button class="primary alt" onclick="info('Rate Us')">⭐ Rate Us</button><button class="primary alt" onclick="info('Feedback')">✉️ Feedback</button><button class="primary alt" onclick="info('Privacy Policy')">🔒 Privacy Policy</button><button class="primary alt" onclick="info('Terms of Service')">📄 Terms of Service</button><button class="primary alt" onclick="info('Contact Us')">☎️ Contact Us</button><hr><small>App version: 1.0.0 (Preview)</small><button class="primary" onclick="logout()">Sign Out</button></div></section>
+</main>
+<nav id="bottomNav" class="menu hidden"><button data-screen="home" class="active" onclick="show('home')"><span>🏠</span>Homepage</button><button data-screen="store" onclick="show('store')"><span>🛍️</span>My Store</button><button data-screen="notifications" onclick="show('notifications')"><span>🔔</span>Notification</button><button data-screen="profile" onclick="show('profile')"><span>👤</span>My Profile</button><button data-screen="settings" onclick="show('settings')"><span>⚙️</span>Settings</button></nav>
+<div id="infoModal" class="permission hidden"><div class="dialog"><h3 id="infoTitle">তথ্য</h3><p id="infoText">এই অংশটি পরবর্তী সংস্করণে যুক্ত হবে।</p><button class="primary" onclick="closeInfo()">ঠিক আছে</button></div></div>
+<script>
+let lang='bn',signup=false,profile={};
+function show(id){document.querySelectorAll('main .screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.menu button').forEach(b=>b.classList.toggle('active',b.dataset.screen===id));}
+function choosePermission(allowed){localStorage.setItem('th_notice_choice',allowed?'allow':'deny');show('language')}
+function setLang(v){lang=v;document.documentElement.lang=v;document.getElementById('tagline').textContent=v==='bn'?'শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়া—সব হিসাব এক জায়গায়':'Students, monthly fees, payments and dues in one place';show('auth')}
+function toggleAuth(){signup=!signup;document.getElementById('signupFields').classList.toggle('hidden',!signup);document.getElementById('loginFields').classList.toggle('hidden',signup);document.getElementById('authTitle').textContent=signup?'নতুন একাউন্ট তৈরি করুন':'সাইন ইন';document.getElementById('authSubmit').textContent=signup?'সাইন আপ':'সাইন ইন';document.getElementById('switchAuth').textContent=signup?'আগে একাউন্ট আছে? সাইন ইন':'নতুন একাউন্ট খুলুন'}
+function previewPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById('photoPreview').src=r.result;document.getElementById('photoPreview').classList.remove('hidden');profile.photo=r.result};r.readAsDataURL(f)}
+function submitAuth(){if(signup){const name=document.getElementById('fullName').value.trim(),email=document.getElementById('email').value.trim(),pass=document.getElementById('password').value;if(!name||!email||pass.length<6){alert('নাম, সঠিক ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।');return}profile={...profile,name,email,mobile:document.getElementById('mobile').value,institution:document.getElementById('institution').value,designation:document.getElementById('designation').value};localStorage.setItem('th_preview_profile',JSON.stringify(profile));}else{const email=document.getElementById('loginEmail').value.trim(),pass=document.getElementById('loginPass').value;const saved=JSON.parse(localStorage.getItem('th_preview_profile')||'null');if(!saved||saved.email!==email||!pass){alert('প্রোটোটাইপে আগে এই ডিভাইসে সাইন আপ করুন। প্রকৃত লগইন Firebase সংযুক্ত হলে কাজ করবে।');return}profile=saved}document.getElementById('profileName').textContent=profile.name||'আপনার প্রোফাইল';document.getElementById('profileEmail').textContent=profile.email||'';document.getElementById('profileDetails').textContent=[profile.mobile,profile.institution,profile.designation].filter(Boolean).join(' • ')||'অতিরিক্ত তথ্য দেওয়া হয়নি';if(profile.photo)document.getElementById('profilePhoto').src=profile.photo;document.getElementById('bottomNav').classList.remove('hidden');show('home')}
+function logout(){document.getElementById('bottomNav').classList.add('hidden');show('auth')}
+function info(title){document.getElementById('infoTitle').textContent=title;document.getElementById('infoText').textContent=title+' অংশটি পূর্ণভাবে পরবর্তী ধাপে যুক্ত করা হবে।';document.getElementById('infoModal').classList.remove('hidden')}
+function closeInfo(){document.getElementById('infoModal').classList.add('hidden')}
+</script></body></html>
