@@ -1,0 +1,63 @@
+name: Validate Tutor Hisab app
+
+on:
+  push:
+    branches:
+      - feature/manual-drive-backup
+    paths:
+      - index.html
+      - .github/workflows/test-tutorhisab.yml
+  pull_request:
+    paths:
+      - index.html
+      - .github/workflows/test-tutorhisab.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate HTML structure and required app features
+        run: |
+          python - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import re
+          source = Path('index.html').read_text(encoding='utf-8')
+          class CheckHTML(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids = []
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if 'id' in attrs:
+                      self.ids.append(attrs['id'])
+          parser = CheckHTML()
+          parser.feed(source)
+          duplicates = sorted({x for x in parser.ids if parser.ids.count(x) > 1})
+          if duplicates:
+              raise SystemExit('Duplicate HTML IDs: ' + ', '.join(duplicates))
+          required = ['studentsSection', 'paymentsSection', 'reportsSection', 'storePage', 'notificationPage', 'profilePage', 'settingsPage', 'function saveStudent(', 'function addPayment(', 'function renderReport(', 'function backup(', 'function restore(', 'function dueFor(', 'function chooseLanguage(']
+          missing = [item for item in required if item not in source]
+          if missing:
+              raise SystemExit('Missing required app sections/functions: ' + ', '.join(missing))
+          if source.count('data-page="') < 5:
+              raise SystemExit('Expected five bottom navigation destinations')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', source, re.I)
+          inline = [s for s in scripts if s.strip()]
+          if not inline:
+              raise SystemExit('No inline application JavaScript found')
+          Path('/tmp/tutorhisab-inline.js').write_text('\n'.join(inline), encoding='utf-8')
+          print('HTML IDs, required app features, and five navigation destinations validated.')
+          PY
+      - name: Check JavaScript syntax
+        run: node --check /tmp/tutorhisab-inline.js

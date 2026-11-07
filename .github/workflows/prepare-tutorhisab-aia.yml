@@ -1,0 +1,73 @@
+name: Prepare Tutor Hisab Android project
+
+on:
+  push:
+    branches:
+      - feature/manual-drive-backup
+    paths:
+      - index.html
+      - TutorHisab_AppInventor_v1_2.aia.zip
+      - .github/workflows/prepare-tutorhisab-aia.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out work branch
+        uses: actions/checkout@v4
+
+      - name: Patch App Inventor project with latest app HTML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import tempfile
+
+          source = Path("TutorHisab_AppInventor_v1_2.aia.zip")
+          html = Path("index.html")
+          if not source.is_file() or not html.is_file():
+              raise SystemExit("Required AIA archive or index.html is missing")
+
+          with tempfile.TemporaryDirectory() as tmp:
+              tmp = Path(tmp)
+              with ZipFile(source) as zin:
+                  names = zin.namelist()
+                  asset = "assets/Tutor_Hisab_v1.html"
+                  if asset not in names:
+                      raise SystemExit(f"Expected App Inventor asset not found: {asset}")
+                  for name in names:
+                      if name.endswith("/"):
+                          continue
+                      target = tmp / name
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      if name == asset:
+                          target.write_bytes(html.read_bytes())
+                      else:
+                          target.write_bytes(zin.read(name))
+
+              out = Path("TutorHisab_Android_Ready.aia")
+              with ZipFile(out, "w", ZIP_DEFLATED) as zout:
+                  for path in sorted(tmp.rglob("*")):
+                      if path.is_file():
+                          zout.write(path, path.relative_to(tmp).as_posix())
+
+          with ZipFile("TutorHisab_Android_Ready.aia") as check:
+              if "assets/Tutor_Hisab_v1.html" not in check.namelist():
+                  raise SystemExit("Patched AIA validation failed")
+              patched = check.read("assets/Tutor_Hisab_v1.html").decode("utf-8")
+              for marker in ("enterOfflineMode", "makeId"):
+                  if marker not in patched:
+                      raise SystemExit(f"Patched HTML is missing expected fix: {marker}")
+          print("Patched AIA archive created and validated.")
+          PY
+
+      - name: Upload Android-ready App Inventor project
+        uses: actions/upload-artifact@v4
+        with:
+          name: TutorHisab-Android-Ready-AIA
+          path: TutorHisab_Android_Ready.aia
+          if-no-files-found: error
