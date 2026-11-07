@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
     @Override public void onBackPressed() {
         if (webView == null) { super.onBackPressed(); return; }
         webView.evaluateJavascript("(function(){return window.handleAndroidBack ? window.handleAndroidBack() : 'exit';})()", value -> {
-            if ("\\\"exit\\\"".equals(value) || value == null) finish();
+            if ("\"exit\"".equals(value) || value == null) finish();
         });
     }
 }
