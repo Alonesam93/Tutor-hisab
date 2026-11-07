@@ -6,6 +6,10 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import android.os.Environment;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
@@ -69,8 +73,19 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "ব্যাকআপ ডাউনলোড শুরু হয়েছে", Toast.LENGTH_SHORT).show();
             } catch (Exception e) { Toast.makeText(this, "ডাউনলোড করা যায়নি", Toast.LENGTH_LONG).show(); }
         });
-        if (savedInstanceState == null) webView.loadUrl("file:///android_asset/index.html");
-        else webView.restoreState(savedInstanceState);
+        if (savedInstanceState == null) {
+            try (InputStream input = getAssets().open("index.html"); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                byte[] buffer = new byte[8192];
+                int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                String html = output.toString(StandardCharsets.UTF_8.name());
+                // Give the bundled app a secure, Firebase-authorized web origin instead of file:// (null origin).
+                webView.loadDataWithBaseURL("https://tutor-hisab.firebaseapp.com/", html, "text/html", "UTF-8", null);
+            } catch (Exception e) {
+                Log.e("TutorHisab", "Could not load app assets", e);
+                Toast.makeText(this, "অ্যাপ লোড করা যায়নি। আবার ইনস্টল করুন।", Toast.LENGTH_LONG).show();
+            }
+        } else webView.restoreState(savedInstanceState);
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
