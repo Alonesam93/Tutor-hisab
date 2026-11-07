@@ -32,7 +32,7 @@
  <div class="brand">📚 Tutor Hisab</div>
  <section class="card">
   <div class="tabs"><button id="loginTab" class="active" onclick="authMode('login')">Sign In</button><button id="signupTab" onclick="authMode('signup')">Sign Up</button></div>
-  <div class="notice">অ্যাকাউন্টের নিরাপদ ইমেইল লগইনের জন্য Firebase Authentication সংযোগ সম্পন্ন না হওয়া পর্যন্ত এখানে বাস্তব Sign In/Sign Up চালু নয়। এই প্রিভিউতে পাসওয়ার্ড সংরক্ষণ করা হয় না।</div>
+  <div class="notice">ইমেইল ও পাসওয়ার্ড দিয়ে Firebase-এর মাধ্যমে অ্যাকাউন্ট তৈরি ও লগইন হবে। প্রথমবার লগইন/সাইন আপের সময় ইন্টারনেট সংযোগ প্রয়োজন।</div>
   <form id="authForm" onsubmit="return authSubmit(event)">
    <div id="signupFields" class="hidden">
     <label>Profile Photo / প্রোফাইল ছবি</label><input id="photo" type="file" accept="image/*">
