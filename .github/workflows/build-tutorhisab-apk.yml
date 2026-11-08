@@ -7,8 +7,9 @@ on:
       - build/capacitor-debug-apk
     paths:
       - index.html
-      - package.json
-      - capacitor.config.json
+      - app/**
+      - build.gradle
+      - settings.gradle
       - .github/workflows/build-tutorhisab-apk.yml
 
 permissions:
@@ -21,16 +22,14 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Install Android SDK packages
         run: |
@@ -40,45 +39,24 @@ jobs:
           yes | "$SDKMANAGER" --licenses
           "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
 
-      - name: Install Capacitor
-        run: npm install
-
-      - name: Prepare web assets
-        run: npm run build:web
-
-      - name: Generate Android project
-        run: npx cap add android
-
-      - name: Add resilient Maven mirrors
+      - name: Prepare current app screens and legal pages
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          for name in ("android/build.gradle", "android/settings.gradle"):
-              path = Path(name)
-              if not path.exists():
-                  continue
-              text = path.read_text()
-              text = text.replace(
-                  "mavenCentral()",
-                  "mavenCentral()" + chr(10) + "        maven { url 'https://maven-central.storage-download.googleapis.com/maven2' }"
-              )
-              text = text.replace(
-                  "google()",
-                  "google()" + chr(10) + "        maven { url 'https://maven.google.com' }"
-              )
-              path.write_text(text)
-          PY
+          mkdir -p app/src/main/assets
+          cp index.html app/src/main/assets/index.html
+          cp hosting/privacy.html app/src/main/assets/privacy.html
+          cp hosting/terms.html app/src/main/assets/terms.html
 
-      - name: Sync web assets
-        run: npx cap sync android
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
 
       - name: Build debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug
+        run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Tutor-Hisab-debug-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
