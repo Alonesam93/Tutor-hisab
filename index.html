@@ -252,7 +252,7 @@ function applyLanguage(){
  document.documentElement.lang=lang;
  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
- for(const node of nodes){const raw=node.nodeValue,trimmed=raw.trim();if(!trimmed)continue;const translated=translations[trimmed];if(translated)node.nodeValue=raw.replace(trimmed,lang==="en"?translated:reverseTranslations[trimmed]||trimmed);}
+ for(const node of nodes){const raw=node.nodeValue,trimmed=raw.trim();if(!trimmed)continue;const translated=lang==="en"?translations[trimmed]:reverseTranslations[trimmed];if(translated)node.nodeValue=raw.replace(trimmed,translated);}
  document.querySelectorAll("[placeholder]").forEach(el=>{const original=el.dataset.bnPlaceholder||el.getAttribute("placeholder");if(!el.dataset.bnPlaceholder)el.dataset.bnPlaceholder=original;el.setAttribute("placeholder",lang==="en"?(translations[original]||original):original);});
  const select=document.getElementById("languageSelect");if(select&&select.value!==lang)select.value=lang;
 }
