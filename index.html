@@ -315,7 +315,7 @@ showTab("home");
 
 const firebaseConfig={apiKey:"AIzaSyCafBcI740GbEfMOIbR8dWhNpaypH-Z8Vw",authDomain:"tutor-hisab.firebaseapp.com",projectId:"tutor-hisab",storageBucket:"tutor-hisab.firebasestorage.app",messagingSenderId:"910571768792",appId:"1:910571768792:web:5e01f9a066b3d40ec600ad"};
 let auth=null,db=null,currentUser=null;
-try{if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}}catch(e){console.error(e);}
+try{if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn("Auth persistence:",e));}}catch(e){console.error(e);}
 function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
 function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
 function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim()};}
