@@ -24,14 +24,20 @@ h3{margin-top:0}
 .small{font-size:13px;color:#60756b}
 .notice{background:#fff4d6;padding:10px;border-radius:8px;margin:8px 0;font-size:14px}
 hr{border:0;border-top:1px solid #eee;margin:12px 0}
-</style>
+
+.tab-screen{max-width:700px;margin:auto;padding:14px 14px 90px}
+.bottom-nav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #dce5df;box-shadow:0 -2px 8px #0001}
+.bottom-nav button{font-size:10px;padding:10px 2px;margin:0;border-radius:7px;white-space:normal;min-height:44px}
+.bottom-nav button.active{background:#075b43}
+body{padding-bottom:75px}
+
 </head>
 <body>
 <header>
 <h2>📚 Tutor Hisab</h2>
 আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব
 </header>
-<main>
+<main id="homeScreen">
 <div class="card stats">
 <div class="stat">মোট শিক্ষার্থী<b id="count">০</b></div>
 <div class="stat">মোট জমা<b id="paid">৳০</b></div>
@@ -75,14 +81,47 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <button onclick="report()">রিপোর্ট দেখুন</button>
 <div id="reportResult"></div>
 </div>
-<div class="card">
+
+</main>
+
+<section id="storeScreen" class="tab-screen" hidden>
+ <div class="card"><h3>🛍️ My Store</h3>
+  <div class="student"><b>SMS Packages</b><p>Coming Soon</p></div>
+  <div class="student"><b>Pro</b><p>Coming Soon</p></div>
+  <div class="student"><b>Elite</b><p>Coming Soon</p></div>
+ </div>
+</section>
+<section id="notificationScreen" class="tab-screen" hidden>
+ <div class="card"><h3>🔔 Notification</h3><p>এখনো কোনো নোটিফিকেশন নেই।</p><p class="small">পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।</p></div>
+</section>
+<section id="profileScreen" class="tab-screen" hidden>
+ <div class="card"><h3>👤 My Profile</h3><p>প্রোফাইল ও অ্যাকাউন্ট ব্যবস্থাপনা Login/Signup যুক্ত হওয়ার পর সক্রিয় হবে।</p></div>
+</section>
+<section id="settingsScreen" class="tab-screen" hidden>
+ <div class="card"><h3>⚙️ Settings</h3>
+  <h4>💾 Save Your Progress</h4>
+  <div class="card">
 <h3>💾 ব্যাকআপ ও রিস্টোর</h3>
 <button onclick="backup()">ব্যাকআপ ডাউনলোড করুন</button>
 <label>ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন</label>
 <input type="file" id="restoreFile" accept=".json,application/json">
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
-</main>
+  <hr><h4>Language</h4><p class="small">বাংলা ও English-এর সম্পূর্ণ অনুবাদ পরবর্তী ধাপে যুক্ত করা হচ্ছে।</p>
+  <hr><h4>Guideline</h4><p>শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।</p>
+  <hr><h4>Support</h4>
+  <p>Rate Us · Feedback · Privacy Policy · Terms of Service · Contact Us · About</p>
+  <p class="small">এই লিংকগুলো প্রকাশের আগে যাচাই করা হবে।</p>
+ </div>
+</section>
+<nav class="bottom-nav" aria-label="Main navigation">
+ <button type="button" data-tab="home">Homepage</button>
+ <button type="button" data-tab="store">My Store</button>
+ <button type="button" data-tab="notification">Notification</button>
+ <button type="button" data-tab="profile">My Profile</button>
+ <button type="button" data-tab="settings">Settings</button>
+</nav>
+
 <script>
 const STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
@@ -186,6 +225,19 @@ function restore(){
   }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
  };reader.readAsText(file);
 }
+
+function showTab(tab){
+ const home=$("homeScreen");
+ const screens={store:$("storeScreen"),notification:$("notificationScreen"),profile:$("profileScreen"),settings:$("settingsScreen")};
+ home.hidden=tab!=="home";
+ Object.entries(screens).forEach(([key,el])=>{el.hidden=key!==tab;});
+ document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.classList.toggle("active",btn.dataset.tab===tab));
+ window.scrollTo(0,0);
+}
+document.querySelector(".bottom-nav").addEventListener("click",e=>{
+ const btn=e.target.closest("[data-tab]");if(btn)showTab(btn.dataset.tab);
+});
+showTab("home");
 render();
 </script>
 </body>
