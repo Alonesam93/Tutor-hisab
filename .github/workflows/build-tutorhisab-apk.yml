@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - build/capacitor-debug-apk
+      - fix/white-screen-onboarding
     paths:
       - index.html
       - app/**
