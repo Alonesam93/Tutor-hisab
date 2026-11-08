@@ -1,6 +1,8 @@
 package com.tutorhisab.app;
 
 import android.app.Activity;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Build;
 import android.os.Environment;
@@ -107,6 +109,10 @@ public class MainActivity extends Activity {
             }
         });
         setContentView(webView);
+        if (Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
+        }
         if (savedInstanceState == null) {
             webView.loadUrl("file:///android_asset/index.html");
         } else {
