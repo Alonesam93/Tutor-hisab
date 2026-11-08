@@ -324,23 +324,38 @@ function emailSignIn(){if(!auth){alert("Firebase সংযোগ পাওয়া
 async function emailSignUp(){if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি।");return;}const e=$("authEmail").value.trim(),p=$("authPassword").value;if(!e||p.length<6){alert("সঠিক ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");return;}try{const u=await auth.createUserWithEmailAndPassword(e,p);await db.collection("users").doc(u.user.uid).set({email:u.user.email,profile:profileValues(),createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("অ্যাকাউন্ট তৈরি হয়েছে।");}catch(x){alert("অ্যাকাউন্ট তৈরি হয়নি: "+x.message);}}
 async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
 async function readCloudData(uid){const base=db.collection("users").doc(uid),r=await Promise.all([base.get(),base.collection("students").get(),base.collection("payments").get()]),v=r[0].exists?r[0].data():{};return{students:r[1].docs.map(x=>({id:x.id,...x.data()})),payments:r[2].docs.map(x=>({id:x.id,...x.data()})),profile:v.profile||{}};}
-async function writeCloudData(uid,d){
- const base=db.collection("users").doc(uid);
- const [oldS,oldP]=await Promise.all([base.collection("students").get(),base.collection("payments").get()]);
- const ops=[];
- oldS.docs.forEach(x=>ops.push({ref:x.ref,del:true}));
- oldP.docs.forEach(x=>ops.push({ref:x.ref,del:true}));
- d.students.forEach(x=>ops.push({ref:base.collection("students").doc(String(x.id)),data:x}));
- d.payments.forEach(x=>ops.push({ref:base.collection("payments").doc(String(x.id)),data:x}));
- for(let i=0;i<ops.length;i+=400){
+function stableRecord(value){
+ const keys=Object.keys(value||{}).sort();
+ const normalized={};keys.forEach(k=>normalized[k]=value[k]);
+ return JSON.stringify(normalized);
+}
+async function syncCloud(){
+ if(!currentUser||!db){cloudMessage("Cloud Sync করতে আগে Sign In করুন।");return;}
+ cloudMessage("Cloud-এর তথ্য নিরাপদে মিলিয়ে দেখা হচ্ছে…");
+ try{
+  const base=db.collection("users").doc(currentUser.uid);
+  const cloud=await readCloudData(currentUser.uid);
+  const local=JSON.parse(JSON.stringify(data));
+  const localStudents=new Map(local.students.map(x=>[String(x.id),x]));
+  const localPayments=new Map(local.payments.map(x=>[String(x.id),x]));
+  const cloudStudents=new Map(cloud.students.map(x=>[String(x.id),x]));
+  const cloudPayments=new Map(cloud.payments.map(x=>[String(x.id),x]));
+  for(const [id,item] of localStudents){if(cloudStudents.has(id)&&stableRecord(item)!==stableRecord(cloudStudents.get(id)))throw new Error("একই শিক্ষার্থীর ID-তে দুই জায়গায় ভিন্ন তথ্য আছে। কোনো তথ্য পরিবর্তন করা হয়নি। Backup নিয়ে সহায়তা নিন।");}
+  for(const [id,item] of localPayments){if(cloudPayments.has(id)&&stableRecord(item)!==stableRecord(cloudPayments.get(id)))throw new Error("একই জমার ID-তে দুই জায়গায় ভিন্ন তথ্য আছে। কোনো তথ্য পরিবর্তন করা হয়নি। Backup নিয়ে সহায়তা নিন।");}
   const batch=db.batch();
-  ops.slice(i,i+400).forEach(op=>op.del?batch.delete(op.ref):batch.set(op.ref,op.data));
-  await batch.commit();
- }
- await base.set({email:currentUser?.email||"",profile:profileValues(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  let writes=0;
+  for(const [id,item] of localStudents){if(!cloudStudents.has(id)){batch.set(base.collection("students").doc(id),item);writes++;}}
+  for(const [id,item] of localPayments){if(!cloudPayments.has(id)){batch.set(base.collection("payments").doc(id),item);writes++;}}
+  if(writes)await batch.commit();
+  const mergedStudents=new Map([...cloudStudents,...localStudents]);
+  const mergedPayments=new Map([...cloudPayments,...localPayments]);
+  data={students:[...mergedStudents.values()],payments:[...mergedPayments.values()]};
+  save();
+  await base.set({email:currentUser.email||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  cloudMessage("Cloud Sync সম্পন্ন। দুই জায়গার নতুন তথ্য একত্র করা হয়েছে; আগের কোনো রেকর্ড মুছে ফেলা হয়নি।");
+ }catch(e){console.error("Safe Cloud Sync:",e);cloudMessage("Cloud Sync বন্ধ রাখা হয়েছে: "+e.message);}
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}try{await db.collection("users").doc(currentUser.uid).set({profile:profileValues(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল সংরক্ষণ হয়নি: "+e.message);}}
-async function syncCloud(){if(!currentUser){alert("আগে Sign In করুন।");return;}cloudMessage("Cloud-এর তথ্য যাচাই হচ্ছে…");try{const cloud=await readCloudData(currentUser.uid),local=JSON.parse(JSON.stringify(data)),lh=local.students.length||local.payments.length,ch=cloud.students.length||cloud.payments.length;if(lh&&ch){if(confirm("এই ডিভাইসের তথ্য Cloud-এ আপলোড করবেন? এতে Cloud-এর আগের তথ্য প্রতিস্থাপিত হবে। OK=Upload, Cancel=Cloud থেকে আনুন।")){await writeCloudData(currentUser.uid,local);cloudMessage("Cloud-এ সংরক্ষণ হয়েছে।");}else if(confirm("Cloud-এর তথ্য এই ডিভাইসে আনবেন? বর্তমান তথ্য প্রতিস্থাপিত হবে।")){data={students:cloud.students,payments:cloud.payments};save();cloudMessage("Cloud-এর তথ্য এসেছে।");}else cloudMessage("Sync বাতিল হয়েছে।");}else if(lh){await writeCloudData(currentUser.uid,local);cloudMessage("ডিভাইসের তথ্য Cloud-এ সংরক্ষণ হয়েছে।");}else if(ch){data={students:cloud.students,payments:cloud.payments};save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে এসেছে।");}else{await writeCloudData(currentUser.uid,local);cloudMessage("Cloud Sync প্রস্তুত।");}}catch(e){cloudMessage("Cloud Sync হয়নি: "+e.message);}}
 if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;if(u){const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);try{const cloud=await readCloudData(u.uid);$("profileName").value=cloud.profile.name||"";$("profileMobile").value=cloud.profile.mobile||"";$("profileInstitution").value=cloud.profile.institution||"";$("profileDesignation").value=cloud.profile.designation||"";await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}}else{currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");}
 
 
