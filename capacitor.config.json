@@ -1,0 +1,8 @@
+{
+  "appId": "com.tutorhisab.app",
+  "appName": "Tutor Hisab",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
