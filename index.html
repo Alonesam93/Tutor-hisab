@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#087f5b">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <title>Tutor Hisab</title>
 <style>
 *{box-sizing:border-box}
@@ -94,9 +97,18 @@ body{padding-bottom:75px}
 <section id="notificationScreen" class="tab-screen" hidden>
  <div class="card"><h3>🔔 Notification</h3><p>এখনো কোনো নোটিফিকেশন নেই।</p><p class="small">পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।</p></div>
 </section>
-<section id="profileScreen" class="tab-screen" hidden>
- <div class="card"><h3>👤 My Profile</h3><p>প্রোফাইল ও অ্যাকাউন্ট ব্যবস্থাপনা Login/Signup যুক্ত হওয়ার পর সক্রিয় হবে।</p></div>
-</section>
+<section id="profileScreen" class="tab-screen" hidden><div class="card">
+<h3>👤 My Profile / Account</h3><p id="authStatus" class="small">স্থানীয়ভাবে ব্যবহার অথবা অ্যাকাউন্টে Sign In করুন।</p>
+<label>নাম</label><input id="profileName" maxlength="100" placeholder="আপনার নাম">
+<label>মোবাইল নম্বর</label><input id="profileMobile" maxlength="20" inputmode="tel" placeholder="মোবাইল নম্বর">
+<label>প্রতিষ্ঠানের নাম</label><input id="profileInstitution" maxlength="120" placeholder="প্রতিষ্ঠানের নাম">
+<label>পদবি</label><input id="profileDesignation" maxlength="80" placeholder="যেমন: শিক্ষক">
+<label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল">
+<label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
+<button onclick="emailSignIn()">Sign In</button><button class="secondary" onclick="emailSignUp()">Sign Up</button>
+<button class="secondary" onclick="saveProfile()">প্রোফাইল সংরক্ষণ</button><button class="secondary" onclick="syncCloud()">এখনই Cloud Sync করুন</button>
+<button class="danger" onclick="emailSignOut()">Sign Out</button><p id="cloudStatus" class="small">Cloud Sync করতে ইন্টারনেট প্রয়োজন।</p>
+</div></section>
 <section id="settingsScreen" class="tab-screen" hidden>
  <div class="card"><h3>⚙️ Settings</h3>
   <h4>💾 Save Your Progress</h4>
@@ -110,8 +122,10 @@ body{padding-bottom:75px}
   <hr><h4>Language</h4><select id="languageSelect" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select>
   <hr><h4>Guideline</h4><p>শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।</p>
   <hr><h4>Support</h4>
-  <p>Rate Us · Feedback · Privacy Policy · Terms of Service · Contact Us · About</p>
-  <p class="small">এই লিংকগুলো প্রকাশের আগে যাচাই করা হবে।</p>
+  <p><a href="privacy.html">Privacy Policy / গোপনীয়তা নীতি</a></p>
+  <p><a href="terms.html">Terms of Service / ব্যবহারের শর্তাবলি</a></p>
+  <p><a href="mailto:tutorhisab.support@gmail.com">Contact Us / যোগাযোগ</a></p>
+  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">Feedback</a> · Rate Us · About Tutor Hisab</p>
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
@@ -123,7 +137,7 @@ body{padding-bottom:75px}
 </nav>
 
 <script>
-const STORAGE_KEY="tutorHisabData";
+let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
 const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
 const today=new Date();
@@ -208,6 +222,7 @@ function report(){
  $("reportResult").innerHTML=rows.map(r=>`<hr><b>${esc(r.name)}</b><br>এই মাসে জমা: ${money(r.paid)}<br>এই মাস পর্যন্ত মোট বকেয়া: ${money(r.due)}`).join("")||"কোনো তথ্য নেই";
 }
 function backup(){
+ if(window.Android && typeof window.Android.saveBackup==="function"){window.Android.saveBackup(JSON.stringify(data,null,2));return;}
  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
  a.href=url;a.download="tutor-hisab-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
@@ -273,6 +288,22 @@ document.querySelector(".bottom-nav").addEventListener("click",e=>{
  const btn=e.target.closest("[data-tab]");if(btn)showTab(btn.dataset.tab);
 });
 showTab("home");
+
+const firebaseConfig={apiKey:"AIzaSyCafBcI740GbEfMOIbR8dWhNpaypH-Z8Vw",authDomain:"tutor-hisab.firebaseapp.com",projectId:"tutor-hisab",storageBucket:"tutor-hisab.firebasestorage.app",messagingSenderId:"910571768792",appId:"1:910571768792:web:5e01f9a066b3d40ec600ad"};
+let auth=null,db=null,currentUser=null;
+try{if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}}catch(e){console.error(e);}
+function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
+function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
+function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim()};}
+function emailSignIn(){if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি।");return;}const e=$("authEmail").value.trim(),p=$("authPassword").value;if(!e||!p){alert("ইমেইল ও পাসওয়ার্ড লিখুন।");return;}auth.signInWithEmailAndPassword(e,p).catch(x=>alert("লগইন হয়নি: "+x.message));}
+async function emailSignUp(){if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি।");return;}const e=$("authEmail").value.trim(),p=$("authPassword").value;if(!e||p.length<6){alert("সঠিক ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");return;}try{const u=await auth.createUserWithEmailAndPassword(e,p);await db.collection("users").doc(u.user.uid).set({email:u.user.email,profile:profileValues(),students:[],payments:[],createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("অ্যাকাউন্ট তৈরি হয়েছে।");}catch(x){alert("অ্যাকাউন্ট তৈরি হয়নি: "+x.message);}}
+async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
+async function readCloudData(uid){const s=await db.collection("users").doc(uid).get(),v=s.exists?s.data():{};return{students:Array.isArray(v.students)?v.students:[],payments:Array.isArray(v.payments)?v.payments:[],profile:v.profile||{}};}
+async function writeCloudData(uid,d){await db.collection("users").doc(uid).set({email:currentUser?.email||"",profile:profileValues(),students:d.students,payments:d.payments,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
+async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}try{await db.collection("users").doc(currentUser.uid).set({profile:profileValues(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল সংরক্ষণ হয়নি: "+e.message);}}
+async function syncCloud(){if(!currentUser){alert("আগে Sign In করুন।");return;}cloudMessage("Cloud-এর তথ্য যাচাই হচ্ছে…");try{const cloud=await readCloudData(currentUser.uid),local=JSON.parse(JSON.stringify(data)),lh=local.students.length||local.payments.length,ch=cloud.students.length||cloud.payments.length;if(lh&&ch){if(confirm("এই ডিভাইসের তথ্য Cloud-এ আপলোড করবেন? এতে Cloud-এর আগের তথ্য প্রতিস্থাপিত হবে। OK=Upload, Cancel=Cloud থেকে আনুন।")){await writeCloudData(currentUser.uid,local);cloudMessage("Cloud-এ সংরক্ষণ হয়েছে।");}else if(confirm("Cloud-এর তথ্য এই ডিভাইসে আনবেন? বর্তমান তথ্য প্রতিস্থাপিত হবে।")){data={students:cloud.students,payments:cloud.payments};save();cloudMessage("Cloud-এর তথ্য এসেছে।");}else cloudMessage("Sync বাতিল হয়েছে।");}else if(lh){await writeCloudData(currentUser.uid,local);cloudMessage("ডিভাইসের তথ্য Cloud-এ সংরক্ষণ হয়েছে।");}else if(ch){data={students:cloud.students,payments:cloud.payments};save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে এসেছে।");}else{await writeCloudData(currentUser.uid,local);cloudMessage("Cloud Sync প্রস্তুত।");}}catch(e){cloudMessage("Cloud Sync হয়নি: "+e.message);}}
+if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;if(u){const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);try{const cloud=await readCloudData(u.uid);$("profileName").value=cloud.profile.name||"";$("profileMobile").value=cloud.profile.mobile||"";$("profileInstitution").value=cloud.profile.institution||"";$("profileDesignation").value=cloud.profile.designation||"";await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}}else{currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");}
+
 render();
 </script>
 </body>
