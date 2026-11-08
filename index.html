@@ -33,6 +33,11 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 .bottom-nav button{font-size:10px;padding:10px 2px;margin:0;border-radius:7px;white-space:normal;min-height:44px}
 .bottom-nav button.active{background:#075b43}
 body{padding-bottom:75px}
+.onboarding{position:fixed;inset:0;z-index:100;background:#0b241dcc;display:flex;align-items:center;justify-content:center;padding:18px}
+.onboarding[hidden]{display:none}
+.onboarding-card{background:#fff;width:100%;max-width:420px;padding:22px;border-radius:16px;box-shadow:0 12px 40px #0004}
+.onboarding-card h2{color:#087f5b;margin-top:0}
+.onboarding-card a{color:#087f5b}
 
 </head>
 <body>
@@ -40,6 +45,24 @@ body{padding-bottom:75px}
 <h2>📚 Tutor Hisab</h2>
 আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব
 </header>
+
+<div id="firstRunOverlay" class="onboarding" hidden>
+ <div class="onboarding-card">
+  <section id="firstLanguageStep">
+   <h2>Welcome to Tutor Hisab</h2><p>Choose your language / ভাষা নির্বাচন করুন</p>
+   <button type="button" data-first-language="bn">বাংলা</button>
+   <button type="button" data-first-language="en">English</button>
+  </section>
+  <section id="firstAccountStep" hidden>
+   <h2>Welcome / স্বাগতম</h2>
+   <p id="firstAccountMessage">Sign in or create an account to sync your data. You can also continue offline.</p>
+   <button type="button" id="firstOpenAccount">Sign In / Sign Up</button>
+   <button type="button" class="secondary" id="firstContinueOffline">Continue Offline</button>
+   <p><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="mailto:tutorhisab.support@gmail.com">Contact</a></p>
+  </section>
+ </div>
+</div>
+
 <main id="homeScreen">
 <div class="card stats">
 <div class="stat">মোট শিক্ষার্থী<b id="count">০</b></div>
@@ -318,6 +341,27 @@ async function writeCloudData(uid,d){
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}try{await db.collection("users").doc(currentUser.uid).set({profile:profileValues(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল সংরক্ষণ হয়নি: "+e.message);}}
 async function syncCloud(){if(!currentUser){alert("আগে Sign In করুন।");return;}cloudMessage("Cloud-এর তথ্য যাচাই হচ্ছে…");try{const cloud=await readCloudData(currentUser.uid),local=JSON.parse(JSON.stringify(data)),lh=local.students.length||local.payments.length,ch=cloud.students.length||cloud.payments.length;if(lh&&ch){if(confirm("এই ডিভাইসের তথ্য Cloud-এ আপলোড করবেন? এতে Cloud-এর আগের তথ্য প্রতিস্থাপিত হবে। OK=Upload, Cancel=Cloud থেকে আনুন।")){await writeCloudData(currentUser.uid,local);cloudMessage("Cloud-এ সংরক্ষণ হয়েছে।");}else if(confirm("Cloud-এর তথ্য এই ডিভাইসে আনবেন? বর্তমান তথ্য প্রতিস্থাপিত হবে।")){data={students:cloud.students,payments:cloud.payments};save();cloudMessage("Cloud-এর তথ্য এসেছে।");}else cloudMessage("Sync বাতিল হয়েছে।");}else if(lh){await writeCloudData(currentUser.uid,local);cloudMessage("ডিভাইসের তথ্য Cloud-এ সংরক্ষণ হয়েছে।");}else if(ch){data={students:cloud.students,payments:cloud.payments};save();cloudMessage("Cloud-এর তথ্য এই ডিভাইসে এসেছে।");}else{await writeCloudData(currentUser.uid,local);cloudMessage("Cloud Sync প্রস্তুত।");}}catch(e){cloudMessage("Cloud Sync হয়নি: "+e.message);}}
 if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;if(u){const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);try{const cloud=await readCloudData(u.uid);$("profileName").value=cloud.profile.name||"";$("profileMobile").value=cloud.profile.mobile||"";$("profileInstitution").value=cloud.profile.institution||"";$("profileDesignation").value=cloud.profile.designation||"";await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}}else{currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");}
+
+
+function finishOnboarding(tab){
+ localStorage.setItem("tutorHisabOnboardingDone","yes");
+ $("firstRunOverlay").hidden=true;
+ showTab(tab);
+}
+document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventListener("click",()=>{
+ const lang=btn.dataset.firstLanguage;
+ localStorage.setItem("tutorHisabLanguage",lang);
+ applyLanguage();
+ $("firstLanguageStep").hidden=true;
+ $("firstAccountStep").hidden=false;
+}));
+$("firstOpenAccount").addEventListener("click",()=>finishOnboarding("profile"));
+$("firstContinueOffline").addEventListener("click",()=>finishOnboarding("home"));
+if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
+ $("firstRunOverlay").hidden=false;
+ $("firstLanguageStep").hidden=false;
+ $("firstAccountStep").hidden=true;
+}
 
 render();
 </script>
