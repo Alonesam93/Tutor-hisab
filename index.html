@@ -107,7 +107,7 @@ body{padding-bottom:75px}
 <input type="file" id="restoreFile" accept=".json,application/json">
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
-  <hr><h4>Language</h4><p class="small">বাংলা ও English-এর সম্পূর্ণ অনুবাদ পরবর্তী ধাপে যুক্ত করা হচ্ছে।</p>
+  <hr><h4>Language</h4><select id="languageSelect" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select>
   <hr><h4>Guideline</h4><p>শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।</p>
   <hr><h4>Support</h4>
   <p>Rate Us · Feedback · Privacy Policy · Terms of Service · Contact Us · About</p>
@@ -225,6 +225,41 @@ function restore(){
   }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
  };reader.readAsText(file);
 }
+
+
+const translations={
+"আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব":"Student and monthly tuition management",
+"মোট শিক্ষার্থী":"Total Students","মোট জমা":"Total Paid","মোট বকেয়া":"Total Due","মাসিক নির্ধারিত বেতন":"Monthly Tuition",
+"➕ নতুন শিক্ষার্থী যোগ করুন":"➕ Add New Student","শিক্ষার্থীর নাম":"Student Name","শ্রেণি":"Class","মোবাইল নম্বর":"Mobile Number","মাসিক বেতন":"Monthly Fee",
+"বেতন গণনা শুরুর মাস":"Fee Calculation Start Month","আগের বকেয়া (টাকা)":"Previous Due (৳)","শিক্ষার্থী সংরক্ষণ করুন":"Save Student","সম্পাদনা বাতিল করুন":"Cancel Edit",
+"💰 বেতন জমা করুন":"💰 Record Payment","শিক্ষার্থী নির্বাচন করুন":"Select Student","জমার পরিমাণ":"Payment Amount","কোন মাসের বেতন":"Payment For Month","জমার তারিখ":"Payment Date",
+"একাধিক মাসের বকেয়া থাকলে নির্বাচিত মাস পর্যন্ত মোট বকেয়ার মধ্যে জমা নেওয়া হবে।":"For multiple unpaid months, payment is accepted up to the total due through the selected month.",
+"জমা সংরক্ষণ করুন":"Save Payment","🧾 জমার ইতিহাস":"🧾 Payment History","এখনো কোনো জমা নেই।":"No payments recorded yet.",
+"👨‍🎓 শিক্ষার্থীদের তালিকা":"👨‍🎓 Student List","এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।":"No students added yet.",
+"📊 মাসিক রিপোর্ট":"📊 Monthly Report","রিপোর্ট দেখুন":"View Report","এই মাসে জমা:":"Paid this month:","এই মাস পর্যন্ত মোট বকেয়া:":"Total due through this month:",
+"💾 ব্যাকআপ ও রিস্টোর":"💾 Backup & Restore","ব্যাকআপ ডাউনলোড করুন":"Download Backup","ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন":"Restore data from backup file","ব্যাকআপ রিস্টোর করুন":"Restore Backup",
+"🛍️ My Store":"🛍️ My Store","SMS Packages":"SMS Packages","Coming Soon":"Coming Soon","🔔 Notification":"🔔 Notification","এখনো কোনো নোটিফিকেশন নেই।":"No notifications yet.",
+"পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে。":"Payment reminders and app update notifications will be added in a later update.",
+"👤 My Profile":"👤 My Profile","প্রোফাইল ও অ্যাকাউন্ট ব্যবস্থাপনা Login/Signup যুক্ত হওয়ার পর সক্রিয় হবে।":"Profile and account management will be available after Login/Signup is implemented.",
+"⚙️ Settings":"⚙️ Settings","💾 Save Your Progress":"💾 Save Your Progress","Language":"Language","Guideline":"Guideline",
+"শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।":"Add students, set monthly fees, and record payments.",
+"Support":"Support","এই লিংকগুলো প্রকাশের আগে যাচাই করা হবে।":"These links will be verified before release.",
+"সম্পাদনা":"Edit","শিক্ষার্থী মুছুন":"Delete Student","জমা সম্পাদনা":"Edit Payment","জমা মুছুন":"Delete Payment",
+"মোবাইল:":"Mobile:","মাসিক বেতন:":"Monthly Fee:","মোট জমা:":"Total Paid:","বর্তমান বকেয়া:":"Current Due:","হিসাব শুরুর মাস:":"Fee Start Month:","আগের বকেয়া:":"Previous Due:"
+};
+function applyLanguage(){
+ const lang=localStorage.getItem("tutorHisabLanguage")||"bn";
+ document.documentElement.lang=lang;
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+ const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+ for(const node of nodes){const raw=node.nodeValue,trimmed=raw.trim();if(!trimmed)continue;const translated=translations[trimmed];if(translated)node.nodeValue=raw.replace(trimmed,lang==="en"?translated:reverseTranslations[trimmed]||trimmed);}
+ document.querySelectorAll("[placeholder]").forEach(el=>{const original=el.dataset.bnPlaceholder||el.getAttribute("placeholder");if(!el.dataset.bnPlaceholder)el.dataset.bnPlaceholder=original;el.setAttribute("placeholder",lang==="en"?(translations[original]||original):original);});
+ const select=document.getElementById("languageSelect");if(select&&select.value!==lang)select.value=lang;
+}
+const reverseTranslations=Object.fromEntries(Object.entries(translations).map(([bn,en])=>[en,bn]));
+const originalRender=render;
+render=function(){originalRender();applyLanguage();};
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="languageSelect"){localStorage.setItem("tutorHisabLanguage",e.target.value);applyLanguage();}});
 
 function showTab(tab){
  const home=$("homeScreen");
