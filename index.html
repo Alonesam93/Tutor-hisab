@@ -169,7 +169,7 @@ body{padding-bottom:75px}
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
  <div class="profile-head">
-  <img id="profileAvatar" class="profile-avatar" alt="Profile photo" hidden>
+  <img id="profileAvatar" class="profile-avatar" alt="প্রোফাইল ছবি" hidden>
   <div id="profileAvatarFallback" class="profile-avatar-fallback" aria-hidden="true">👤</div>
   <div class="profile-head-main"><h3 id="profileDisplayName">আমার প্রোফাইল</h3><p id="profileDisplayEmail"></p></div>
   <button id="profileEditBtn" type="button" class="secondary" onclick="editProfile()">✏️ সম্পাদনা</button>
@@ -208,7 +208,7 @@ body{padding-bottom:75px}
   <p><a href="privacy.html">গোপনীয়তা নীতি</a></p>
   <p><a href="terms.html">ব্যবহারের শর্তাবলি</a></p>
   <p><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a> · রেটিং দিন · Tutor Hisab পরিচিতি</p>
+  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a></p><p>রেটিং দিন · Tutor Hisab পরিচিতি</p>
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
@@ -373,7 +373,7 @@ const translations={
 "মাসিক রিপোর্ট":"Monthly Report","রিপোর্ট দেখুন":"View Report","ব্যাকআপ ডাউনলোড করুন":"Download Backup",
 "ব্যাকআপ রিস্টোর করুন":"Restore Backup","ব্যাকআপ ও রিস্টোর":"Backup & Restore",
 "Guideline":"Guideline","Support":"Support","Save Your Progress":"Save Your Progress",
-"গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact Us",
+"গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact Us","রেটিং দিন · Tutor Hisab পরিচিতি":"Rate Us · About Tutor Hisab",
 "হোমপেজ":"Homepage","আমার স্টোর":"My Store","নোটিফিকেশন":"Notification","আমার প্রোফাইল":"My Profile","সেটিংস":"Settings",
 "মূল নেভিগেশন":"Main navigation","Tutor Hisab-এ স্বাগতম":"Welcome to Tutor Hisab","ভাষা নির্বাচন করুন":"Choose your language",
 "লগইন করুন":"Sign In","ইমেইল":"Email","পাসওয়ার্ড":"Password","প্রবেশ করুন":"Sign In",
@@ -411,7 +411,7 @@ function applyLanguage(){
  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  for(const node of nodes){const raw=node.nodeValue,trimmed=raw.trim();if(!trimmed)continue;const translated=lang==="en"?translations[trimmed]:reverseTranslations[trimmed];if(translated)node.nodeValue=raw.replace(trimmed,translated);}
- document.querySelectorAll("[placeholder],[aria-label],[title]").forEach(el=>["placeholder","aria-label","title"].forEach(attr=>{if(!el.hasAttribute(attr))return;const key="bn"+attr.replace(/(^|-)([a-z])/g,(_,a,b)=>b.toUpperCase());if(!el.dataset[key])el.dataset[key]=el.getAttribute(attr);const original=el.dataset[key];el.setAttribute(attr,lang==="en"?(translations[original]||original):(reverseTranslations[original]||original));}));
+ document.querySelectorAll("[placeholder],[aria-label],[title],[alt]").forEach(el=>["placeholder","aria-label","title"].forEach(attr=>{if(!el.hasAttribute(attr))return;const key="bn"+attr.replace(/(^|-)([a-z])/g,(_,a,b)=>b.toUpperCase());if(!el.dataset[key])el.dataset[key]=el.getAttribute(attr);const original=el.dataset[key];el.setAttribute(attr,lang==="en"?(translations[original]||original):(reverseTranslations[original]||original));}));
  const select=document.getElementById("languageSelect");if(select&&select.value!==lang)select.value=lang;
  updateProfileViewIfReady();
 }
