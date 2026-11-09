@@ -70,6 +70,9 @@ body{padding-bottom:75px}
 .profile-photo-picker{display:flex;align-items:center;gap:12px;margin:8px 0 14px}
 .profile-photo-picker input{max-width:100%}
 .profile-signout{margin-top:24px;width:100%}
+.home-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}
+.home-tabs button{font-size:13px;padding:11px 5px;margin:0;background:#e8f4ee;color:#075b43;border:1px solid #cde5d8}
+.home-tabs button.active{background:#087f5b;color:#fff}
 
 </style>
 </head>
@@ -118,42 +121,53 @@ body{padding-bottom:75px}
 <div class="stat">মোট বকেয়া<b id="due">৳০</b></div>
 <div class="stat">এই মাসের নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
-<div class="card">
-<h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
-<input id="name" placeholder="শিক্ষার্থীর নাম" maxlength="100">
-<input id="className" placeholder="শ্রেণি" maxlength="50">
-<input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel" maxlength="20">
-<input id="fee" type="number" min="1" step="0.01" placeholder="মাসিক বেতন">
-<label>বেতন গণনা শুরুর মাস</label>
-<input id="start" type="month">
-<input id="opening" type="number" min="0" step="0.01" value="0" placeholder="আগের বকেয়া (টাকা)">
-<button id="studentSaveBtn" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
-<button id="studentCancelBtn" class="secondary" style="display:none" onclick="cancelStudentEdit()">সম্পাদনা বাতিল করুন</button>
+<div class="home-tabs" role="tablist" aria-label="Homepage sections">
+ <button type="button" data-home-tab="students" class="active">👨‍🎓 শিক্ষার্থী</button>
+ <button type="button" data-home-tab="payments">💰 টাকা জমা</button>
+ <button type="button" data-home-tab="reports">📊 হিসাব-রিপোর্ট</button>
 </div>
-<div class="card">
-<h3>💰 বেতন জমা করুন</h3>
-<select id="payStudent"><option value="">শিক্ষার্থী নির্বাচন করুন</option></select>
-<input id="payAmount" type="number" min="0.01" step="0.01" placeholder="জমার পরিমাণ">
-<label>কোন মাসের বেতন</label>
-<input id="payMonth" type="month">
-<label>জমার তারিখ</label>
-<input id="payDate" type="date">
-<div class="notice">একাধিক মাসের বকেয়া থাকলে নির্বাচিত মাস পর্যন্ত মোট বকেয়ার মধ্যে জমা নেওয়া হবে।</div>
-<button onclick="addPayment()">জমা সংরক্ষণ করুন</button>
+<div id="homeStudentsPanel">
+ <div class="card">
+  <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
+  <input id="name" placeholder="শিক্ষার্থীর নাম" maxlength="100">
+  <input id="className" placeholder="শ্রেণি" maxlength="50">
+  <input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel" maxlength="20">
+  <input id="fee" type="number" min="1" step="0.01" placeholder="মাসিক বেতন">
+  <label>বেতন গণনা শুরুর মাস</label>
+  <input id="start" type="month">
+  <input id="opening" type="number" min="0" step="0.01" value="0" placeholder="আগের বকেয়া (টাকা)">
+  <button id="studentSaveBtn" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
+  <button id="studentCancelBtn" class="secondary" style="display:none" onclick="cancelStudentEdit()">সম্পাদনা বাতিল করুন</button>
+ </div>
+ <div class="card">
+  <h3>👨‍🎓 শিক্ষার্থীদের তালিকা</h3>
+  <div id="students">এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।</div>
+ </div>
 </div>
-<div class="card">
-<h3>🧾 জমার ইতিহাস</h3>
-<div id="paymentHistory">এখনো কোনো জমা নেই।</div>
+<div id="homePaymentsPanel" hidden>
+ <div class="card">
+  <h3>💰 বেতন জমা করুন</h3>
+  <select id="payStudent"><option value="">শিক্ষার্থী নির্বাচন করুন</option></select>
+  <input id="payAmount" type="number" min="0.01" step="0.01" placeholder="জমার পরিমাণ">
+  <label>কোন মাসের বেতন</label>
+  <input id="payMonth" type="month">
+  <label>জমার তারিখ</label>
+  <input id="payDate" type="date">
+  <div class="notice">একাধিক মাসের বকেয়া থাকলে নির্বাচিত মাস পর্যন্ত মোট বকেয়ার মধ্যে জমা নেওয়া হবে।</div>
+  <button onclick="addPayment()">জমা সংরক্ষণ করুন</button>
+ </div>
+ <div class="card">
+  <h3>🧾 জমার ইতিহাস</h3>
+  <div id="paymentHistory">এখনো কোনো জমা নেই۔</div>
+ </div>
 </div>
-<div class="card">
-<h3>👨‍🎓 শিক্ষার্থীদের তালিকা</h3>
-<div id="students">এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।</div>
-</div>
-<div class="card">
-<h3>📊 মাসিক রিপোর্ট</h3>
-<input id="reportMonth" type="month">
-<button onclick="report()">রিপোর্ট দেখুন</button>
-<div id="reportResult"></div>
+<div id="homeReportsPanel" hidden>
+ <div class="card">
+  <h3>📊 মাসিক রিপোর্ট</h3>
+  <input id="reportMonth" type="month">
+  <button onclick="report()">রিপোর্ট দেখুন</button>
+  <div id="reportResult"></div>
+ </div>
 </div>
 
 </main>
@@ -374,7 +388,7 @@ const translations={
 "মাসিক রিপোর্ট":"Monthly Report","রিপোর্ট দেখুন":"View Report","ব্যাকআপ ডাউনলোড করুন":"Download Backup",
 "ব্যাকআপ রিস্টোর করুন":"Restore Backup","ব্যাকআপ ও রিস্টোর":"Backup & Restore",
 "Guideline":"Guideline","Support":"Support","Save Your Progress":"Save Your Progress",
-"গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact Us","রেটিং দিন · Tutor Hisab পরিচিতি":"Rate Us · About Tutor Hisab",
+"গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact Us","👨‍🎓 শিক্ষার্থী":"👨‍🎓 Students","💰 টাকা জমা":"💰 Payments","📊 হিসাব-রিপোর্ট":"📊 Reports","রেটিং দিন · Tutor Hisab পরিচিতি":"Rate Us · About Tutor Hisab",
 "হোমপেজ":"Homepage","আমার স্টোর":"My Store","নোটিফিকেশন":"Notification","আমার প্রোফাইল":"My Profile","সেটিংস":"Settings",
 "মূল নেভিগেশন":"Main navigation","Tutor Hisab-এ স্বাগতম":"Welcome to Tutor Hisab","ভাষা নির্বাচন করুন":"Choose your language",
 "লগইন করুন":"Sign In","ইমেইল":"Email","পাসওয়ার্ড":"Password","প্রবেশ করুন":"Sign In",
@@ -422,6 +436,8 @@ const originalRender=render;
 render=function(){originalRender();applyLanguage();};
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="languageSelect"){localStorage.setItem("tutorHisabLanguage",e.target.value);render();}});
 
+function showHomePanel(tab){const panels={students:$("homeStudentsPanel"),payments:$("homePaymentsPanel"),reports:$("homeReportsPanel")};Object.entries(panels).forEach(([key,el])=>el.hidden=key!==tab);document.querySelectorAll("[data-home-tab]").forEach(btn=>btn.classList.toggle("active",btn.dataset.homeTab===tab));}
+document.querySelector(".home-tabs").addEventListener("click",e=>{const btn=e.target.closest("[data-home-tab]");if(btn)showHomePanel(btn.dataset.homeTab);});
 function showTab(tab){
  if(!window.__tutorHisabSignedIn && tab!=="profile")tab="profile";
  const home=$("homeScreen");
