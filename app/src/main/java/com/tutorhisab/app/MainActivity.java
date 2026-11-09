@@ -13,6 +13,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.graphics.Color;
@@ -21,12 +22,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 
 public class MainActivity extends Activity {
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
+    private static final String FIREBASE_BASE_URL = "https://tutor-hisab.firebaseapp.com/";
 
     public class BackupBridge {
         @JavascriptInterface
@@ -84,7 +88,22 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         webView.addJavascriptInterface(new BackupBridge(), "Android");
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                String path = uri.getPath() == null ? "" : uri.getPath();
+                if (uri.getScheme() != null && uri.getScheme().equals("mailto")) {
+                    try { startActivity(new Intent(Intent.ACTION_SENDTO, uri)); } catch (Exception ignored) {}
+                    return true;
+                }
+                if ("tutor-hisab.firebaseapp.com".equals(uri.getHost())) {
+                    if (path.endsWith("/privacy.html")) { loadAssetPage("privacy.html"); return true; }
+                    if (path.endsWith("/terms.html")) { loadAssetPage("terms.html"); return true; }
+                }
+                return false;
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
@@ -113,9 +132,22 @@ public class MainActivity extends Activity {
         });
         setContentView(webView);
         if (savedInstanceState == null) {
-            webView.loadUrl("file:///android_asset/index.html");
+            loadAssetPage("index.html");
         } else {
             webView.restoreState(savedInstanceState);
+        }
+    }
+
+    private void loadAssetPage(String assetName) {
+        try (InputStream input = getAssets().open(assetName);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            String html = output.toString("UTF-8");
+            webView.loadDataWithBaseURL(FIREBASE_BASE_URL, html, "text/html", "UTF-8", null);
+        } catch (Exception e) {
+            Toast.makeText(this, "অ্যাপের পৃষ্ঠা লোড করা যায়নি।", Toast.LENGTH_LONG).show();
         }
     }
 
