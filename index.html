@@ -222,7 +222,8 @@ body{padding-bottom:75px}
 <script>
 let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
-const money=n=>"৳"+Number(n||0).toLocaleString("bn-BD",{maximumFractionDigits:2});
+const numberLocale=()=>((localStorage.getItem("tutorHisabLanguage")||"bn")==="bn"?"bn-BD":"en-US");
+const money=n=>"৳"+Number(n||0).toLocaleString(numberLocale(),{maximumFractionDigits:2});
 const today=new Date();
 const localDate=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
 const currentMonth=localDate.slice(0,7);
@@ -284,7 +285,7 @@ function removeStudent(id){if(!confirm("শিক্ষার্থী ও ত�
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
  const totalPaid=data.payments.filter(p=>String(p.month||"")===currentMonth).reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
- $("count").textContent=data.students.length.toLocaleString("bn-BD");$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
+ $("count").textContent=data.students.length.toLocaleString(numberLocale());$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
  $("students").innerHTML=data.students.length?data.students.map(s=>`
  <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
  <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div><div>মাসিক বেতন: ${money(s.fee)}</div><div>মোট জমা: ${money(paidFor(s.id))}</div>
@@ -419,7 +420,7 @@ function updateProfileViewIfReady(){if(typeof currentUser!=="undefined"&&current
 const reverseTranslations=Object.fromEntries(Object.entries(translations).map(([bn,en])=>[en,bn]));
 const originalRender=render;
 render=function(){originalRender();applyLanguage();};
-document.addEventListener("change",e=>{if(e.target&&e.target.id==="languageSelect"){localStorage.setItem("tutorHisabLanguage",e.target.value);applyLanguage();}});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="languageSelect"){localStorage.setItem("tutorHisabLanguage",e.target.value);render();}});
 
 function showTab(tab){
  if(!window.__tutorHisabSignedIn && tab!=="profile")tab="profile";
@@ -495,7 +496,7 @@ function finishOnboarding(tab){
 document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventListener("click",()=>{
  const lang=btn.dataset.firstLanguage;
  localStorage.setItem("tutorHisabLanguage",lang);
- applyLanguage();
+ render();
  $("firstLanguageStep").hidden=true;
  $("firstAccountStep").hidden=false;
 }));
