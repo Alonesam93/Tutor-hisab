@@ -347,6 +347,7 @@ function setupAppTabs(){
  nav.addEventListener("click",e=>{const btn=e.target.closest("button[data-page]");if(btn)showAppPage(btn.dataset.page);});
  window.showAppPage=function(name){ids.forEach(k=>pages[k].classList.toggle("active",k===name));nav.querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.dataset.page===name));window.scrollTo(0,0);};
  window.handleAndroidBack=function(){const active=nav.querySelector("button.active");if(active&&active.dataset.page!=="home"){showAppPage("home");return true;}return false;};
+ window.isSafeAdMoment=function(){const page=document.querySelector(".app-page.active");const focused=document.activeElement;return !!(page&&page.id==="page-home"&&(!focused||!["INPUT","SELECT","TEXTAREA"].includes(focused.tagName)));};
  window.setAuthenticatedUI=function(user){const ok=!!user;account.hidden=ok;Object.values(pages).forEach(p=>p.hidden=!ok);nav.hidden=!ok;main.classList.toggle("app-ready",ok);if(ok)showAppPage("home");};
 }
 
