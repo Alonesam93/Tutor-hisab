@@ -53,12 +53,29 @@ body{padding-bottom:75px}
 .login-footer{text-align:center;font-size:13px;margin-top:14px;color:#6d625a}
 .login-footer a{margin:0 5px}
 .login-error{color:#b42318;font-size:13px;min-height:18px}
+.onboarding{padding:0;align-items:stretch;justify-content:stretch}
+.onboarding-card{width:100%;max-width:none;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;border-radius:0;padding:calc(28px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center;overflow:auto}
+.login-card{border:0;border-radius:0;background:#fffaf5}
+.login-brand h2{font-size:26px}
+.login-primary,.login-secondary{width:100%;padding:14px;font-size:16px;margin-top:8px}
+.bottom-nav button{font-size:22px;line-height:1;padding:9px 2px;min-height:50px;border-radius:9px}
+.bottom-nav button.active{background:#e5f4ed;color:#075b43;outline:2px solid #087f5b}
+.profile-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.profile-avatar,.profile-avatar-fallback{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #d8eee4;background:#e8f5ef;display:grid;place-items:center;font-size:34px;flex:none}
+.profile-head-main{flex:1;min-width:140px}
+.profile-head-main h3{margin:0 0 4px}
+.profile-head-main p{margin:0;color:#60756b;font-size:13px;overflow-wrap:anywhere}
+.profile-details p{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #edf1ee;padding:9px 0;margin:0}
+.profile-details p span:last-child{text-align:right;overflow-wrap:anywhere}
+.profile-photo-picker{display:flex;align-items:center;gap:12px;margin:8px 0 14px}
+.profile-photo-picker input{max-width:100%}
+.profile-signout{margin-top:24px;width:100%}
 
 </style>
 </head>
 <body>
-<header>
-<h2>📚 Tutor Hisab</h2>
+<header id="appHeader">
+<h2>📚 প্রাইভেট টিউটর হিসাব</h2>
 আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব
 </header>
 
@@ -97,9 +114,9 @@ body{padding-bottom:75px}
 <main id="homeScreen">
 <div class="card stats">
 <div class="stat">মোট শিক্ষার্থী<b id="count">০</b></div>
-<div class="stat">মোট জমা<b id="paid">৳০</b></div>
+<div class="stat">এই মাসে জমা<b id="paid">৳০</b></div>
 <div class="stat">মোট বকেয়া<b id="due">৳০</b></div>
-<div class="stat">মাসিক নির্ধারিত বেতন<b id="monthly">৳০</b></div>
+<div class="stat">এই মাসের নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
 <div class="card">
 <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
@@ -144,21 +161,36 @@ body{padding-bottom:75px}
 <section id="storeScreen" class="tab-screen" hidden>
  <div class="card"><h3>🛍️ My Store</h3>
   <div class="student"><b>SMS Packages</b><p>Coming Soon</p></div>
-  <div class="student"><b>Pro</b><p>Coming Soon</p></div>
-  <div class="student"><b>Elite</b><p>Coming Soon</p></div>
+  <div class="student"><b>Remove Ads</b><p>Coming Soon</p></div>
  </div>
 </section>
 <section id="notificationScreen" class="tab-screen" hidden>
  <div class="card"><h3>🔔 Notification</h3><p>এখনো কোনো নোটিফিকেশন নেই।</p><p class="small">পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।</p></div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
-<h3>👤 My Profile / Account</h3><p id="authStatus" class="small">স্থানীয়ভাবে ব্যবহার অথবা অ্যাকাউন্টে Sign In করুন।</p>
-<label>নাম</label><input id="profileName" maxlength="100" placeholder="আপনার নাম">
-<label>মোবাইল নম্বর</label><input id="profileMobile" maxlength="20" inputmode="tel" placeholder="মোবাইল নম্বর">
-<label>প্রতিষ্ঠানের নাম</label><input id="profileInstitution" maxlength="120" placeholder="প্রতিষ্ঠানের নাম">
-<label>পদবি</label><input id="profileDesignation" maxlength="80" placeholder="যেমন: শিক্ষক">
-<button class="secondary" onclick="saveProfile()">প্রোফাইল সংরক্ষণ</button><button class="secondary" onclick="syncCloud()">এখনই Cloud Sync করুন</button>
-<button class="danger" onclick="emailSignOut()">Sign Out</button><p id="cloudStatus" class="small">Cloud Sync করতে ইন্টারনেট প্রয়োজন।</p>
+ <div class="profile-head">
+  <img id="profileAvatar" class="profile-avatar" alt="Profile photo" hidden>
+  <div id="profileAvatarFallback" class="profile-avatar-fallback" aria-hidden="true">👤</div>
+  <div class="profile-head-main"><h3 id="profileDisplayName">আমার প্রোফাইল</h3><p id="profileDisplayEmail"></p></div>
+  <button id="profileEditBtn" type="button" class="secondary" onclick="editProfile()">✏️ Edit</button>
+ </div>
+ <div id="profileView" class="profile-details">
+  <p><b>নাম</b><span id="profileViewName">—</span></p>
+  <p><b>মোবাইল নম্বর</b><span id="profileViewMobile">—</span></p>
+  <p><b>প্রতিষ্ঠানের নাম</b><span id="profileViewInstitution">—</span></p>
+  <p><b>পদবি</b><span id="profileViewDesignation">—</span></p>
+ </div>
+ <div id="profileEditForm" hidden>
+  <div class="profile-photo-picker"><label for="profilePhotoInput">প্রোফাইল ছবি</label><input id="profilePhotoInput" type="file" accept="image/*"></div>
+  <label>নাম</label><input id="profileName" maxlength="100" placeholder="আপনার নাম">
+  <label>মোবাইল নম্বর</label><input id="profileMobile" maxlength="20" inputmode="tel" placeholder="মোবাইল নম্বর">
+  <label>প্রতিষ্ঠানের নাম</label><input id="profileInstitution" maxlength="120" placeholder="প্রতিষ্ঠানের নাম">
+  <label>পদবি</label><input id="profileDesignation" maxlength="80" placeholder="যেমন: শিক্ষক">
+  <button id="profileSaveBtn" type="button" onclick="saveProfile()">প্রোফাইল সংরক্ষণ</button>
+  <button id="profileCancelBtn" type="button" class="secondary" onclick="cancelProfileEdit()">বাতিল</button>
+ </div>
+ <p id="authStatus" class="small" hidden></p><p id="cloudStatus" class="small" hidden></p>
+ <button type="button" class="danger profile-signout" onclick="emailSignOut()">Sign Out / Log Out</button>
 </div></section>
 <section id="settingsScreen" class="tab-screen" hidden>
  <div class="card"><h3>⚙️ Settings</h3>
@@ -177,15 +209,14 @@ body{padding-bottom:75px}
   <p><a href="terms.html">Terms of Service / ব্যবহারের শর্তাবলি</a></p>
   <p><a href="mailto:tutorhisab.support@gmail.com">Contact Us / যোগাযোগ</a></p>
   <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">Feedback</a> · Rate Us · About Tutor Hisab</p>
-  <button class="danger" onclick="emailSignOut()">Sign Out</button>
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
- <button type="button" data-tab="home">Homepage</button>
- <button type="button" data-tab="store">My Store</button>
- <button type="button" data-tab="notification">Notification</button>
- <button type="button" data-tab="profile">My Profile</button>
- <button type="button" data-tab="settings">Settings</button>
+ <button type="button" data-tab="home" aria-label="Homepage" title="Homepage">🏠</button>
+ <button type="button" data-tab="store" aria-label="My Store" title="My Store">🛍️</button>
+ <button type="button" data-tab="notification" aria-label="Notification" title="Notification">🔔</button>
+ <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile">👤</button>
+ <button type="button" data-tab="settings" aria-label="Settings" title="Settings">⚙️</button>
 </nav>
 
 <script>
@@ -252,7 +283,7 @@ function cancelStudentEdit(){editingStudentId=null;["name","className","phone","
 function removeStudent(id){if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;data.students=data.students.filter(s=>s.id!==id);data.payments=data.payments.filter(p=>p.studentId!==id);save();}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
- const totalPaid=data.payments.reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
+ const totalPaid=data.payments.filter(p=>String(p.month||"")===currentMonth).reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
  $("count").textContent=data.students.length.toLocaleString("bn-BD");$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
  $("students").innerHTML=data.students.length?data.students.map(s=>`
  <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
@@ -312,7 +343,37 @@ const translations={
 "শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।":"Add students, set monthly fees, and record payments.",
 "Support":"Support","👤 My Profile / Account":"👤 My Profile / Account","নাম":"Name","আপনার নাম":"Your name","প্রতিষ্ঠানের নাম":"Institution name","পদবি":"Designation","যেমন: শিক্ষক":"e.g. Teacher","প্রোফাইল সংরক্ষণ":"Save Profile","এখনই Cloud Sync করুন":"Sync Cloud Now","Sign In করা নেই।":"Not signed in.","অ্যাকাউন্ট তৈরি হয়েছে।":"Account created.","প্রোফাইল সংরক্ষণ হয়েছে।":"Profile saved.","Cloud Sync করতে Sign In করুন।":"Sign in to sync with Cloud.","ইমেইল ও পাসওয়ার্ড লিখুন।":"Enter email and password.","সঠিক ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।":"Enter a valid email and a password of at least 6 characters.","লগইন হয়নি:":"Sign in failed:","অ্যাকাউন্ট তৈরি হয়নি:":"Account creation failed:","এই লিংকগুলো প্রকাশের আগে যাচাই করা হবে।":"These links will be verified before release.",
 "সম্পাদনা":"Edit","শিক্ষার্থী মুছুন":"Delete Student","জমা সম্পাদনা":"Edit Payment","জমা মুছুন":"Delete Payment",
-"মোবাইল:":"Mobile:","মাসিক বেতন:":"Monthly Fee:","মোট জমা:":"Total Paid:","বর্তমান বকেয়া:":"Current Due:","হিসাব শুরুর মাস:":"Fee Start Month:","আগের বকেয়া:":"Previous Due:"
+"মোবাইল:":"Mobile:","মাসিক বেতন:":"Monthly Fee:","মোট জমা:":"Total Paid:","বর্তমান বকেয়া:":"Current Due:","হিসাব শুরুর মাস:":"Fee Start Month:","আগের বকেয়া:":"Previous Due:",
+"এই মাসে জমা":"Paid This Month","এই মাসের নির্ধারিত বেতন":"Scheduled Tuition This Month","📚 প্রাইভেট টিউটর হিসাব":"📚 Private Tutor Accounts",
+"Welcome to Tutor Hisab":"Welcome to Tutor Hisab","Choose your language / ভাষা নির্বাচন করুন":"Choose your language",
+"স্বাগতম / Welcome":"Welcome","আপনার অ্যাকাউন্টে প্রবেশ করতে ইমেইল ব্যবহার করুন":"Use your email to access your account",
+"ইমেইল দিয়ে লগিন করুন":"Sign in with Email","আপনার ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন":"Sign in with your email and password",
+"ইমেইল / Email":"Email","পাসওয়ার্ড / Password":"Password","আপনার ইমেইল লিখুন":"Enter your email","আপনার পাসওয়ার্ড লিখুন":"Enter your password",
+"প্রবেশ করুন / Sign In":"Sign In","নতুন অ্যাকাউন্ট তৈরি করুন / Sign Up":"Create New Account / Sign Up",
+"Show Password":"Show Password","Hide Password":"Hide Password","Remember Me":"Remember Me","Forgot Password?":"Forgot Password?",
+"Privacy Policy":"Privacy Policy","Contact":"Contact","About":"About","🛍️ My Store":"🛍️ My Store","Remove Ads":"Remove Ads",
+"👤 My Profile / Account":"👤 My Profile","আমার প্রোফাইল":"My Profile","প্রোফাইল ছবি":"Profile Photo","Edit":"Edit","✏️ Edit":"✏️ Edit",
+"বাতিল":"Cancel","Sign Out / Log Out":"Sign Out / Log Out","আমার প্রোফাইল":"My Profile","প্রতিষ্ঠানের নাম":"Institution Name",
+"নাম":"Name","মোবাইল নম্বর":"Mobile Number","পদবি":"Designation","প্রোফাইল সংরক্ষণ":"Save the Profile",
+"একটি ছবি নির্বাচন করুন।":"Please choose an image.","ছবির আকার ৮ MB-এর কম হতে হবে।":"Image size must be under 8 MB.",
+"আপনার নাম লিখুন।":"Please enter your name.","আগে Sign In করুন।":"Please sign in first.",
+"প্রোফাইল সংরক্ষণ হয়েছে।":"Profile saved.","প্রোফাইল সংরক্ষণ হয়নি:":"Profile could not be saved:",
+"শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?":"Delete this student and their payment records?",
+"এই জমার তথ্য মুছে ফেলবেন?":"Delete this payment record?",
+"নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন。":"Enter a name, valid monthly fee, and start month.",
+"নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন।":"Enter a name, valid monthly fee, and start month.",
+"শিক্ষার্থী সংরক্ষণ করুন":"Save Student","শিক্ষার্থীর তথ্য সম্পাদনা করে সংরক্ষণ করা হয়েছে।":"Student details updated and saved.",
+"জমা সংরক্ষণ হয়েছে।":"Payment saved.","জমার তথ্য সম্পাদনা হয়েছে।":"Payment updated.",
+"শিক্ষার্থী, সঠিক জমার পরিমাণ, মাস ও তারিখ দিন।":"Enter a student, valid payment amount, month, and date.",
+"শিক্ষার্থীর বেতন গণনা শুরুর মাসের আগের মাসে জমা নেওয়া যাবে না。":"Payments cannot be recorded before the fee start month.",
+"শিক্ষার্থীর বেতন গণনা শুরুর মাসের আগের মাসে জমা নেওয়া যাবে না।":"Payments cannot be recorded before the fee start month.",
+"শিক্ষার্থী নির্বাচন করুন":"Select Student","জমা সংরক্ষণ করুন":"Save Payment",
+"শিক্ষার্থী মুছুন":"Delete Student","জমা সম্পাদনা":"Edit Payment","জমা মুছুন":"Delete Payment",
+"SMS Packages":"SMS Packages","Coming Soon":"Coming Soon","Settings":"Settings","Homepage":"Homepage","Notification":"Notification",
+"মাসিক রিপোর্ট":"Monthly Report","রিপোর্ট দেখুন":"View Report","ব্যাকআপ ডাউনলোড করুন":"Download Backup",
+"ব্যাকআপ রিস্টোর করুন":"Restore Backup","ব্যাকআপ ও রিস্টোর":"Backup & Restore",
+"Guideline":"Guideline","Support":"Support","Save Your Progress":"Save Your Progress",
+"গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact Us"
 };
 function applyLanguage(){
  const lang=localStorage.getItem("tutorHisabLanguage")||"bn";
@@ -320,9 +381,11 @@ function applyLanguage(){
  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  for(const node of nodes){const raw=node.nodeValue,trimmed=raw.trim();if(!trimmed)continue;const translated=lang==="en"?translations[trimmed]:reverseTranslations[trimmed];if(translated)node.nodeValue=raw.replace(trimmed,translated);}
- document.querySelectorAll("[placeholder]").forEach(el=>{const original=el.dataset.bnPlaceholder||el.getAttribute("placeholder");if(!el.dataset.bnPlaceholder)el.dataset.bnPlaceholder=original;el.setAttribute("placeholder",lang==="en"?(translations[original]||original):original);});
+ document.querySelectorAll("[placeholder],[aria-label],[title]").forEach(el=>["placeholder","aria-label","title"].forEach(attr=>{if(!el.hasAttribute(attr))return;const key="bn"+attr.replace(/(^|-)([a-z])/g,(_,a,b)=>b.toUpperCase());if(!el.dataset[key])el.dataset[key]=el.getAttribute(attr);const original=el.dataset[key];el.setAttribute(attr,lang==="en"?(translations[original]||original):(reverseTranslations[original]||original));}));
  const select=document.getElementById("languageSelect");if(select&&select.value!==lang)select.value=lang;
+ updateProfileViewIfReady();
 }
+function updateProfileViewIfReady(){if(typeof currentUser!=="undefined"&&currentUser&&document.getElementById("profileDisplayName"))updateProfileView();}
 const reverseTranslations=Object.fromEntries(Object.entries(translations).map(([bn,en])=>[en,bn]));
 const originalRender=render;
 render=function(){originalRender();applyLanguage();};
@@ -344,11 +407,16 @@ showTab("home");
 
 const firebaseConfig={apiKey:"AIzaSyCafBcI740GbEfMOIbR8dWhNpaypH-Z8Vw",authDomain:"tutor-hisab.firebaseapp.com",projectId:"tutor-hisab",storageBucket:"tutor-hisab.firebasestorage.app",messagingSenderId:"910571768792",appId:"1:910571768792:web:5e01f9a066b3d40ec600ad"};
 window.__tutorHisabSignedIn=false;
-let auth=null,db=null,currentUser=null;
+let auth=null,db=null,currentUser=null,profilePhotoData="";
 try{if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn("Auth persistence:",e));}}catch(e){console.error(e);}
 function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
 function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
-function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim()};}
+function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim(),photoData:profilePhotoData,email:currentUser?.email||""};}
+function setProfilePhoto(data){profilePhotoData=data||"";const img=$("profileAvatar"),fallback=$("profileAvatarFallback");if(profilePhotoData){img.src=profilePhotoData;img.hidden=false;fallback.hidden=true;}else{img.removeAttribute("src");img.hidden=true;fallback.hidden=false;}}
+function updateProfileView(){const p=profileValues(),lang=localStorage.getItem("tutorHisabLanguage")||"bn";$("profileDisplayName").textContent=p.name||(lang==="bn"?"আমার প্রোফাইল":"My Profile");$("profileDisplayEmail").textContent=currentUser?.email||"";$("profileViewName").textContent=p.name||"—";$("profileViewMobile").textContent=p.mobile||"—";$("profileViewInstitution").textContent=p.institution||"—";$("profileViewDesignation").textContent=p.designation||"—";setProfilePhoto(profilePhotoData);}
+function editProfile(){$("profileView").hidden=true;$("profileEditForm").hidden=false;$("profileEditBtn").hidden=true;}
+function cancelProfileEdit(){if(!$("profileName").value.trim()){return;}$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();}
+function handleProfilePhoto(event){const file=event.target.files&&event.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");return;}if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");return;}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);setProfilePhoto(canvas.toDataURL("image/jpeg",.72));};img.src=reader.result;};reader.readAsDataURL(file);}
 function loginValues(){return{email:$("loginEmail").value.trim(),password:$("loginPassword").value};}
 function showLoginError(message){$("loginError").textContent=message||"";}
 async function emailSignIn(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const {email,password}=loginValues();if(!email||!password){showLoginError("ইমেইল ও পাসওয়ার্ড লিখুন।");return;}try{await auth.setPersistence($("rememberMe").checked?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION);await auth.signInWithEmailAndPassword(email,password);showLoginError("");}catch(x){showLoginError("লগিন হয়নি: "+x.message);}}
@@ -387,8 +455,8 @@ async function syncCloud(){
   cloudMessage("Cloud Sync সম্পন্ন। দুই জায়গার নতুন তথ্য একত্র করা হয়েছে; আগের কোনো রেকর্ড মুছে ফেলা হয়নি।");
  }catch(e){console.error("Safe Cloud Sync:",e);cloudMessage("Cloud Sync বন্ধ রাখা হয়েছে: "+e.message);}
 }
-async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}try{await db.collection("users").doc(currentUser.uid).set({profile:profileValues(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল সংরক্ষণ হয়নি: "+e.message);}}
-if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;showTab("home");const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);try{const cloud=await readCloudData(u.uid);$("profileName").value=cloud.profile.name||"";$("profileMobile").value=cloud.profile.mobile||"";$("profileInstitution").value=cloud.profile.institution||"";$("profileDesignation").value=cloud.profile.designation||"";await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}}else{currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile");if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
+async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}try{const profile=profileValues();localStorage.setItem("tutorHisabProfile_"+currentUser.uid,JSON.stringify(profile));await db.collection("users").doc(currentUser.uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home");}}catch(e){cloudMessage("প্রোফাইল সংরক্ষণ হয়নি: "+e.message);}}
+if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);try{const cloud=await readCloudData(u.uid);let localProfile={};try{localProfile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}const profile={...localProfile,...(cloud.profile||{})};profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);updateProfileView();if(!profile.name||!profile.name.trim()){window.__tutorHisabProfileSetupRequired=true;editProfile();showTab("profile");}else{$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home");}await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);window.__tutorHisabProfileSetupRequired=true;editProfile();showTab("profile");}}else{currentUser=null;profilePhotoData="";STORAGE_KEY="tutorHisabData";data=loadData();render();updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile");if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
 
 
 function finishOnboarding(tab){
@@ -404,6 +472,7 @@ document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventList
 }));
 $("firstOpenAccount").addEventListener("click",()=>{ $("firstAccountStep").hidden=true; $("firstAuthStep").hidden=false; showLoginError(""); });
 $("loginSignIn").addEventListener("click",emailSignIn);
+$("profilePhotoInput").addEventListener("change",handleProfilePhoto);
 $("loginSignUp").addEventListener("click",emailSignUp);
 $("forgotPassword").addEventListener("click",e=>{e.preventDefault();resetLoginPassword();});
 $("togglePassword").addEventListener("click",()=>{const p=$("loginPassword");const visible=p.type==="password";p.type=visible?"text":"password";$("togglePassword").textContent=visible?"Hide Password":"Show Password";});
