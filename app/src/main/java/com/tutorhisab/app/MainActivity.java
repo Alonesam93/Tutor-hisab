@@ -283,6 +283,19 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onDestroy() {
+        if (interstitialRunnable != null) adHandler.removeCallbacks(interstitialRunnable);
+        if (bannerAdView != null) {
+            if (bannerAdView.getParent() instanceof ViewGroup) {
+                ((ViewGroup) bannerAdView.getParent()).removeView(bannerAdView);
+            }
+            bannerAdView.destroy();
+            bannerAdView = null;
+        }
+        super.onDestroy();
+    }
+
+    @Override
     public void onBackPressed() {
         if (webView != null && Build.VERSION.SDK_INT >= 19) {
             webView.evaluateJavascript("(function(){if(window.handleAndroidBack){return window.handleAndroidBack();}return false;})()", value -> {
