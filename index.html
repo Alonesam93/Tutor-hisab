@@ -210,7 +210,7 @@ body{padding-bottom:75px}
   <button id="profileSaveBtn" type="button" onclick="saveProfile()">প্রোফাইল সংরক্ষণ</button>
   <button id="profileCancelBtn" type="button" class="secondary" onclick="cancelProfileEdit()">বাতিল</button>
  </div>
- <p id="authStatus" class="small" hidden></p><p id="cloudStatus" class="small" hidden></p>
+ <p id="authStatus" class="small"></p><p id="cloudStatus" class="small"></p>
  <button type="button" class="danger profile-signout" onclick="emailSignOut()">লগ আউট</button>
 </div></section>
 <section id="settingsScreen" class="tab-screen" hidden>
@@ -250,18 +250,27 @@ const money=n=>"৳"+Number(n||0).toLocaleString(numberLocale(),{maximumFraction
 const today=new Date();
 const localDate=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
 const currentMonth=localDate.slice(0,7);
-function emptyData(){return {students:[],payments:[]};}
+function emptyData(){return {students:[],payments:[],deletedStudentIds:[],deletedPaymentIds:[]};}
 function loadData(){
- try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return emptyData();const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.students)||!Array.isArray(parsed.payments))return emptyData();return parsed;}
- catch(e){return emptyData();}
+ try{
+  const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return emptyData();
+  const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.students)||!Array.isArray(parsed.payments))return emptyData();
+  return {...parsed,deletedStudentIds:Array.isArray(parsed.deletedStudentIds)?parsed.deletedStudentIds:[],deletedPaymentIds:Array.isArray(parsed.deletedPaymentIds)?parsed.deletedPaymentIds:[]};
+ }catch(e){return emptyData();}
 }
 let data=loadData();
 let editingStudentId=null;
 let editingPaymentId=null;
+let cloudSyncInProgress=false,cloudSyncPending=false;
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
 function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();}
+function save(syncCloudNow=true){
+ if(!Array.isArray(data.deletedStudentIds))data.deletedStudentIds=[];
+ if(!Array.isArray(data.deletedPaymentIds))data.deletedPaymentIds=[];
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
+ if(syncCloudNow&&currentUser&&db)syncCloud();
+}
 function monthsBetween(a,b){if(!validMonth(a)||!validMonth(b)||a>b)return 0;const [y1,m1]=a.split("-").map(Number),[y2,m2]=b.split("-").map(Number);return (y2-y1)*12+m2-m1+1;}
 function paidFor(id,month=null){return data.payments.filter(p=>p.studentId===id&&(!month||p.month===month)).reduce((s,p)=>s+Number(p.amount||0),0);}
 function dueFor(s,upto=currentMonth){
@@ -304,7 +313,17 @@ function editStudent(id){
  $("name").scrollIntoView({behavior:"smooth",block:"center"});
 }
 function cancelStudentEdit(){editingStudentId=null;["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";$("studentFormTitle").textContent="➕ নতুন শিক্ষার্থী যোগ করুন";$("studentSaveBtn").textContent="শিক্ষার্থী সংরক্ষণ করুন";$("studentCancelBtn").style.display="none";}
-function removeStudent(id){if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;data.students=data.students.filter(s=>s.id!==id);data.payments=data.payments.filter(p=>p.studentId!==id);save();}
+function removeStudent(id){
+ if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;
+ const removedPayments=data.payments.filter(p=>p.studentId===id);
+ data.deletedStudentIds=data.deletedStudentIds||[];
+ data.deletedPaymentIds=data.deletedPaymentIds||[];
+ if(!data.deletedStudentIds.includes(id))data.deletedStudentIds.push(id);
+ removedPayments.forEach(p=>{if(!data.deletedPaymentIds.includes(p.id))data.deletedPaymentIds.push(p.id);});
+ data.students=data.students.filter(s=>s.id!==id);
+ data.payments=data.payments.filter(p=>p.studentId!==id);
+ save();
+}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
  const totalPaid=data.payments.filter(p=>String(p.month||"")===currentMonth).reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
@@ -322,7 +341,14 @@ $("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data
 $("paymentHistory").addEventListener("click",e=>{const edit=e.target.closest("[data-payment-edit]");if(edit){editPayment(edit.dataset.paymentEdit);return;}const del=e.target.closest("[data-payment-remove]");if(del)removePayment(del.dataset.paymentRemove);});
 function editPayment(id){const p=data.payments.find(x=>x.id===id);if(!p)return;editingPaymentId=id;$("payStudent").value=p.studentId;$("payAmount").value=p.amount;$("payMonth").value=p.month;$("payDate").value=p.date;const btn=document.querySelector('button[onclick="addPayment()"]');if(btn)btn.textContent="জমার পরিবর্তন সংরক্ষণ করুন";$("payStudent").scrollIntoView({behavior:"smooth",block:"center"});}
 function cancelPaymentEdit(){editingPaymentId=null;$("payAmount").value="";$("payMonth").value=currentMonth;$("payDate").value=localDate;const btn=document.querySelector('button[onclick="addPayment()"]');if(btn)btn.textContent="জমা সংরক্ষণ করুন";}
-function removePayment(id){if(!confirm("এই জমার তথ্য মুছে ফেলবেন?"))return;data.payments=data.payments.filter(p=>p.id!==id);if(editingPaymentId===id)cancelPaymentEdit();save();}
+function removePayment(id){
+ if(!confirm("এই জমার তথ্য মুছে ফেলবেন?"))return;
+ data.deletedPaymentIds=data.deletedPaymentIds||[];
+ if(!data.deletedPaymentIds.includes(id))data.deletedPaymentIds.push(id);
+ data.payments=data.payments.filter(p=>p.id!==id);
+ if(editingPaymentId===id)cancelPaymentEdit();
+ save();
+}
 function report(){
  const m=$("reportMonth").value;if(!validMonth(m)){alert("সঠিক মাস নির্বাচন করুন");return;}
  const rows=data.students.map(s=>({name:s.name,paid:paidFor(s.id,m),due:dueFor(s,m)}));
@@ -343,7 +369,7 @@ function restore(){
    for(const p of d.payments){const student=d.students.find(s=>s.id===p.studentId);if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date)||p.month<student.start)throw Error("payment");}
    for(const s of d.students){const months=[...new Set(d.payments.filter(p=>p.studentId===s.id).map(p=>p.month))].sort();for(const m of months){const accrued=Number(s.opening||0)+Number(s.fee)*monthsBetween(s.start,m);const paid=d.payments.filter(p=>p.studentId===s.id&&p.month<=m).reduce((sum,p)=>sum+Number(p.amount),0);if(paid>accrued)throw Error("overpaid");}}
    if(!confirm("বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?"))return;
-   data=d;save();alert("ব্যাকআপ রিস্টোর হয়েছে।");
+   data={...d,deletedStudentIds:Array.isArray(d.deletedStudentIds)?d.deletedStudentIds:[],deletedPaymentIds:Array.isArray(d.deletedPaymentIds)?d.deletedPaymentIds:[]};save();alert("ব্যাকআপ রিস্টোর হয়েছে।");
   }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
  };reader.readAsText(file);
 }
@@ -486,7 +512,9 @@ function stableRecord(value){
  return JSON.stringify(normalized);
 }
 async function syncCloud(){
- if(!currentUser||!db){cloudMessage("Cloud Sync করতে আগে Sign In করুন।");return;}
+ if(!currentUser||!db)return;
+ if(cloudSyncInProgress){cloudSyncPending=true;return;}
+ cloudSyncInProgress=true;
  cloudMessage("Cloud-এর তথ্য নিরাপদে মিলিয়ে দেখা হচ্ছে…");
  try{
   const base=db.collection("users").doc(currentUser.uid);
@@ -496,23 +524,37 @@ async function syncCloud(){
   const localPayments=new Map(local.payments.map(x=>[String(x.id),x]));
   const cloudStudents=new Map(cloud.students.map(x=>[String(x.id),x]));
   const cloudPayments=new Map(cloud.payments.map(x=>[String(x.id),x]));
-  for(const [id,item] of localStudents){if(cloudStudents.has(id)&&stableRecord(item)!==stableRecord(cloudStudents.get(id)))throw new Error("একই শিক্ষার্থীর ID-তে দুই জায়গায় ভিন্ন তথ্য আছে। কোনো তথ্য পরিবর্তন করা হয়নি। Backup নিয়ে সহায়তা নিন।");}
-  for(const [id,item] of localPayments){if(cloudPayments.has(id)&&stableRecord(item)!==stableRecord(cloudPayments.get(id)))throw new Error("একই জমার ID-তে দুই জায়গায় ভিন্ন তথ্য আছে। কোনো তথ্য পরিবর্তন করা হয়নি। Backup নিয়ে সহায়তা নিন।");}
-  const batch=db.batch();
-  let writes=0;
-  for(const [id,item] of localStudents){if(!cloudStudents.has(id)){batch.set(base.collection("students").doc(id),item);writes++;}}
-  for(const [id,item] of localPayments){if(!cloudPayments.has(id)){batch.set(base.collection("payments").doc(id),item);writes++;}}
-  if(writes)await batch.commit();
-  const mergedStudents=new Map([...cloudStudents,...localStudents]);
-  const mergedPayments=new Map([...cloudPayments,...localPayments]);
-  data={students:[...mergedStudents.values()],payments:[...mergedPayments.values()]};
-  save();
+  const deletedStudents=new Set(local.deletedStudentIds||[]);
+  const deletedPayments=new Set(local.deletedPaymentIds||[]);
+  for(const [id,p] of cloudPayments){if(deletedStudents.has(String(p.studentId)))deletedPayments.add(id);}
+  const writes=[];
+  for(const id of deletedStudents)writes.push(batch=>batch.delete(base.collection("students").doc(id)));
+  for(const id of deletedPayments)writes.push(batch=>batch.delete(base.collection("payments").doc(id)));
+  // Local edits are written back to the same teacher-scoped document IDs.
+  for(const [id,item] of localStudents)writes.push(batch=>batch.set(base.collection("students").doc(id),item));
+  for(const [id,item] of localPayments)writes.push(batch=>batch.set(base.collection("payments").doc(id),item));
+  // Firestore batches are limited; commit in safe chunks.
+  for(let i=0;i<writes.length;i+=450){
+   const batch=db.batch();writes.slice(i,i+450).forEach(write=>write(batch));await batch.commit();
+  }
+  const mergedStudents=new Map(cloudStudents),mergedPayments=new Map(cloudPayments);
+  for(const id of deletedStudents)mergedStudents.delete(id);
+  for(const id of deletedPayments)mergedPayments.delete(id);
+  for(const [id,item] of localStudents)mergedStudents.set(id,item);
+  for(const [id,item] of localPayments)mergedPayments.set(id,item);
+  data={...local,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],deletedStudentIds:[],deletedPaymentIds:[]};
+  save(false);
   await base.set({email:currentUser.email||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  cloudMessage("Cloud Sync সম্পন্ন। দুই জায়গার নতুন তথ্য একত্র করা হয়েছে; আগের কোনো রেকর্ড মুছে ফেলা হয়নি।");
- }catch(e){console.error("Safe Cloud Sync:",e);cloudMessage("Cloud Sync বন্ধ রাখা হয়েছে: "+e.message);}
+  cloudMessage("Cloud Sync সম্পন্ন। নতুন ও সম্পাদিত তথ্য সংরক্ষণ হয়েছে; মুছে ফেলা রেকর্ডও সিঙ্ক হয়েছে।");
+ }catch(e){console.error("Safe Cloud Sync:",e);cloudMessage("Cloud Sync সম্পন্ন হয়নি: "+e.message);}
+ finally{
+  cloudSyncInProgress=false;
+  if(cloudSyncPending){cloudSyncPending=false;Promise.resolve().then(syncCloud);}
+ }
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}const profile=profileValues();savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+currentUser.uid,JSON.stringify(profile));$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home");}try{await db.collection("users").doc(currentUser.uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল ডিভাইসে সংরক্ষিত হয়েছে; Cloud-এ পাঠানো যায়নি: "+e.message);}}
-if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();if(!profile.name||!profile.name.trim()){window.__tutorHisabProfileSetupRequired=true;editProfile();showTab("profile");}else{window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home");}}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile");if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
+window.addEventListener("online",()=>{if(currentUser&&db)syncCloud();});
+if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save(false);else render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();if(!profile.name||!profile.name.trim()){window.__tutorHisabProfileSetupRequired=true;editProfile();showTab("profile");}else{window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home");}}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile");if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
 
 function shareTutorHisab(event){
  if(event)event.preventDefault();
