@@ -18,6 +18,20 @@ import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.graphics.Color;
 import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.widget.FrameLayout;
+import android.view.View;
+import android.view.ViewGroup;
+import android.util.DisplayMetrics;
+import com.google.android.libraries.ads.mobile.sdk.MobileAds;
+import com.google.android.libraries.ads.mobile.sdk.initialization.InitializationConfig;
+import com.google.android.libraries.ads.mobile.sdk.banner.AdSize;
+import com.google.android.libraries.ads.mobile.sdk.banner.AdView;
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAd;
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest;
+import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback;
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -31,6 +45,10 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
     private static final String FIREBASE_BASE_URL = "https://tutor-hisab.firebaseapp.com/";
+    private static final String TEST_ADMOB_APP_ID = "ca-app-pub-3940256099942544~3347511713";
+    private static final String TEST_BANNER_ID = "ca-app-pub-3940256099942544/9214589741";
+    private FrameLayout bannerContainer;
+    private AdView bannerAdView;
 
     public class BackupBridge {
         @JavascriptInterface
@@ -130,12 +148,48 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        setContentView(webView);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.addView(webView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        bannerContainer = new FrameLayout(this);
+        bannerContainer.setVisibility(View.GONE);
+        root.addView(bannerContainer, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        setContentView(root);
+        initializeTestAds();
         if (savedInstanceState == null) {
             loadAssetPage("index.html");
         } else {
             webView.restoreState(savedInstanceState);
         }
+    }
+
+    private void initializeTestAds() {
+        new Thread(() -> MobileAds.initialize(
+                this,
+                new InitializationConfig.Builder(TEST_ADMOB_APP_ID).build(),
+                status -> runOnUiThread(this::loadBannerAd))).start();
+    }
+
+    private void loadBannerAd() {
+        if (bannerContainer == null || isFinishing()) return;
+        bannerAdView = new AdView(this);
+        bannerContainer.addView(bannerAdView);
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int widthDp = (int) (metrics.widthPixels / metrics.density);
+        AdSize size = AdSize.getLargeAnchoredAdaptiveBannerAdSize(this, widthDp);
+        BannerAdRequest request = new BannerAdRequest.Builder(TEST_BANNER_ID, size).build();
+        bannerAdView.loadAd(request, new AdLoadCallback<BannerAd>() {
+            @Override
+            public void onAdLoaded(BannerAd ad) {
+                bannerContainer.setVisibility(View.VISIBLE);
+            }
+            @Override
+            public void onAdFailedToLoad(LoadAdError error) {
+                bannerContainer.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void loadAssetPage(String assetName) {
