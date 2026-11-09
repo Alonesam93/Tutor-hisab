@@ -28,6 +28,23 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
 
+    public class ShareBridge {
+        @JavascriptInterface
+        public void shareText(String title, String message) {
+            runOnUiThread(() -> {
+                try {
+                    Intent send = new Intent(Intent.ACTION_SEND);
+                    send.setType("text/plain");
+                    send.putExtra(Intent.EXTRA_SUBJECT, title);
+                    send.putExtra(Intent.EXTRA_TEXT, message);
+                    startActivity(Intent.createChooser(send, "Share Tutor Hisab"));
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "শেয়ার করা যায়নি। আবার চেষ্টা করুন।", Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
     public class BackupBridge {
         @JavascriptInterface
         public void saveBackup(String json) {
@@ -71,8 +88,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(Color.rgb(8, 127, 91));
-        getWindow().setNavigationBarColor(Color.rgb(8, 127, 91));
+        getWindow().setStatusBarColor(Color.rgb(81, 65, 143));
+        getWindow().setNavigationBarColor(Color.rgb(50, 36, 95));
         webView = new WebView(this);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -81,6 +98,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         webView.addJavascriptInterface(new BackupBridge(), "Android");
+        webView.addJavascriptInterface(new ShareBridge(), "Android");
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -141,8 +159,15 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
+        if (webView != null) {
+            webView.evaluateJavascript(
+                "(function(){return window.handleAppBack ? window.handleAppBack() : false;})()",
+                value -> {
+                    if (!"true".equals(value)) {
+                        MainActivity.super.onBackPressed();
+                    }
+                }
+            );
         } else {
             super.onBackPressed();
         }
