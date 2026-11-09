@@ -301,18 +301,22 @@ if(auth){
  auth.onAuthStateChanged(async user=>{
   currentUser=user||null;
   if(user){
-   const guestData=data;
    STORAGE_KEY="tutorHisabData_"+user.uid;
-   const saved=localStorage.getItem(STORAGE_KEY);
-   data=saved?loadData():guestData;
-   if(!saved)save();else render();
-   authMessage("লগইন: "+user.email+" — আপনার তথ্য এই অ্যাকাউন্টের জন্য আলাদা রাখা হবে।");
-   cloudMessage("লগইন সফল। Cloud Sync শুরু হচ্ছে…");
-   await syncCloud();
+   data=loadData();render();
+   try{
+    const snap=await db.collection("users").doc(user.uid).get();
+    const p=snap.exists?snap.data():{};
+    const profile=$("profileSummary");
+    if(profile)profile.innerHTML="<b>"+esc(p.name||user.email)+"</b><br>"+esc(user.email)+"<br>মোবাইল: "+esc(p.mobile||"—")+"<br>প্রতিষ্ঠান: "+esc(p.institution||"—")+"<br>পদবি: "+esc(p.designation||"—");
+   }catch(e){console.error("Profile load failed",e);}
+   authMessage("লগইন সফল: "+user.email);
+   cloudMessage("Cloud Sync করতে Settings থেকে Cloud Sync চাপুন।");
+   setAuthenticatedUI(user);
   }else{
-   currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();
-   authMessage("লগইন করা নেই। স্থানীয় তথ্য এই ডিভাইসে থাকবে।");
-   cloudMessage("Cloud Sync করতে ইমেইল দিয়ে লগইন করুন।");
+   currentUser=null;STORAGE_KEY="tutorHisabData";data=emptyData();render();
+   authMessage("আপনার অ্যাকাউন্টে Sign In করুন অথবা নতুন অ্যাকাউন্ট তৈরি করুন।");
+   cloudMessage("লগইন করার পর Cloud Sync ব্যবহার করতে পারবেন।");
+   setAuthenticatedUI(null);
   }
  });
 }
