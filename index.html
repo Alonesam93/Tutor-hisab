@@ -88,7 +88,7 @@ body{padding-bottom:75px}
   </section>
   <section id="firstAccountStep" hidden>
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
-   <h3 style="text-align:center;color:#513a2a">স্বাগতম / Welcome</h3>
+   <h3 style="text-align:center;color:#513a2a">স্বাগতম</h3>
    <p class="login-subtitle">আপনার অ্যাকাউন্টে প্রবেশ করতে ইমেইল ব্যবহার করুন</p>
    <button type="button" id="firstOpenAccount" class="login-primary">ইমেইল দিয়ে লগিন করুন</button>
    <div class="login-footer"><a href="privacy.html">গোপনীয়তা নীতি</a> · <a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a> · <a href="about.html">পরিচিতি</a></div>
@@ -104,7 +104,7 @@ body{padding-bottom:75px}
    <button type="button" id="togglePassword" class="login-secondary" style="width:auto;padding:7px 12px;font-size:13px">পাসওয়ার্ড দেখুন</button>
    <div class="login-row"><label><input type="checkbox" id="rememberMe" checked> মনে রাখুন</label><a href="#" id="forgotPassword">পাসওয়ার্ড ভুলে গেছেন?</a></div>
    <button type="button" id="loginSignIn" class="login-primary">প্রবেশ করুন</button>
-   <button type="button" id="loginSignUp" class="login-secondary">নতুন অ্যাকাউন্ট তৈরি করুন / Sign Up</button>
+   <button type="button" id="loginSignUp" class="login-secondary">নতুন অ্যাকাউন্ট তৈরি করুন</button>
    <div id="loginError" class="login-error"></div>
    <div class="login-footer"><a href="privacy.html">Privacy Policy</a> · <a href="mailto:tutorhisab.support@gmail.com">Contact</a> · <a href="about.html">About</a></div>
   </section>
@@ -160,8 +160,8 @@ body{padding-bottom:75px}
 
 <section id="storeScreen" class="tab-screen" hidden>
  <div class="card"><h3>🛍️ আমার স্টোর</h3>
-  <div class="student"><b>SMS Packages</b><p>Coming Soon</p></div>
-  <div class="student"><b>Remove Ads</b><p>Coming Soon</p></div>
+  <div class="student"><b>এসএমএস প্যাকেজ</b><p>শীঘ্রই আসছে</p></div>
+  <div class="student"><b>বিজ্ঞাপন সরান</b><p>শীঘ্রই আসছে</p></div>
  </div>
 </section>
 <section id="notificationScreen" class="tab-screen" hidden>
@@ -172,7 +172,7 @@ body{padding-bottom:75px}
   <img id="profileAvatar" class="profile-avatar" alt="Profile photo" hidden>
   <div id="profileAvatarFallback" class="profile-avatar-fallback" aria-hidden="true">👤</div>
   <div class="profile-head-main"><h3 id="profileDisplayName">আমার প্রোফাইল</h3><p id="profileDisplayEmail"></p></div>
-  <button id="profileEditBtn" type="button" class="secondary" onclick="editProfile()">✏️ Edit</button>
+  <button id="profileEditBtn" type="button" class="secondary" onclick="editProfile()">✏️ সম্পাদনা</button>
  </div>
  <div id="profileView" class="profile-details">
   <p><b>নাম</b><span id="profileViewName">—</span></p>
@@ -190,11 +190,11 @@ body{padding-bottom:75px}
   <button id="profileCancelBtn" type="button" class="secondary" onclick="cancelProfileEdit()">বাতিল</button>
  </div>
  <p id="authStatus" class="small" hidden></p><p id="cloudStatus" class="small" hidden></p>
- <button type="button" class="danger profile-signout" onclick="emailSignOut()">Sign Out / Log Out</button>
+ <button type="button" class="danger profile-signout" onclick="emailSignOut()">লগ আউট</button>
 </div></section>
 <section id="settingsScreen" class="tab-screen" hidden>
  <div class="card"><h3>⚙️ সেটিংস</h3>
-  <h4>💾 Save Your Progress</h4>
+  <h4>💾 আপনার অগ্রগতি সংরক্ষণ</h4>
   <div class="card">
 <h3>💾 ব্যাকআপ ও রিস্টোর</h3>
 <button onclick="backup()">ব্যাকআপ ডাউনলোড করুন</button>
@@ -386,8 +386,25 @@ const translations={
 "পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।":"Payment reminders and app update notifications will be added in a later update.",
 "Privacy Policy / গোপনীয়তা নীতি":"Privacy Policy","Terms of Service / ব্যবহারের শর্তাবলি":"Terms of Service",
 "Contact Us / যোগাযোগ":"Contact Us","Feedback":"Feedback","Rate Us":"Rate Us","About Tutor Hisab":"About Tutor Hisab",
-"Sign Out / Log Out":"Sign Out / Log Out"
+"Sign Out / Log Out":"Sign Out / Log Out",
+"স্বাগতম":"Welcome","নতুন অ্যাকাউন্ট তৈরি করুন":"Create New Account","✏️ সম্পাদনা":"✏️ Edit","লগ আউট":"Sign Out / Log Out",
+"💾 আপনার অগ্রগতি সংরক্ষণ":"💾 Save Your Progress","এসএমএস প্যাকেজ":"SMS Packages","শীঘ্রই আসছে":"Coming Soon","বিজ্ঞাপন সরান":"Remove Ads",
+"সম্পাদনা করুন":"Edit","পরিবর্তন সংরক্ষণ করুন":"Save Changes","জমার পরিবর্তন সংরক্ষণ করুন":"Save Payment Changes",
+"✏️ শিক্ষার্থীর তথ্য সম্পাদনা করুন":"✏️ Edit Student Details","সঠিক মাস নির্বাচন করুন":"Select a valid month",
+"কোনো তথ্য নেই":"No records found","ব্যাকআপ ফাইল নির্বাচন করুন":"Select a backup file",
+"ব্যাকআপ রিস্টোর হয়েছে।":"Backup restored.","ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।":"The backup file is invalid or contains incorrect data.",
+"বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?":"The backup will replace current data. Continue?",
+"শিক্ষার্থীটি পাওয়া যায়নি।":"Student not found.","এই মাস পর্যন্ত কোনো বকেয়া নেই।":"There is no due through this month.",
+"নির্বাচিত মাস পর্যন্ত কোনো বকেয়া নেই।":"There is no due through the selected month.",
+"এই মাস পর্যন্ত অবশিষ্ট বকেয়া ":"Remaining due through this month: ",
+"আগের বকেয়া শূন্য বা তার বেশি হতে হবে।":"Previous due must be zero or greater.",
+"একই শিক্ষার্থীর ID-তে দুই জায়গায় ভিন্ন তথ্য আছে। কোনো তথ্য পরিবর্তন করা হয়নি। Backup নিয়ে সহায়তা নিন।":"Conflicting student records found. No data was changed. Please back up and contact support.",
+"একই জমার ID-তে দুই জায়গায় ভিন্ন তথ্য আছে। কোনো তথ্য পরিবর্তন করা হয়নি। Backup নিয়ে সহায়তা নিন।":"Conflicting payment records found. No data was changed. Please back up and contact support."
 };
+function localizeMessage(message){const lang=localStorage.getItem("tutorHisabLanguage")||"bn";const value=String(message??"");if(lang==="bn")return value;const exact=translations[value];if(exact)return exact;for(const [bn,en] of Object.entries(translations)){if(value.startsWith(bn))return en+value.slice(bn.length);}return value;}
+const nativeAlert=window.alert.bind(window),nativeConfirm=window.confirm.bind(window);
+window.alert=message=>nativeAlert(localizeMessage(message));
+window.confirm=message=>nativeConfirm(localizeMessage(message));
 function applyLanguage(){
  const lang=localStorage.getItem("tutorHisabLanguage")||"bn";
  document.documentElement.lang=lang;
@@ -428,7 +445,7 @@ function profileValues(){return{name:$("profileName").value.trim(),mobile:$("pro
 function setProfilePhoto(data){profilePhotoData=data||"";const img=$("profileAvatar"),fallback=$("profileAvatarFallback");if(profilePhotoData){img.src=profilePhotoData;img.hidden=false;fallback.hidden=true;}else{img.removeAttribute("src");img.hidden=true;fallback.hidden=false;}}
 function updateProfileView(){const p=profileValues(),lang=localStorage.getItem("tutorHisabLanguage")||"bn";$("profileDisplayName").textContent=p.name||(lang==="bn"?"আমার প্রোফাইল":"My Profile");$("profileDisplayEmail").textContent=currentUser?.email||"";$("profileViewName").textContent=p.name||"—";$("profileViewMobile").textContent=p.mobile||"—";$("profileViewInstitution").textContent=p.institution||"—";$("profileViewDesignation").textContent=p.designation||"—";setProfilePhoto(profilePhotoData);}
 function editProfile(){$("profileView").hidden=true;$("profileEditForm").hidden=false;$("profileEditBtn").hidden=true;}
-function cancelProfileEdit(){if(!$("profileName").value.trim()){return;}$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();}
+function cancelProfileEdit(){if(!$("profileViewName").textContent.trim()||$("profileViewName").textContent==="—"){return;}$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();}
 function handleProfilePhoto(event){const file=event.target.files&&event.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");return;}if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");return;}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);setProfilePhoto(canvas.toDataURL("image/jpeg",.72));};img.src=reader.result;};reader.readAsDataURL(file);}
 function loginValues(){return{email:$("loginEmail").value.trim(),password:$("loginPassword").value};}
 function showLoginError(message){$("loginError").textContent=message||"";}
