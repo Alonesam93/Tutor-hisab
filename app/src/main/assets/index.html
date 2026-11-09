@@ -58,7 +58,7 @@ body{padding-bottom:75px}
 .login-card{border:0;border-radius:0;background:#fffaf5}
 .login-brand h2{font-size:26px}
 .login-primary,.login-secondary{width:100%;padding:14px;font-size:16px;margin-top:8px}
-.bottom-nav button{font-size:22px;line-height:1;padding:9px 2px;min-height:50px;border-radius:9px}
+.bottom-nav button{font-size:20px;line-height:1;padding:7px 2px;min-height:54px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}.bottom-nav button span{font-size:9px;line-height:1.1;font-weight:600}
 .bottom-nav button.active{background:#e5f4ed;color:#075b43;outline:2px solid #087f5b}
 .profile-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
 .profile-avatar,.profile-avatar-fallback{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #d8eee4;background:#e8f5ef;display:grid;place-items:center;font-size:34px;flex:none}
@@ -180,13 +180,7 @@ body{padding-bottom:75px}
  </div>
 </section>
 <section id="notificationScreen" class="tab-screen" hidden>
- <div class="card"><h3>🔔 নোটিফিকেশন</h3>
-  <p>এখনো কোনো নতুন নোটিফিকেশন নেই।</p>
-  <div class="student"><b>বেতন ও পেমেন্ট</b><p>শিক্ষার্থীদের মাসিক বেতন ও জমার আপডেট এখানে দেখা যাবে।</p></div>
-  <div class="student"><b>বকেয়া রিমাইন্ডার</b><p>বকেয়া সংক্রান্ত রিমাইন্ডার এখানে দেখা যাবে।</p></div>
-  <div class="student"><b>SMS / Pro / Elite</b><p>প্যাকেজ ও সাবস্ক্রিপশনের অবস্থা এখানে দেখা যাবে।</p></div>
-  <div class="student"><b>অ্যাপ আপডেট</b><p>নতুন সংস্করণ ও গুরুত্বপূর্ণ ঘোষণা এখানে দেখা যাবে।</p></div>
- </div>
+ <div class="card"><h3>🔔 নোটিফিকেশন</h3><div id="notificationList"></div></div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
  <div class="profile-head">
@@ -235,11 +229,11 @@ body{padding-bottom:75px}
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
- <button type="button" data-tab="home" aria-label="Homepage" title="Homepage">🏠</button>
- <button type="button" data-tab="store" aria-label="My Store" title="My Store">🛍️</button>
- <button type="button" data-tab="notification" aria-label="Notification" title="Notification">🔔</button>
- <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile">👤</button>
- <button type="button" data-tab="settings" aria-label="Settings" title="Settings">⚙️</button>
+ <button type="button" data-tab="home" aria-label="Homepage" title="Homepage">🏠<span>Homepage</span></button>
+ <button type="button" data-tab="store" aria-label="My Store" title="My Store">🛍️<span>My Store</span></button>
+ <button type="button" data-tab="notification" aria-label="Notification" title="Notification">🔔<span>Notification</span></button>
+ <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile">👤<span>My Profile</span></button>
+ <button type="button" data-tab="settings" aria-label="Settings" title="Settings">⚙️<span>Settings</span></button>
 </nav>
 
 <script>
@@ -336,6 +330,28 @@ function render(){
  $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
  const history=[...data.payments].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
  $("paymentHistory").innerHTML=history.length?history.map(p=>{const st=data.students.find(s=>s.id===p.studentId);return '<div class="student"><b>'+esc(st?st.name:"শিক্ষার্থী নেই")+'</b><div>পরিমাণ: '+money(p.amount)+' | মাস: '+esc(p.month)+' | তারিখ: '+esc(p.date)+'</div><button class="secondary" data-payment-edit="'+esc(p.id)+'">জমা সম্পাদনা</button><button class="danger" data-payment-remove="'+esc(p.id)+'">জমা মুছুন</button></div>';}).join(""):"এখনো কোনো জমা নেই।";
+ renderNotifications();
+}
+function renderNotifications(){
+ const box=$("notificationList");if(!box)return;
+ const en=(localStorage.getItem("tutorHisabLanguage")||"bn")==="en";
+ const due=data.students.map(s=>({student:s,amount:dueFor(s)})).filter(x=>x.amount>0).sort((a,b)=>b.amount-a.amount);
+ const recent=[...data.payments].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,5);
+ const section=(title,body)=>'<div class="student"><b>'+title+'</b><p>'+body+'</p></div>';
+ let html='';
+ if(due.length){
+  html+='<h4>'+(en?'Due reminders':'বকেয়া রিমাইন্ডার')+'</h4>';
+  html+=due.map(x=>section(esc(x.student.name),en?'Outstanding due: '+money(x.amount):'মোট বকেয়া: '+money(x.amount))).join('');
+ }else{
+  html+=section(en?'Due reminders':'বকেয়া রিমাইন্ডার',en?'No outstanding dues at the moment.':'এই মুহূর্তে কোনো বকেয়া নেই।');
+ }
+ html+='<h4>'+(en?'Recent payments':'সাম্প্রতিক জমা')+'</h4>';
+ html+=recent.length?recent.map(p=>{const st=data.students.find(s=>s.id===p.studentId);return section(esc(st?st.name:(en?'Student removed':'শিক্ষার্থী মুছে ফেলা হয়েছে')), (en?'Received ':'জমা হয়েছে ')+money(p.amount)+' · '+esc(p.date||p.month));}).join(''):section(en?'Recent payments':'সাম্প্রতিক জমা',en?'No payments recorded yet.':'এখনো কোনো জমা নেই।');
+ html+='<h4>'+(en?'Services and subscription status':'সেবা ও সাবস্ক্রিপশনের অবস্থা')+'</h4>';
+ html+=section('SMS / Pro / Elite',en?'Coming soon. No paid package is active.':'শীঘ্রই আসছে। এখনো কোনো পেইড প্যাকেজ চালু নেই।');
+ html+='<h4>'+(en?'App updates':'অ্যাপ আপডেট')+'</h4>';
+ html+=section(en?'App announcements':'অ্যাপের ঘোষণা',en?'Important app updates will appear here.':'অ্যাপের গুরুত্বপূর্ণ আপডেট এখানে দেখানো হবে।');
+ box.innerHTML=html;
 }
 $("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data-edit-id]");if(editBtn){editStudent(editBtn.dataset.editId);return;}const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
 $("paymentHistory").addEventListener("click",e=>{const edit=e.target.closest("[data-payment-edit]");if(edit){editPayment(edit.dataset.paymentEdit);return;}const del=e.target.closest("[data-payment-remove]");if(del)removePayment(del.dataset.paymentRemove);});
@@ -355,15 +371,17 @@ function report(){
  $("reportResult").innerHTML=rows.map(r=>`<hr><b>${esc(r.name)}</b><br>এই মাসে জমা: ${money(r.paid)}<br>এই মাস পর্যন্ত মোট বকেয়া: ${money(r.due)}`).join("")||"কোনো তথ্য নেই";
 }
 function backup(){
- if(window.Android && typeof window.Android.saveBackup==="function"){window.Android.saveBackup(JSON.stringify(data,null,2));return;}
- const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ const payload={...data,backupVersion:2,accountUid:currentUser?.uid||null,exportedAt:new Date().toISOString()};
+ const json=JSON.stringify(payload,null,2);
+ if(window.Android && typeof window.Android.saveBackup==="function"){window.Android.saveBackup(json);return;}
+ const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
  a.href=url;a.download="tutor-hisab-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function restore(){
  const file=$("restoreFile").files[0];if(!file){alert("ব্যাকআপ ফাইল নির্বাচন করুন");return;}
  const reader=new FileReader();reader.onload=()=>{
   try{
-   const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error("invalid");
+   const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error("invalid");if(d.accountUid&&currentUser&&d.accountUid!==currentUser.uid)throw Error("wrong account");
    const ids=new Set();
    for(const s of d.students){if(!s||typeof s.id!=="string"||!s.id||ids.has(s.id)||typeof s.name!=="string"||!s.name.trim()||!validMonth(s.start)||!Number.isFinite(Number(s.fee))||Number(s.fee)<=0||!Number.isFinite(Number(s.opening||0))||Number(s.opening||0)<0)throw Error("student");ids.add(s.id);}
    for(const p of d.payments){const student=d.students.find(s=>s.id===p.studentId);if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date)||p.month<student.start)throw Error("payment");}
