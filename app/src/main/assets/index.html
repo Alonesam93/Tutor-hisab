@@ -29,6 +29,10 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<style>
+.app-page{display:none}.app-page.active{display:block}.bottom-nav{position:fixed;z-index:50;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #dce5df;padding:6px 3px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px #0001}.bottom-nav button{margin:0;padding:7px 1px;background:transparent;color:#60756b;font-size:11px;display:flex;flex-direction:column;gap:3px;align-items:center}.bottom-nav button.active{color:#087f5b;background:#e4f5ed}.bottom-nav b{font-size:18px}.app-ready{padding-bottom:82px}#accountCard{max-width:520px;margin:18px auto}
+</style>
 </head>
 <body>
 <header>
@@ -100,6 +104,8 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
 </main>
+<nav id="bottomNav" class="bottom-nav" hidden><button class="active" data-page="home"><b>⌂</b>Homepage</button><button data-page="store"><b>▣</b>My Store</button><button data-page="notification"><b>♢</b>Notification</button><button data-page="profile"><b>◉</b>My Profile</button><button data-page="settings"><b>⚙</b>Settings</button></nav>
+
 <footer class="legal-links"><a href="privacy.html">গোপনীয়তা নীতি</a><a href="terms.html">ব্যবহারের শর্তাবলি</a><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></footer>
 <script>
 let STORAGE_KEY="tutorHisabData";
@@ -311,7 +317,9 @@ if(auth){
  });
 }
 
+setupAppTabs();
 render();
+setAuthenticatedUI(currentUser);
 </script>
 </body>
 </html>
