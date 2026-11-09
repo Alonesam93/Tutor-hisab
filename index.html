@@ -175,11 +175,18 @@ body{padding-bottom:75px}
 <section id="storeScreen" class="tab-screen" hidden>
  <div class="card"><h3>🛍️ আমার স্টোর</h3>
   <div class="student"><b>এসএমএস প্যাকেজ</b><p>শীঘ্রই আসছে</p></div>
-  <div class="student"><b>বিজ্ঞাপন সরান</b><p>শীঘ্রই আসছে</p></div>
+  <div class="student"><b>প্রো (Pro)</b><p>শীঘ্রই আসছে</p></div>
+  <div class="student"><b>এলিট (Elite)</b><p>শীঘ্রই আসছে</p></div>
  </div>
 </section>
 <section id="notificationScreen" class="tab-screen" hidden>
- <div class="card"><h3>🔔 নোটিফিকেশন</h3><p>এখনো কোনো নোটিফিকেশন নেই।</p><p class="small">পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।</p></div>
+ <div class="card"><h3>🔔 নোটিফিকেশন</h3>
+  <p>এখনো কোনো নতুন নোটিফিকেশন নেই।</p>
+  <div class="student"><b>বেতন ও পেমেন্ট</b><p>শিক্ষার্থীদের মাসিক বেতন ও জমার আপডেট এখানে দেখা যাবে।</p></div>
+  <div class="student"><b>বকেয়া রিমাইন্ডার</b><p>বকেয়া সংক্রান্ত রিমাইন্ডার এখানে দেখা যাবে।</p></div>
+  <div class="student"><b>SMS / Pro / Elite</b><p>প্যাকেজ ও সাবস্ক্রিপশনের অবস্থা এখানে দেখা যাবে।</p></div>
+  <div class="student"><b>অ্যাপ আপডেট</b><p>নতুন সংস্করণ ও গুরুত্বপূর্ণ ঘোষণা এখানে দেখা যাবে।</p></div>
+ </div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
  <div class="profile-head">
@@ -222,7 +229,9 @@ body{padding-bottom:75px}
   <p><a href="privacy.html">গোপনীয়তা নীতি</a></p>
   <p><a href="terms.html">ব্যবহারের শর্তাবলি</a></p>
   <p><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a></p><p>রেটিং দিন · Tutor Hisab পরিচিতি</p>
+  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a></p><p><a href="about.html">পরিচিতি / About Tutor Hisab</a></p>
+  <p><a href="#" onclick="shareTutorHisab(event)">শেয়ার করুন / Share</a></p>
+  <p>রেটিং দিন / Rate Us — শীঘ্রই আসছে</p>
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
@@ -403,7 +412,7 @@ const translations={
 "Contact Us / যোগাযোগ":"Contact Us","Feedback":"Feedback","Rate Us":"Rate Us","About Tutor Hisab":"About Tutor Hisab",
 "Sign Out / Log Out":"Sign Out / Log Out",
 "স্বাগতম":"Welcome","নতুন অ্যাকাউন্ট তৈরি করুন":"Create New Account","✏️ সম্পাদনা":"✏️ Edit","লগ আউট":"Sign Out / Log Out",
-"💾 আপনার অগ্রগতি সংরক্ষণ":"💾 Save Your Progress","এসএমএস প্যাকেজ":"SMS Packages","শীঘ্রই আসছে":"Coming Soon","বিজ্ঞাপন সরান":"Remove Ads",
+"💾 আপনার অগ্রগতি সংরক্ষণ":"💾 Save Your Progress","এসএমএস প্যাকেজ":"SMS Packages","শীঘ্রই আসছে":"Coming Soon","প্রো (Pro)":"Pro","এলিট (Elite)":"Elite","বেতন ও পেমেন্ট":"Salary & Payments","বকেয়া রিমাইন্ডার":"Due Reminders","প্যাকেজ ও সাবস্ক্রিপশনের অবস্থা এখানে দেখা যাবে।":"Package and subscription status will appear here.","শিক্ষার্থীদের মাসিক বেতন ও জমার আপডেট এখানে দেখা যাবে।":"Monthly fee and payment updates will appear here.","বকেয়া সংক্রান্ত রিমাইন্ডার এখানে দেখা যাবে।":"Due reminders will appear here.","নতুন সংস্করণ ও গুরুত্বপূর্ণ ঘোষণা এখানে দেখা যাবে।":"New versions and important announcements will appear here.","এখনো কোনো নতুন নোটিফিকেশন নেই।":"No new notifications yet.",
 "সম্পাদনা করুন":"Edit","পরিবর্তন সংরক্ষণ করুন":"Save Changes","জমার পরিবর্তন সংরক্ষণ করুন":"Save Payment Changes",
 "✏️ শিক্ষার্থীর তথ্য সম্পাদনা করুন":"✏️ Edit Student Details","সঠিক মাস নির্বাচন করুন":"Select a valid month",
 "কোনো তথ্য নেই":"No records found","ব্যাকআপ ফাইল নির্বাচন করুন":"Select a backup file",
@@ -505,6 +514,12 @@ async function syncCloud(){
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}const profile=profileValues();savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+currentUser.uid,JSON.stringify(profile));$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home");}try{await db.collection("users").doc(currentUser.uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল ডিভাইসে সংরক্ষিত হয়েছে; Cloud-এ পাঠানো যায়নি: "+e.message);}}
 if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();if(!profile.name||!profile.name.trim()){window.__tutorHisabProfileSetupRequired=true;editProfile();showTab("profile");}else{window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home");}}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile");if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
 
+function shareTutorHisab(event){
+ if(event)event.preventDefault();
+ const payload={title:"Tutor Hisab",text:"Tutor Hisab — শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়ার হিসাব রাখুন।"};
+ if(navigator.share){navigator.share(payload).catch(()=>{});}
+ else{alert("এই ডিভাইসে Share সুবিধা পাওয়া যাচ্ছে না।");}
+}
 function finishOnboarding(tab){
  $("firstRunOverlay").hidden=true;
  showTab(tab);
