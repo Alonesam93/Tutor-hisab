@@ -2,6 +2,9 @@ name: Build Tutor Hisab Android APK
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - fix/account-isolation-profile-cancel
   push:
     branches:
       - fix/audit-and-data-integrity
