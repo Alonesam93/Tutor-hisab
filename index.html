@@ -515,10 +515,12 @@ async function syncCloud(){
  if(!currentUser||!db)return;
  if(cloudSyncInProgress){cloudSyncPending=true;return;}
  cloudSyncInProgress=true;
+ const syncUid=currentUser.uid;
  cloudMessage("Cloud-এর তথ্য নিরাপদে মিলিয়ে দেখা হচ্ছে…");
  try{
-  const base=db.collection("users").doc(currentUser.uid);
-  const cloud=await readCloudData(currentUser.uid);
+  const base=db.collection("users").doc(syncUid);
+  const cloud=await readCloudData(syncUid);
+  if(!currentUser||currentUser.uid!==syncUid)return;
   const local=JSON.parse(JSON.stringify(data));
   const localStudents=new Map(local.students.map(x=>[String(x.id),x]));
   const localPayments=new Map(local.payments.map(x=>[String(x.id),x]));
@@ -537,16 +539,28 @@ async function syncCloud(){
   for(let i=0;i<writes.length;i+=450){
    const batch=db.batch();writes.slice(i,i+450).forEach(write=>write(batch));await batch.commit();
   }
+  if(!currentUser||currentUser.uid!==syncUid)return;
+  // Keep any edits made while this sync was running; a follow-up sync will send them.
+  const latest=JSON.parse(JSON.stringify(data));
+  const latestDeletedStudents=new Set(latest.deletedStudentIds||[]);
+  const latestDeletedPayments=new Set(latest.deletedPaymentIds||[]);
   const mergedStudents=new Map(cloudStudents),mergedPayments=new Map(cloudPayments);
   for(const id of deletedStudents)mergedStudents.delete(id);
   for(const id of deletedPayments)mergedPayments.delete(id);
   for(const [id,item] of localStudents)mergedStudents.set(id,item);
   for(const [id,item] of localPayments)mergedPayments.set(id,item);
-  data={...local,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],deletedStudentIds:[],deletedPaymentIds:[]};
+  for(const id of latestDeletedStudents)mergedStudents.delete(id);
+  for(const id of latestDeletedPayments)mergedPayments.delete(id);
+  for(const [id,item] of (latest.students||[]).map(x=>[String(x.id),x]))mergedStudents.set(id,item);
+  for(const [id,item] of (latest.payments||[]).map(x=>[String(x.id),x]))mergedPayments.set(id,item);
+  for(const [id,p] of mergedPayments){if(latestDeletedStudents.has(String(p.studentId)))mergedPayments.delete(id);}
+  data={...latest,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],
+   deletedStudentIds:[...latestDeletedStudents].filter(id=>!deletedStudents.has(id)),
+   deletedPaymentIds:[...latestDeletedPayments].filter(id=>!deletedPayments.has(id))};
   save(false);
   await base.set({email:currentUser.email||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
   cloudMessage("Cloud Sync সম্পন্ন। নতুন ও সম্পাদিত তথ্য সংরক্ষণ হয়েছে; মুছে ফেলা রেকর্ডও সিঙ্ক হয়েছে।");
- }catch(e){console.error("Safe Cloud Sync:",e);cloudMessage("Cloud Sync সম্পন্ন হয়নি: "+e.message);}
+ }catch(e){console.error("Safe Cloud Sync:",e);if(currentUser&&currentUser.uid===syncUid)cloudMessage("Cloud Sync সম্পন্ন হয়নি: "+e.message);}
  finally{
   cloudSyncInProgress=false;
   if(cloudSyncPending){cloudSyncPending=false;Promise.resolve().then(syncCloud);}
