@@ -14,7 +14,8 @@ android {
         versionName '1.0'
     }
 
-    dependencies {
-        implementation 'com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0'
-    }
+}
+
+dependencies {
+    implementation 'com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0'
 }
