@@ -321,6 +321,28 @@ if(auth){
  });
 }
 
+
+function setupAppTabs(){
+ const main=document.querySelector("main");
+ const ids=["home","store","notification","profile","settings"],pages={};
+ ids.forEach(name=>{const el=document.createElement("section");el.id="page-"+name;el.className="app-page";main.appendChild(el);pages[name]=el;});
+ const card=id=>$(id)?.closest(".card");
+ const homeCards=["count","studentFormTitle","payStudent","students","reportMonth"].map(card);
+ [...new Set(homeCards)].filter(Boolean).forEach(el=>pages.home.appendChild(el));
+ const store=document.createElement("div");store.className="card";store.innerHTML="<h3>🛍️ My Store</h3><div class='student'><b>SMS Packages</b><p class='small'>SMS রিমাইন্ডার প্যাকেজ</p>Coming Soon</div><div class='student'><b>Pro</b><p class='small'>অতিরিক্ত সুবিধা</p>Coming Soon</div><div class='student'><b>Elite</b><p class='small'>প্রিমিয়াম সুবিধা</p>Coming Soon</div>";pages.store.appendChild(store);
+ const note=document.createElement("div");note.className="card";note.innerHTML="<h3>🔔 Notification</h3><p>বেতন ও পেমেন্ট আপডেট, বকেয়ার রিমাইন্ডার, SMS / Pro / Elite-এর অবস্থা এবং অ্যাপ আপডেট এখানে দেখা যাবে।</p>";pages.notification.appendChild(note);
+ const profile=document.createElement("div");profile.className="card";profile.innerHTML="<h3>👤 My Profile</h3><div id='profileSummary' class='small'>অ্যাকাউন্টের তথ্য লোড হচ্ছে…</div><button class='secondary' onclick='emailSignOut()'>Sign Out</button>";pages.profile.appendChild(profile);
+ const settings=document.createElement("div");settings.className="card";settings.innerHTML="<h3>⚙️ Settings</h3><div class='student'><b>Save Your Progress</b><p class='small'>Backup download ও restore</p></div><div class='student'><b>Language</b><p class='small'>বাংলা / English — পরবর্তী আপডেটে সক্রিয় হবে</p></div><div class='student'><b>Guideline</b><p class='small'>অ্যাপ ব্যবহারের নির্দেশনা</p></div><button class='secondary' onclick='rateUs()'>⭐ Rate Us</button><button class='secondary' onclick='sendFeedback()'>✉️ Feedback</button><button class='secondary' onclick=\"location.href='privacy.html'\">🔒 Privacy Policy</button><button class='secondary' onclick=\"location.href='terms.html'\">📄 Terms of Service</button><button class='secondary' onclick=\"location.href='mailto:tutorhisab.support@gmail.com'\">☎️ Contact Us</button><button class='secondary' onclick=\"alert('Tutor Hisab — শিক্ষার্থী ও মাসিক বেতনের হিসাব।')\">ℹ️ About</button><button onclick='syncCloud()'>☁️ Cloud Sync</button><button class='danger' onclick='emailSignOut()'>Sign Out</button>";pages.settings.appendChild(settings);
+ const backup=card("restoreFile");if(backup)pages.settings.appendChild(backup);
+ const account=$("accountCard");account.classList.add("auth-card");
+ const share=main.querySelector(".card:has(#authEmail) + .card");if(share)share.remove();
+ const nav=$("bottomNav");
+ nav.addEventListener("click",e=>{const btn=e.target.closest("button[data-page]");if(btn)showAppPage(btn.dataset.page);});
+ window.showAppPage=function(name){ids.forEach(k=>pages[k].classList.toggle("active",k===name));nav.querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.dataset.page===name));window.scrollTo(0,0);};
+ window.handleAndroidBack=function(){const active=nav.querySelector("button.active");if(active&&active.dataset.page!=="home"){showAppPage("home");return true;}return false;};
+ window.setAuthenticatedUI=function(user){const ok=!!user;account.hidden=ok;Object.values(pages).forEach(p=>p.hidden=!ok);nav.hidden=!ok;main.classList.toggle("app-ready",ok);if(ok)showAppPage("home");};
+}
+
 setupAppTabs();
 render();
 setAuthenticatedUI(currentUser);
