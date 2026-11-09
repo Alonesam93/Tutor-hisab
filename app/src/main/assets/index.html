@@ -38,14 +38,13 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <main>
 <div class="card" id="accountCard">
 <h3>👤 ইমেইল অ্যাকাউন্ট ও Cloud Sync</h3>
-<div id="authStatus" class="small">অ্যাকাউন্টে প্রবেশ না করেও স্থানীয়ভাবে অ্যাপ ব্যবহার করতে পারবেন। ক্লাউডে তথ্য রাখতে ইমেইল দিয়ে লগইন করুন।</div>
-<input id="authEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল">
+<div id="authStatus" class="small">আপনার অ্যাকাউন্টে প্রবেশ করুন অথবা নতুন অ্যাকাউন্ট তৈরি করুন।</div>
+<div id="signupFields" hidden><input id="profileName" placeholder="আপনার পূর্ণ নাম" maxlength="100"><input id="profileMobile" placeholder="মোবাইল নম্বর (প্রোফাইলের জন্য)" inputmode="tel" maxlength="20"><input id="profileInstitution" placeholder="প্রতিষ্ঠানের নাম" maxlength="120"><input id="profileDesignation" placeholder="আপনার পদবি / পরিচয়" maxlength="80"></div>
+<input id="authEmail" type="email" autocomplete="email" placeholder="ইমেইল ঠিকানা">
 <input id="authPassword" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
-<button onclick="emailSignIn()">ইমেইল দিয়ে লগইন</button>
-<button class="secondary" onclick="emailSignUp()">নতুন অ্যাকাউন্ট তৈরি</button>
-<button class="secondary" onclick="emailSignOut()">লগআউট</button>
-<button onclick="syncCloud()">এখনই Cloud Sync করুন</button>
-<div id="cloudStatus" class="small">Cloud Sync করতে ইন্টারনেট ও ইমেইল অ্যাকাউন্ট প্রয়োজন।</div>
+<button id="signInBtn" onclick="emailSignIn()">Sign In</button><button id="signUpBtn" class="secondary" onclick="emailSignUp()">Sign Up</button>
+<button id="forgotBtn" class="secondary" onclick="resetPassword()">পাসওয়ার্ড ভুলে গেছেন?</button><button id="switchAuthBtn" class="secondary" onclick="toggleAuthMode()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+<div id="cloudStatus" class="small">ইন্টারনেট সংযোগ প্রয়োজন।</div><div class="legal-links"><a href="privacy.html">Privacy Policy</a><a href="mailto:tutorhisab.support@gmail.com">Contact</a><a href="#about">About</a></div>
 </div>
 <div class="card">
 <h3>📲 শেয়ার ও যোগাযোগ</h3>
@@ -218,6 +217,8 @@ try{
 function cloudMessage(message){const el=$("cloudStatus");if(el)el.textContent=message;}
 function authMessage(message){const el=$("authStatus");if(el)el.textContent=message;}
 function hasRecords(d){return !!(d&&(d.students?.length||d.payments?.length));}
+function toggleAuthMode(){const box=$("signupFields"),on=box.hidden;box.hidden=!on;$("signInBtn").hidden=on;$("forgotBtn").hidden=on;$("switchAuthBtn").textContent=on?"আগে থেকেই অ্যাকাউন্ট আছে? Sign In":"নতুন অ্যাকাউন্ট তৈরি করুন";$("authPassword").autocomplete=on?"new-password":"current-password";}
+function resetPassword(){if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি।");return;}const email=$("authEmail").value.trim();if(!email){alert("আগে ইমেইল ঠিকানা লিখুন।");return;}auth.sendPasswordResetEmail(email).then(()=>alert("পাসওয়ার্ড রিসেটের লিংক ইমেইলে পাঠানো হয়েছে।")).catch(e=>alert("লিংক পাঠানো যায়নি: "+e.message));}
 function emailSignIn(){
  if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি। অনলাইন HTTPS সংস্করণ ব্যবহার করুন।");return;}
  const email=$("authEmail").value.trim(),password=$("authPassword").value;
@@ -226,12 +227,10 @@ function emailSignIn(){
 }
 function emailSignUp(){
  if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি। অনলাইন HTTPS সংস্করণ ব্যবহার করুন।");return;}
- const email=$("authEmail").value.trim(),password=$("authPassword").value;
+ const email=$("authEmail").value.trim(),password=$("authPassword").value;const profile={name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim()};
+ if(!profile.name||!profile.mobile||!profile.institution||!profile.designation){alert("নাম, মোবাইল, প্রতিষ্ঠানের নাম ও পদবি পূরণ করুন।");return;}
  if(!email||password.length<6){alert("সঠিক ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");return;}
- auth.createUserWithEmailAndPassword(email,password).then(async cred=>{
-  await db.collection("users").doc(cred.user.uid).set({email:cred.user.email,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  alert("অ্যাকাউন্ট তৈরি হয়েছে।");
- }).catch(e=>alert("অ্যাকাউন্ট তৈরি হয়নি: "+e.message));
+ auth.createUserWithEmailAndPassword(email,password).then(async cred=>{await db.collection("users").doc(cred.user.uid).set({...profile,email:cred.user.email,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}).catch(e=>alert("অ্যাকাউন্ট তৈরি হয়নি: "+e.message));
 }
 async function emailSignOut(){if(auth&&currentUser){await auth.signOut();}}
 async function readCloudData(uid){
