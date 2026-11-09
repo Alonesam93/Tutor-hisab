@@ -45,6 +45,19 @@ jobs:
           cp hosting/terms.html app/src/main/assets/terms.html
           cp about.html app/src/main/assets/about.html
 
+      - name: Validate embedded JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script(?:\\s[^>]*)?>(.*?)</script>", html, flags=re.I | re.S)
+          if not scripts:
+              raise SystemExit("No inline JavaScript found in index.html")
+          Path("/tmp/tutor-hisab-inline.js").write_text("\\n;\\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/tutor-hisab-inline.js
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
