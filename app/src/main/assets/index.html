@@ -55,9 +55,21 @@ body{padding-bottom:75px}
 .login-error{color:#b42318;font-size:13px;min-height:18px}
 .onboarding{padding:0;align-items:stretch;justify-content:stretch}
 .onboarding-card{width:100%;max-width:none;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;border-radius:0;padding:calc(28px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center;overflow:auto}
-.login-card{border:0;border-radius:0;background:#fff4ed}
-.login-brand h2{font-size:26px}
-.login-primary,.login-secondary{width:100%;padding:14px;font-size:16px;margin-top:8px}
+.login-card{border:0;border-radius:0;background:linear-gradient(160deg,#f7f3ff 0%,#ffffff 48%,#fff7f1 100%)}
+.login-brand{margin-bottom:22px}
+.login-logo{width:58px;height:58px;border-radius:18px;background:linear-gradient(145deg,#51418f,#8069bd);font-size:30px;box-shadow:0 8px 20px #51418f30}
+.login-brand h2{font-size:28px;color:#32245f;letter-spacing:.2px}
+#authHeading{font-size:25px;margin-top:8px}
+.login-subtitle{font-size:14px;line-height:1.6;color:#756b83;margin-bottom:22px}
+.login-label{color:#40345d;font-size:14px;margin:12px 0 5px}
+.login-input{border:1px solid #ded5ee;background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 6px #32245f08}
+.login-input:focus{outline:2px solid #b8a6df;border-color:#8069bd}
+.login-primary,.login-secondary{width:100%;padding:14px;font-size:16px;margin-top:10px;border-radius:12px!important}
+.login-primary{background:linear-gradient(135deg,#51418f,#7560b0)!important;box-shadow:0 7px 16px #51418f30}
+.login-secondary{color:#51418f!important;border:1px solid #ded5ee!important}
+.login-row{margin:12px 0 16px;color:#514767}
+.login-footer{line-height:1.8}
+.login-error{margin:8px 0}
 .bottom-nav button{font-size:27px;line-height:1;padding:8px 2px;min-height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#706487;background:transparent;transition:background .18s ease,color .18s ease,transform .18s ease}.bottom-nav button.active{background:#eee8fa;color:#51418f;outline:2px solid #d8c8ef;transform:translateY(-2px)}.bottom-nav button:focus-visible{outline:2px solid #51418f;outline-offset:2px}.coming-soon-screen{min-height:55vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#51418f;background:linear-gradient(145deg,#f4effb,#fff1eb);border:1px solid #e7dcf2;border-radius:22px;padding:28px;box-shadow:0 8px 24px #51418f12}.coming-soon-mark{width:88px;height:88px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(145deg,#51418f,#826bc0);color:#fff;font-size:48px;box-shadow:0 12px 28px #51418f35}.coming-soon-screen h2{font-size:25px;margin:20px 0 8px}.coming-soon-screen p{margin:0;color:#71667d;font-size:14px}
 .bottom-nav button.active{background:#efe7fa;color:#32245f;outline:2px solid #51418f}
 .profile-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
@@ -100,12 +112,26 @@ body{padding-bottom:75px}
   </section>
   <section id="firstAuthStep" hidden>
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
-   <h3 style="text-align:center;color:#513a2a;margin-bottom:5px">লগইন করুন</h3>
-   <p class="login-subtitle">আপনার ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন</p>
+   <h3 id="authHeading" style="text-align:center;color:#32245f;margin-bottom:5px">লগইন করুন</h3>
+   <p id="authSubtitle" class="login-subtitle">আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন</p>
+   <div id="signupFields" hidden>
+    <label class="login-label" for="signupName">আপনার নাম</label>
+    <input class="login-input" id="signupName" type="text" autocomplete="name" placeholder="আপনার পূর্ণ নাম">
+    <label class="login-label" for="signupMobile">মোবাইল নম্বর (ঐচ্ছিক)</label>
+    <input class="login-input" id="signupMobile" type="tel" autocomplete="tel" placeholder="মোবাইল নম্বর">
+    <label class="login-label" for="signupInstitution">প্রতিষ্ঠানের নাম (ঐচ্ছিক)</label>
+    <input class="login-input" id="signupInstitution" type="text" placeholder="প্রতিষ্ঠানের নাম">
+    <label class="login-label" for="signupDesignation">পদবি (ঐচ্ছিক)</label>
+    <input class="login-input" id="signupDesignation" type="text" placeholder="যেমন: শিক্ষক">
+   </div>
    <label class="login-label" for="loginEmail">ইমেইল</label>
    <input class="login-input" id="loginEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল লিখুন">
    <label class="login-label" for="loginPassword">পাসওয়ার্ড</label>
    <input class="login-input" id="loginPassword" type="password" autocomplete="current-password" placeholder="আপনার পাসওয়ার্ড লিখুন">
+   <div id="confirmPasswordWrap" hidden>
+    <label class="login-label" for="confirmPassword">পাসওয়ার্ড নিশ্চিত করুন</label>
+    <input class="login-input" id="confirmPassword" type="password" autocomplete="new-password" placeholder="পাসওয়ার্ড আবার লিখুন">
+   </div>
    <button type="button" id="togglePassword" class="login-secondary" style="width:auto;padding:7px 12px;font-size:13px">পাসওয়ার্ড দেখুন</button>
    <div class="login-row"><label><input type="checkbox" id="rememberMe" checked> মনে রাখুন</label><a href="#" id="forgotPassword">পাসওয়ার্ড ভুলে গেছেন?</a></div>
    <button type="button" id="loginSignIn" class="login-primary">প্রবেশ করুন</button>
@@ -522,8 +548,8 @@ function handleProfilePhoto(event){const file=event.target.files&&event.target.f
 function loginValues(){return{email:$("loginEmail").value.trim(),password:$("loginPassword").value};}
 function showLoginError(message){$("loginError").textContent=message||"";}
 let authMode="signin";
-function setAuthMode(mode){authMode=mode;const bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",signup=mode==="signup";$("loginSignIn").textContent=signup?(bn?"অ্যাকাউন্ট তৈরি করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");$("authModePrompt").textContent=signup?(bn?"আগে থেকেই অ্যাকাউন্ট আছে?":"Already have an account?"):(bn?"নতুন অ্যাকাউন্ট প্রয়োজন?":"Need an account?");$("loginSignUp").textContent=signup?(bn?"সাইন ইন করুন":"Sign in"):(bn?"নতুন অ্যাকাউন্ট তৈরি করুন":"Create account");$("forgotPassword").hidden=signup;$("loginPassword").autocomplete=signup?"new-password":"current-password";showLoginError("");}
-async function emailSignIn(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const {email,password}=loginValues();if(!email||!password){showLoginError("ইমেইল ও পাসওয়ার্ড লিখুন।");return;}if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showLoginError("সঠিক ইমেইল ঠিকানা লিখুন।");return;}if(authMode==="signup"&&password.length<6){showLoginError("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");return;}try{await auth.setPersistence($("rememberMe").checked?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION);if(authMode==="signup"){const u=await auth.createUserWithEmailAndPassword(email,password);await db.collection("users").doc(u.user.uid).set({email:u.user.email,profile:{},createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}else await auth.signInWithEmailAndPassword(email,password);showLoginError("");}catch(x){const code=x.code||"",bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn";const messages={"auth/email-already-in-use":bn?"এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে। সাইন ইন করুন।":"An account already exists for this email. Please sign in.","auth/invalid-email":bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.","auth/weak-password":bn?"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।":"Password must be at least 6 characters.","auth/user-not-found":bn?"এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।":"No account was found for this email.","auth/wrong-password":bn?"পাসওয়ার্ড সঠিক নয়।":"Incorrect password.","auth/invalid-credential":bn?"ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।":"Incorrect email or password.","auth/network-request-failed":bn?"ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।":"Check your internet connection and try again."};showLoginError(messages[code]||(bn?"লগইন করা যায়নি: ":"Sign in failed: ")+x.message);}}
+function setAuthMode(mode){authMode=mode;const bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",signup=mode==="signup";$("authHeading").textContent=signup?(bn?"নতুন অ্যাকাউন্ট তৈরি করুন":"Create your account"):(bn?"লগইন করুন":"Sign in");$("authSubtitle").textContent=signup?(bn?"আপনার তথ্য দিয়ে Tutor Hisab-এ যোগ দিন":"Enter your details to join Tutor Hisab"):(bn?"আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন":"Enter your account details to continue");$("signupFields").hidden=!signup;$("confirmPasswordWrap").hidden=!signup;$("loginSignIn").textContent=signup?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");$("authModePrompt").textContent=signup?(bn?"আগে থেকেই অ্যাকাউন্ট আছে?":"Already have an account?"):(bn?"অ্যাকাউন্ট নেই?":"Don't have an account?");$("loginSignUp").textContent=signup?(bn?"সাইন ইন করুন":"Sign in"):(bn?"রেজিস্ট্রেশন করুন":"Register");$("forgotPassword").hidden=signup;$("loginPassword").autocomplete=signup?"new-password":"current-password";$("loginPassword").type="password";$("togglePassword").textContent=bn?"পাসওয়ার্ড দেখুন":"Show password";showLoginError("");}
+async function emailSignIn(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const {email,password}=loginValues();const bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn";if(!email||!password){showLoginError(bn?"ইমেইল ও পাসওয়ার্ড লিখুন।":"Enter email and password.");return;}if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showLoginError(bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.");return;}if(authMode==="signup"){if(!$("signupName").value.trim()){showLoginError(bn?"আপনার নাম লিখুন।":"Enter your name.");return;}if(password.length<6){showLoginError(bn?"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।":"Password must be at least 6 characters.");return;}if(password!==$("confirmPassword").value){showLoginError(bn?"দুইবার দেওয়া পাসওয়ার্ড মিলছে না।":"Passwords do not match.");return;}}try{await auth.setPersistence($("rememberMe").checked?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION);if(authMode==="signup"){const profile={name:$("signupName").value.trim(),mobile:$("signupMobile").value.trim(),institution:$("signupInstitution").value.trim(),designation:$("signupDesignation").value.trim(),photoData:"",email};const u=await auth.createUserWithEmailAndPassword(email,password);localStorage.setItem("tutorHisabProfile_"+u.user.uid,JSON.stringify(profile));await db.collection("users").doc(u.user.uid).set({email:u.user.email,profile,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}else await auth.signInWithEmailAndPassword(email,password);showLoginError("");}catch(x){const code=x.code||"";const messages={"auth/email-already-in-use":bn?"এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে। সাইন ইন করুন।":"An account already exists for this email. Please sign in.","auth/invalid-email":bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.","auth/weak-password":bn?"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।":"Password must be at least 6 characters.","auth/user-not-found":bn?"এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।":"No account was found for this email.","auth/wrong-password":bn?"পাসওয়ার্ড সঠিক নয়।":"Incorrect password.","auth/invalid-credential":bn?"ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।":"Incorrect email or password.","auth/network-request-failed":bn?"ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।":"Check your internet connection and try again."};showLoginError(messages[code]||(bn?"লগইন করা যায়নি: ":"Sign in failed: ")+x.message);}}
 async function emailSignUp(){setAuthMode("signup");}
 async function resetLoginPassword(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const email=$("loginEmail").value.trim();if(!email){showLoginError("আগে আপনার ইমেইল লিখুন।");return;}try{await auth.sendPasswordResetEmail(email);showLoginError("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।");}catch(x){showLoginError("রিসেট ইমেইল পাঠানো যায়নি: "+x.message);}}
 async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
