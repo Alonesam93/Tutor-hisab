@@ -58,7 +58,7 @@ body{padding-bottom:75px}
 .login-card{border:0;border-radius:0;background:#fff4ed}
 .login-brand h2{font-size:26px}
 .login-primary,.login-secondary{width:100%;padding:14px;font-size:16px;margin-top:8px}
-.bottom-nav button{font-size:22px;line-height:1;padding:7px 2px 6px;min-height:58px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#51418f}.bottom-nav button span{font-size:10px;line-height:1.1;font-weight:700;white-space:nowrap}.bottom-nav button.active{background:#efe7fa;color:#32245f;outline:2px solid #51418f}
+.bottom-nav button{font-size:27px;line-height:1;padding:8px 2px;min-height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#706487;background:transparent;transition:background .18s ease,color .18s ease,transform .18s ease}.bottom-nav button.active{background:#eee8fa;color:#51418f;outline:2px solid #d8c8ef;transform:translateY(-2px)}.bottom-nav button:focus-visible{outline:2px solid #51418f;outline-offset:2px}.coming-soon-screen{min-height:55vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#51418f;background:linear-gradient(145deg,#f4effb,#fff1eb);border:1px solid #e7dcf2;border-radius:22px;padding:28px;box-shadow:0 8px 24px #51418f12}.coming-soon-mark{width:88px;height:88px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(145deg,#51418f,#826bc0);color:#fff;font-size:48px;box-shadow:0 12px 28px #51418f35}.coming-soon-screen h2{font-size:25px;margin:20px 0 8px}.coming-soon-screen p{margin:0;color:#71667d;font-size:14px}
 .bottom-nav button.active{background:#efe7fa;color:#32245f;outline:2px solid #51418f}
 .profile-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
 .profile-avatar,.profile-avatar-fallback{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #e7d9f5;background:#f2e9fa;display:grid;place-items:center;font-size:34px;flex:none}
@@ -172,7 +172,7 @@ body{padding-bottom:75px}
 
 </main>
 
-<section id="storeScreen" class="tab-screen" hidden><div class="card"><h3>🛍️ আমার স্টোর</h3><p class="small">আপনার প্রয়োজন অনুযায়ী অতিরিক্ত সুবিধা বেছে নিন।</p><div class="student store-product"><div class="store-product-icon">✉️</div><div class="store-product-info"><b>SMS Packages</b><p>শীঘ্রই আসছে</p></div><span class="store-soon">Coming Soon</span></div><div class="student store-product"><div class="store-product-icon">⭐</div><div class="store-product-info"><b>Pro</b><p>প্রিমিয়াম সুবিধা</p></div><span class="store-soon">Coming Soon</span></div><div class="student store-product"><div class="store-product-icon">👑</div><div class="store-product-info"><b>Elite</b><p>বিশেষ প্রিমিয়াম সুবিধা</p></div><span class="store-soon">Coming Soon</span></div></div></section>
+<section id="storeScreen" class="tab-screen" hidden><div class="coming-soon-screen"><div class="coming-soon-mark">✦</div><h2>Coming Soon</h2><p>নতুন সুবিধা খুব শীঘ্রই আসছে</p></div></section>
 <section id="notificationScreen" class="tab-screen" hidden>
  <div class="card"><h3>🔔 নোটিফিকেশন</h3><div id="notificationList"></div></div>
 </section>
@@ -223,11 +223,11 @@ body{padding-bottom:75px}
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
- <button type="button" data-tab="home" aria-label="Homepage" title="Homepage">🏠<span>Homepage</span></button>
- <button type="button" data-tab="store" aria-label="My Store" title="My Store">🛍️<span>My Store</span></button>
- <button type="button" data-tab="notification" aria-label="Notification" title="Notification">🔔<span>Notification</span></button>
- <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile">👤<span>My Profile</span></button>
- <button type="button" data-tab="settings" aria-label="Settings" title="Settings">⚙️<span>Settings</span></button>
+ <button type="button" data-tab="home" aria-label="Homepage" title="Homepage">⌂</button>
+ <button type="button" data-tab="store" aria-label="My Store" title="My Store">✧</button>
+ <button type="button" data-tab="notification" aria-label="Notification" title="Notification">♧</button>
+ <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile">◉</button>
+ <button type="button" data-tab="settings" aria-label="Settings" title="Settings">⚙</button>
 </nav>
 
 <script>
