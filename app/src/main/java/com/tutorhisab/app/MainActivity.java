@@ -98,7 +98,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         webView.addJavascriptInterface(new BackupBridge(), "Android");
-        webView.addJavascriptInterface(new ShareBridge(), "Android");
+        webView.addJavascriptInterface(new ShareBridge(), "Share");
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
