@@ -43,6 +43,7 @@ jobs:
           cp index.html app/src/main/assets/index.html
           cp hosting/privacy.html app/src/main/assets/privacy.html
           cp hosting/terms.html app/src/main/assets/terms.html
+          cp about.html app/src/main/assets/about.html
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
