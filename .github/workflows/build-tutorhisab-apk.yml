@@ -62,11 +62,11 @@ jobs:
           missing = [item for item in required if item not in html]
           if missing:
               raise SystemExit("Required app/login content missing from bundled Android asset: " + ", ".join(missing))
-          scripts = re.findall(r"<script(?:\\s[^>]*)?>(.*?)</script>", html, flags=re.I | re.S)
+          scripts = re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>", html, flags=re.I | re.S)
           inline_scripts = [script for script in scripts if script.strip()]
           if not inline_scripts:
               raise SystemExit("No inline JavaScript found in bundled Android asset")
-          Path("/tmp/tutor-hisab-inline.js").write_text("\\n;\\n".join(inline_scripts), encoding="utf-8")
+          Path("/tmp/tutor-hisab-inline.js").write_text("\n;\n".join(inline_scripts), encoding="utf-8")
           PY
           node --check /tmp/tutor-hisab-inline.js
       - name: Set up Gradle
