@@ -7,6 +7,7 @@ on:
       - fix/audit-and-data-integrity
       - fix/white-screen-onboarding
       - fix/account-isolation-profile-cancel
+      - fix/ui-navigation-language-branding
 
 jobs:
   build:
