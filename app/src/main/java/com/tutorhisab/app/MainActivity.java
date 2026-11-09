@@ -2,6 +2,7 @@ package com.tutorhisab.app;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -25,6 +26,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
 
     public class BackupBridge {
         @JavascriptInterface
@@ -69,6 +71,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, NOTIFICATION_PERMISSION_REQUEST);
+        }
         getWindow().setStatusBarColor(Color.rgb(8, 127, 91));
         getWindow().setNavigationBarColor(Color.rgb(8, 127, 91));
         webView = new WebView(this);
@@ -135,10 +140,16 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
+        if (webView != null && Build.VERSION.SDK_INT >= 19) {
+            webView.evaluateJavascript("(function(){if(window.handleAndroidBack){return window.handleAndroidBack();}return false;})()", value -> {
+                if (!"true".equals(value)) {
+                    if (webView.canGoBack()) webView.goBack();
+                    else MainActivity.super.onBackPressed();
+                }
+            });
+            return;
         }
+        if (webView != null && webView.canGoBack()) { webView.goBack(); return; }
+        super.onBackPressed();
     }
 }
