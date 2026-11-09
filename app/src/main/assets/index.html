@@ -43,7 +43,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <div class="card" id="accountCard">
 <h3>👤 ইমেইল অ্যাকাউন্ট ও Cloud Sync</h3>
 <div id="authStatus" class="small">আপনার অ্যাকাউন্টে প্রবেশ করুন অথবা নতুন অ্যাকাউন্ট তৈরি করুন।</div>
-<div id="signupFields" hidden><input id="profileName" placeholder="আপনার পূর্ণ নাম" maxlength="100"><input id="profileMobile" placeholder="মোবাইল নম্বর (প্রোফাইলের জন্য)" inputmode="tel" maxlength="20"><input id="profileInstitution" placeholder="প্রতিষ্ঠানের নাম" maxlength="120"><input id="profileDesignation" placeholder="আপনার পদবি / পরিচয়" maxlength="80"></div>
+<div id="signupFields" hidden><input id="profilePhoto" type="file" accept="image/*" aria-label="প্রোফাইল ছবি (ঐচ্ছিক)"><input id="profileName" placeholder="আপনার পূর্ণ নাম" maxlength="100"><input id="profileMobile" placeholder="মোবাইল নম্বর (প্রোফাইলের জন্য)" inputmode="tel" maxlength="20"><input id="profileInstitution" placeholder="প্রতিষ্ঠানের নাম" maxlength="120"><input id="profileDesignation" placeholder="আপনার পদবি / পরিচয়" maxlength="80"></div>
 <input id="authEmail" type="email" autocomplete="email" placeholder="ইমেইল ঠিকানা">
 <input id="authPassword" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
 <button id="signInBtn" onclick="emailSignIn()">Sign In</button><button id="signUpBtn" class="secondary" onclick="emailSignUp()">Sign Up</button>
@@ -223,6 +223,12 @@ try{
 function cloudMessage(message){const el=$("cloudStatus");if(el)el.textContent=message;}
 function authMessage(message){const el=$("authStatus");if(el)el.textContent=message;}
 function hasRecords(d){return !!(d&&(d.students?.length||d.payments?.length));}
+function readProfilePhoto(){
+ const file=$("profilePhoto")?.files?.[0];if(!file)return Promise.resolve("");
+ if(!file.type.startsWith("image/"))return Promise.reject(new Error("ছবির ফাইল নির্বাচন করুন।"));
+ if(file.size>5*1024*1024)return Promise.reject(new Error("ছবির আকার ৫ MB-এর কম হতে হবে।"));
+ return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error("ছবি পড়া যায়নি।"));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error("ছবিটি খোলা যায়নি।"));img.onload=()=>{const canvas=document.createElement("canvas"),max=320,scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);const data=canvas.toDataURL("image/jpeg",0.68);if(data.length>330000)reject(new Error("ছবিটি ছোট করে আবার চেষ্টা করুন।"));else resolve(data);};img.src=reader.result;};reader.readAsDataURL(file);});
+}
 function toggleAuthMode(){const box=$("signupFields"),on=box.hidden;box.hidden=!on;$("signInBtn").hidden=on;$("forgotBtn").hidden=on;$("switchAuthBtn").textContent=on?"আগে থেকেই অ্যাকাউন্ট আছে? Sign In":"নতুন অ্যাকাউন্ট তৈরি করুন";$("authPassword").autocomplete=on?"new-password":"current-password";}
 function resetPassword(){if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি।");return;}const email=$("authEmail").value.trim();if(!email){alert("আগে ইমেইল ঠিকানা লিখুন।");return;}auth.sendPasswordResetEmail(email).then(()=>alert("পাসওয়ার্ড রিসেটের লিংক ইমেইলে পাঠানো হয়েছে।")).catch(e=>alert("লিংক পাঠানো যায়নি: "+e.message));}
 function emailSignIn(){
@@ -236,7 +242,7 @@ function emailSignUp(){
  const email=$("authEmail").value.trim(),password=$("authPassword").value;const profile={name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim()};
  if(!profile.name||!profile.mobile||!profile.institution||!profile.designation){alert("নাম, মোবাইল, প্রতিষ্ঠানের নাম ও পদবি পূরণ করুন।");return;}
  if(!email||password.length<6){alert("সঠিক ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");return;}
- auth.createUserWithEmailAndPassword(email,password).then(async cred=>{await db.collection("users").doc(cred.user.uid).set({...profile,email:cred.user.email,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}).catch(e=>alert("অ্যাকাউন্ট তৈরি হয়নি: "+e.message));
+ (async()=>{try{profile.photo=await readProfilePhoto();const cred=await auth.createUserWithEmailAndPassword(email,password);await db.collection("users").doc(cred.user.uid).set({...profile,email:cred.user.email,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}catch(e){alert("অ্যাকাউন্ট তৈরি হয়নি: "+e.message);}})();
 }
 async function emailSignOut(){if(auth&&currentUser){await auth.signOut();}}
 async function readCloudData(uid){
@@ -307,7 +313,7 @@ if(auth){
     const snap=await db.collection("users").doc(user.uid).get();
     const p=snap.exists?snap.data():{};
     const profile=$("profileSummary");
-    if(profile)profile.innerHTML="<b>"+esc(p.name||user.email)+"</b><br>"+esc(user.email)+"<br>মোবাইল: "+esc(p.mobile||"—")+"<br>প্রতিষ্ঠান: "+esc(p.institution||"—")+"<br>পদবি: "+esc(p.designation||"—");
+    if(profile)profile.innerHTML=(p.photo?"<img src=\""+esc(p.photo)+"\" alt=\"Profile photo\" style=\"width:76px;height:76px;border-radius:50%;object-fit:cover;display:block;margin:8px auto\">":"")+"<b>"+esc(p.name||user.email)+"</b><br>"+esc(user.email)+"<br>মোবাইল: "+esc(p.mobile||"—")+"<br>প্রতিষ্ঠান: "+esc(p.institution||"—")+"<br>পদবি: "+esc(p.designation||"—");
    }catch(e){console.error("Profile load failed",e);}
    authMessage("লগইন সফল: "+user.email);
    cloudMessage("Cloud Sync করতে Settings থেকে Cloud Sync চাপুন।");
