@@ -31,6 +31,12 @@ import com.google.android.libraries.ads.mobile.sdk.banner.BannerAd;
 import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest;
 import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback;
 import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError;
+import com.google.android.libraries.ads.mobile.sdk.common.AdRequest;
+import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError;
+import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAd;
+import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAdEventCallback;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,6 +55,10 @@ public class MainActivity extends Activity {
     private static final String TEST_BANNER_ID = "ca-app-pub-3940256099942544/9214589741";
     private FrameLayout bannerContainer;
     private AdView bannerAdView;
+    private InterstitialAd interstitialAd;
+    private final Handler adHandler = new Handler(Looper.getMainLooper());
+    private Runnable interstitialRunnable;
+    private static final String TEST_INTERSTITIAL_ID = "ca-app-pub-3940256099942544/1033173712";
 
     public class BackupBridge {
         @JavascriptInterface
@@ -169,7 +179,7 @@ public class MainActivity extends Activity {
         new Thread(() -> MobileAds.initialize(
                 this,
                 new InitializationConfig.Builder(TEST_ADMOB_APP_ID).build(),
-                status -> runOnUiThread(this::loadBannerAd))).start();
+                status -> runOnUiThread(() -> { loadBannerAd(); loadInterstitialAd(); scheduleInterstitial(7 * 60 * 1000L); }))).start();
     }
 
     private void loadBannerAd() {
@@ -190,6 +200,54 @@ public class MainActivity extends Activity {
                 bannerContainer.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void loadInterstitialAd() {
+        InterstitialAd.load(
+                new AdRequest.Builder(TEST_INTERSTITIAL_ID).build(),
+                new AdLoadCallback<InterstitialAd>() {
+                    @Override
+                    public void onAdLoaded(InterstitialAd ad) {
+                        interstitialAd = ad;
+                    }
+                    @Override
+                    public void onAdFailedToLoad(LoadAdError error) {
+                        interstitialAd = null;
+                    }
+                });
+    }
+
+    private void scheduleInterstitial(long delayMs) {
+        if (interstitialRunnable != null) adHandler.removeCallbacks(interstitialRunnable);
+        interstitialRunnable = () -> {
+            if (webView == null || isFinishing()) return;
+            webView.evaluateJavascript(
+                    "window.isSafeAdMoment ? window.isSafeAdMoment() : false",
+                    value -> {
+                        if ("true".equals(value) && interstitialAd != null) {
+                            InterstitialAd ad = interstitialAd;
+                            interstitialAd = null;
+                            ad.setAdEventCallback(new InterstitialAdEventCallback() {
+                                @Override
+                                public void onAdDismissedFullScreenContent() { loadInterstitialAd(); }
+                                @Override
+                                public void onAdFailedToShowFullScreenContent(FullScreenContentError error) { loadInterstitialAd(); }
+                                @Override
+                                public void onAdShowedFullScreenContent() {}
+                                @Override
+                                public void onAdImpression() {}
+                                @Override
+                                public void onAdClicked() {}
+                            });
+                            ad.show(MainActivity.this);
+                            scheduleInterstitial(7 * 60 * 1000L);
+                        } else {
+                            if (interstitialAd == null) loadInterstitialAd();
+                            scheduleInterstitial(30 * 1000L);
+                        }
+                    });
+        };
+        adHandler.postDelayed(interstitialRunnable, delayMs);
     }
 
     private void loadAssetPage(String assetName) {
