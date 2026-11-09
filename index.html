@@ -84,6 +84,7 @@ body{padding-bottom:75px}
    <input class="login-input" id="loginEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল লিখুন">
    <label class="login-label" for="loginPassword">পাসওয়ার্ড / Password</label>
    <input class="login-input" id="loginPassword" type="password" autocomplete="current-password" placeholder="আপনার পাসওয়ার্ড লিখুন">
+   <button type="button" id="togglePassword" class="login-secondary" style="width:auto;padding:7px 12px;font-size:13px">Show Password</button>
    <div class="login-row"><label><input type="checkbox" id="rememberMe" checked> Remember Me</label><a href="#" id="forgotPassword">Forgot Password?</a></div>
    <button type="button" id="loginSignIn" class="login-primary">প্রবেশ করুন / Sign In</button>
    <button type="button" id="loginSignUp" class="login-secondary">নতুন অ্যাকাউন্ট তৈরি করুন / Sign Up</button>
@@ -405,6 +406,7 @@ $("firstOpenAccount").addEventListener("click",()=>{ $("firstAccountStep").hidde
 $("loginSignIn").addEventListener("click",emailSignIn);
 $("loginSignUp").addEventListener("click",emailSignUp);
 $("forgotPassword").addEventListener("click",e=>{e.preventDefault();resetLoginPassword();});
+$("togglePassword").addEventListener("click",()=>{const p=$("loginPassword");const visible=p.type==="password";p.type=visible?"text":"password";$("togglePassword").textContent=visible?"Hide Password":"Show Password";});
 if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
  $("firstRunOverlay").hidden=false;
  $("firstLanguageStep").hidden=false;
