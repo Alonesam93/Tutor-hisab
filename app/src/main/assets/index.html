@@ -195,8 +195,10 @@ function render(){
  <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div><div class="small">হিসাব শুরুর মাস: ${esc(s.start)} | আগের বকেয়া: ${money(s.opening)}</div>
  <button class="secondary" data-edit-id="${esc(s.id)}">সম্পাদনা</button><button class="danger" data-remove-id="${esc(s.id)}">শিক্ষার্থী মুছুন</button></div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
  $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+ $("paymentsList").innerHTML=data.payments.length?data.payments.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(p=>{const student=data.students.find(s=>s.id===p.studentId);return "<div class='student'><b>"+esc(student?student.name:"শিক্ষার্থী মুছে ফেলা হয়েছে")+"</b><div>জমা: "+money(p.amount)+"</div><div class='small'>মাস: "+esc(p.month)+" | তারিখ: "+esc(p.date)+"</div><button class='secondary' data-edit-payment-id='"+esc(p.id)+"'>সম্পাদনা</button><button class='danger' data-remove-payment-id='"+esc(p.id)+"'>মুছুন</button></div>";}).join(""):"এখনো কোনো পেমেন্ট নেই।";
 }
 $("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data-edit-id]");if(editBtn){editStudent(editBtn.dataset.editId);return;}const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
+$("paymentsList").addEventListener("click",e=>{const edit=e.target.closest("[data-edit-payment-id]");if(edit){editPayment(edit.dataset.editPaymentId);return;}const del=e.target.closest("[data-remove-payment-id]");if(del)removePayment(del.dataset.removePaymentId);});
 function report(){
  const m=$("reportMonth").value;if(!validMonth(m)){alert("সঠিক মাস নির্বাচন করুন");return;}
  const rows=data.students.map(s=>({name:s.name,paid:paidFor(s.id,m),due:dueFor(s,m)}));
