@@ -82,7 +82,7 @@ body{padding-bottom:75px}
 <div id="firstRunOverlay" class="onboarding" hidden>
  <div class="onboarding-card login-card">
   <section id="firstLanguageStep">
-   <h2>Welcome to Tutor Hisab</h2><p>Choose your language / ভাষা নির্বাচন করুন</p>
+   <h2>Tutor Hisab-এ স্বাগতম</h2><p>ভাষা নির্বাচন করুন</p>
    <button type="button" data-first-language="bn">বাংলা</button>
    <button type="button" data-first-language="en">English</button>
   </section>
@@ -91,19 +91,19 @@ body{padding-bottom:75px}
    <h3 style="text-align:center;color:#513a2a">স্বাগতম / Welcome</h3>
    <p class="login-subtitle">আপনার অ্যাকাউন্টে প্রবেশ করতে ইমেইল ব্যবহার করুন</p>
    <button type="button" id="firstOpenAccount" class="login-primary">ইমেইল দিয়ে লগিন করুন</button>
-   <div class="login-footer"><a href="privacy.html">Privacy Policy</a> · <a href="mailto:tutorhisab.support@gmail.com">Contact</a> · <a href="about.html">About</a></div>
+   <div class="login-footer"><a href="privacy.html">গোপনীয়তা নীতি</a> · <a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a> · <a href="about.html">পরিচিতি</a></div>
   </section>
   <section id="firstAuthStep" hidden>
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
-   <h3 style="text-align:center;color:#513a2a;margin-bottom:5px">Sign In</h3>
+   <h3 style="text-align:center;color:#513a2a;margin-bottom:5px">লগইন করুন</h3>
    <p class="login-subtitle">আপনার ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন</p>
-   <label class="login-label" for="loginEmail">ইমেইল / Email</label>
+   <label class="login-label" for="loginEmail">ইমেইল</label>
    <input class="login-input" id="loginEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল লিখুন">
-   <label class="login-label" for="loginPassword">পাসওয়ার্ড / Password</label>
+   <label class="login-label" for="loginPassword">পাসওয়ার্ড</label>
    <input class="login-input" id="loginPassword" type="password" autocomplete="current-password" placeholder="আপনার পাসওয়ার্ড লিখুন">
-   <button type="button" id="togglePassword" class="login-secondary" style="width:auto;padding:7px 12px;font-size:13px">Show Password</button>
-   <div class="login-row"><label><input type="checkbox" id="rememberMe" checked> Remember Me</label><a href="#" id="forgotPassword">Forgot Password?</a></div>
-   <button type="button" id="loginSignIn" class="login-primary">প্রবেশ করুন / Sign In</button>
+   <button type="button" id="togglePassword" class="login-secondary" style="width:auto;padding:7px 12px;font-size:13px">পাসওয়ার্ড দেখুন</button>
+   <div class="login-row"><label><input type="checkbox" id="rememberMe" checked> মনে রাখুন</label><a href="#" id="forgotPassword">পাসওয়ার্ড ভুলে গেছেন?</a></div>
+   <button type="button" id="loginSignIn" class="login-primary">প্রবেশ করুন</button>
    <button type="button" id="loginSignUp" class="login-secondary">নতুন অ্যাকাউন্ট তৈরি করুন / Sign Up</button>
    <div id="loginError" class="login-error"></div>
    <div class="login-footer"><a href="privacy.html">Privacy Policy</a> · <a href="mailto:tutorhisab.support@gmail.com">Contact</a> · <a href="about.html">About</a></div>
@@ -159,13 +159,13 @@ body{padding-bottom:75px}
 </main>
 
 <section id="storeScreen" class="tab-screen" hidden>
- <div class="card"><h3>🛍️ My Store</h3>
+ <div class="card"><h3>🛍️ আমার স্টোর</h3>
   <div class="student"><b>SMS Packages</b><p>Coming Soon</p></div>
   <div class="student"><b>Remove Ads</b><p>Coming Soon</p></div>
  </div>
 </section>
 <section id="notificationScreen" class="tab-screen" hidden>
- <div class="card"><h3>🔔 Notification</h3><p>এখনো কোনো নোটিফিকেশন নেই।</p><p class="small">পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।</p></div>
+ <div class="card"><h3>🔔 নোটিফিকেশন</h3><p>এখনো কোনো নোটিফিকেশন নেই।</p><p class="small">পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।</p></div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
  <div class="profile-head">
@@ -193,7 +193,7 @@ body{padding-bottom:75px}
  <button type="button" class="danger profile-signout" onclick="emailSignOut()">Sign Out / Log Out</button>
 </div></section>
 <section id="settingsScreen" class="tab-screen" hidden>
- <div class="card"><h3>⚙️ Settings</h3>
+ <div class="card"><h3>⚙️ সেটিংস</h3>
   <h4>💾 Save Your Progress</h4>
   <div class="card">
 <h3>💾 ব্যাকআপ ও রিস্টোর</h3>
@@ -202,13 +202,13 @@ body{padding-bottom:75px}
 <input type="file" id="restoreFile" accept=".json,application/json">
 <button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
 </div>
-  <hr><h4>Language</h4><select id="languageSelect" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select>
-  <hr><h4>Guideline</h4><p>শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।</p>
-  <hr><h4>Support</h4>
-  <p><a href="privacy.html">Privacy Policy / গোপনীয়তা নীতি</a></p>
-  <p><a href="terms.html">Terms of Service / ব্যবহারের শর্তাবলি</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com">Contact Us / যোগাযোগ</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">Feedback</a> · Rate Us · About Tutor Hisab</p>
+  <hr><h4>ভাষা</h4><select id="languageSelect" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select>
+  <hr><h4>নির্দেশিকা</h4><p>শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।</p>
+  <hr><h4>সহায়তা</h4>
+  <p><a href="privacy.html">গোপনীয়তা নীতি</a></p>
+  <p><a href="terms.html">ব্যবহারের শর্তাবলি</a></p>
+  <p><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></p>
+  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a> · রেটিং দিন · Tutor Hisab পরিচিতি</p>
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
@@ -350,7 +350,7 @@ const translations={
 "ইমেইল দিয়ে লগিন করুন":"Sign in with Email","আপনার ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন":"Sign in with your email and password",
 "ইমেইল / Email":"Email","পাসওয়ার্ড / Password":"Password","আপনার ইমেইল লিখুন":"Enter your email","আপনার পাসওয়ার্ড লিখুন":"Enter your password",
 "প্রবেশ করুন / Sign In":"Sign In","নতুন অ্যাকাউন্ট তৈরি করুন / Sign Up":"Create New Account / Sign Up",
-"Show Password":"Show Password","Hide Password":"Hide Password","Remember Me":"Remember Me","Forgot Password?":"Forgot Password?",
+"Show Password":"Show Password","পাসওয়ার্ড লুকান":"Hide Password","Remember Me":"Remember Me","Forgot Password?":"Forgot Password?",
 "Privacy Policy":"Privacy Policy","Contact":"Contact","About":"About","🛍️ My Store":"🛍️ My Store","Remove Ads":"Remove Ads",
 "👤 My Profile / Account":"👤 My Profile","আমার প্রোফাইল":"My Profile","প্রোফাইল ছবি":"Profile Photo","Edit":"Edit","✏️ Edit":"✏️ Edit",
 "বাতিল":"Cancel","Sign Out / Log Out":"Sign Out / Log Out","আমার প্রোফাইল":"My Profile","প্রতিষ্ঠানের নাম":"Institution Name",
@@ -373,7 +373,20 @@ const translations={
 "মাসিক রিপোর্ট":"Monthly Report","রিপোর্ট দেখুন":"View Report","ব্যাকআপ ডাউনলোড করুন":"Download Backup",
 "ব্যাকআপ রিস্টোর করুন":"Restore Backup","ব্যাকআপ ও রিস্টোর":"Backup & Restore",
 "Guideline":"Guideline","Support":"Support","Save Your Progress":"Save Your Progress",
-"গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact Us"
+"গোপনীয়তা নীতি":"Privacy Policy","ব্যবহারের শর্তাবলি":"Terms of Service","যোগাযোগ":"Contact Us",
+"হোমপেজ":"Homepage","আমার স্টোর":"My Store","নোটিফিকেশন":"Notification","আমার প্রোফাইল":"My Profile","সেটিংস":"Settings",
+"মূল নেভিগেশন":"Main navigation","Tutor Hisab-এ স্বাগতম":"Welcome to Tutor Hisab","ভাষা নির্বাচন করুন":"Choose your language",
+"লগইন করুন":"Sign In","ইমেইল":"Email","পাসওয়ার্ড":"Password","প্রবেশ করুন":"Sign In",
+"মনে রাখুন":"Remember Me","পাসওয়ার্ড ভুলে গেছেন?":"Forgot Password?","পাসওয়ার্ড দেখুন":"Show Password","পাসওয়ার্ড লুকান":"Hide Password",
+"গোপনীয়তা নীতি":"Privacy Policy","পরিচিতি":"About","আমার স্টোর":"My Store","নোটিফিকেশন":"Notification",
+"এই মাসে জমা":"Paid This Month","এই মাসের নির্ধারিত বেতন":"Scheduled Tuition This Month",
+"প্রোফাইল ছবি":"Profile Photo","বাতিল":"Cancel","রেটিং দিন":"Rate Us","মতামত":"Feedback",
+"নির্দেশিকা":"Guideline","ভাষা":"Language","সহায়তা":"Support","⚙️ সেটিংস":"⚙️ Settings",
+"🔔 নোটিফিকেশন":"🔔 Notification","🛍️ আমার স্টোর":"🛍️ My Store",
+"পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।":"Payment reminders and app update notifications will be added in a later update.",
+"Privacy Policy / গোপনীয়তা নীতি":"Privacy Policy","Terms of Service / ব্যবহারের শর্তাবলি":"Terms of Service",
+"Contact Us / যোগাযোগ":"Contact Us","Feedback":"Feedback","Rate Us":"Rate Us","About Tutor Hisab":"About Tutor Hisab",
+"Sign Out / Log Out":"Sign Out / Log Out"
 };
 function applyLanguage(){
  const lang=localStorage.getItem("tutorHisabLanguage")||"bn";
