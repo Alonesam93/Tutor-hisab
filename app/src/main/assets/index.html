@@ -84,7 +84,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <label>জমার তারিখ</label>
 <input id="payDate" type="date">
 <div class="notice">একাধিক মাসের বকেয়া থাকলে নির্বাচিত মাস পর্যন্ত মোট বকেয়ার মধ্যে জমা নেওয়া হবে।</div>
-<button onclick="addPayment()">জমা সংরক্ষণ করুন</button>
+<button id="paymentSaveBtn" onclick="addPayment()">জমা সংরক্ষণ করুন</button><button id="paymentCancelBtn" class="secondary" style="display:none" onclick="cancelPaymentEdit()">সম্পাদনা বাতিল করুন</button><hr><h3>পেমেন্ট ইতিহাস</h3><div id="paymentsList">এখনো কোনো পেমেন্ট নেই।</div>
 </div>
 <div class="card">
 <h3>👨‍🎓 শিক্ষার্থীদের তালিকা</h3>
@@ -121,6 +121,7 @@ function loadData(){
 }
 let data=loadData();
 let editingStudentId=null;
+let editingPaymentId=null;
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
 function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
@@ -151,11 +152,30 @@ function addPayment(){
  const id=$("payStudent").value,amount=Number($("payAmount").value),month=$("payMonth").value,date=$("payDate").value,student=data.students.find(s=>s.id===id);
  if(!student||!Number.isFinite(amount)||amount<=0||!validMonth(month)||!validDate(date)){alert("শিক্ষার্থী, সঠিক জমার পরিমাণ, মাস ও তারিখ দিন।");return;}
  if(month<student.start){alert("শিক্ষার্থীর বেতন গণনা শুরুর মাসের আগের মাসে জমা নেওয়া যাবে না।");return;}
- const outstanding=dueFor(student,month);
- if(outstanding<=0){alert("নির্বাচিত মাস পর্যন্ত কোনো বকেয়া নেই।");return;}
- if(amount>outstanding){alert("এই মাস পর্যন্ত বকেয়া "+money(outstanding)+"। এর বেশি জমা নেওয়া যাবে না।");return;}
+ const paidBefore=data.payments.filter(p=>p.id!==editingPaymentId&&p.studentId===id&&validMonth(p.month)&&p.month<=month).reduce((sum,p)=>sum+Number(p.amount||0),0);
+ const accrued=Number(student.opening||0)+Number(student.fee||0)*monthsBetween(student.start,month);
+ const outstanding=Math.max(0,accrued-paidBefore);
+ if(amount>outstanding){alert("এই মাস পর্যন্ত সর্বোচ্চ জমা নেওয়া যাবে "+money(outstanding)+"।");return;}
+ if(editingPaymentId){
+  const existing=data.payments.find(p=>p.id===editingPaymentId);if(!existing){alert("পেমেন্টটি পাওয়া যায়নি।");cancelPaymentEdit();return;}
+  Object.assign(existing,{studentId:id,amount,month,date});cancelPaymentEdit();save();alert("পেমেন্ট সম্পাদনা করে সংরক্ষণ হয়েছে।");return;
+ }
  data.payments.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(),studentId:id,amount,month,date});
  $("payAmount").value="";save();alert("জমা সংরক্ষণ হয়েছে।");
+}
+function editPayment(id){
+ const p=data.payments.find(x=>x.id===id);if(!p)return;
+ editingPaymentId=id;$("payStudent").value=p.studentId;$("payAmount").value=p.amount;$("payMonth").value=p.month;$("payDate").value=p.date;
+ $("paymentSaveBtn").textContent="পরিবর্তন সংরক্ষণ করুন";$("paymentCancelBtn").style.display="block";
+ $("payStudent").scrollIntoView({behavior:"smooth",block:"center"});
+}
+function cancelPaymentEdit(){
+ editingPaymentId=null;$("payStudent").value="";$("payAmount").value="";$("payMonth").value=currentMonth;$("payDate").value=localDate;
+ $("paymentSaveBtn").textContent="জমা সংরক্ষণ করুন";$("paymentCancelBtn").style.display="none";
+}
+function removePayment(id){
+ if(!confirm("এই পেমেন্টটি মুছে ফেলবেন?"))return;
+ data.payments=data.payments.filter(p=>p.id!==id);if(editingPaymentId===id)cancelPaymentEdit();save();
 }
 function editStudent(id){
  const s=data.students.find(x=>x.id===id);if(!s)return;
