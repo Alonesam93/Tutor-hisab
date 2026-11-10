@@ -37,7 +37,7 @@ import com.google.android.libraries.ads.mobile.sdk.banner.BannerAd;
 import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest;
 import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback;
 import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError;
-import com.google.android.libraries.ads.mobile.sdk.interstitial.AdRequest;
+import com.google.android.libraries.ads.mobile.sdk.common.AdRequest;
 import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAd;
 import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAdEventCallback;
 import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError;
@@ -216,13 +216,15 @@ public class MainActivity extends Activity {
         bannerAdView.loadAd(request, new AdLoadCallback<BannerAd>() {
             @Override
             public void onAdLoaded(BannerAd ad) {
-                if (isFinishing()) return;
-                bannerAdView.setVisibility(View.VISIBLE);
-                bannerContainer.setVisibility(View.VISIBLE);
+                runOnUiThread(() -> {
+                    if (isFinishing()) return;
+                    bannerAdView.setVisibility(View.VISIBLE);
+                    bannerContainer.setVisibility(View.VISIBLE);
+                });
             }
             @Override
             public void onAdFailedToLoad(LoadAdError error) {
-                bannerContainer.setVisibility(View.GONE);
+                runOnUiThread(() -> bannerContainer.setVisibility(View.GONE));
             }
         });
     }
@@ -233,11 +235,11 @@ public class MainActivity extends Activity {
                 new AdLoadCallback<InterstitialAd>() {
                     @Override
                     public void onAdLoaded(InterstitialAd ad) {
-                        interstitialAd = ad;
+                        runOnUiThread(() -> interstitialAd = ad);
                     }
                     @Override
                     public void onAdFailedToLoad(LoadAdError error) {
-                        interstitialAd = null;
+                        runOnUiThread(() -> interstitialAd = null);
                     }
                 });
     }
@@ -251,13 +253,17 @@ public class MainActivity extends Activity {
         ad.setAdEventCallback(new InterstitialAdEventCallback() {
             @Override
             public void onAdDismissedFullScreenContent() {
-                scheduleNextInterstitialWindow();
-                loadInterstitialAd();
+                runOnUiThread(() -> {
+                    scheduleNextInterstitialWindow();
+                    loadInterstitialAd();
+                });
             }
             @Override
             public void onAdFailedToShowFullScreenContent(FullScreenContentError error) {
-                scheduleNextInterstitialWindow();
-                loadInterstitialAd();
+                runOnUiThread(() -> {
+                    scheduleNextInterstitialWindow();
+                    loadInterstitialAd();
+                });
             }
         });
         ad.show(this);
