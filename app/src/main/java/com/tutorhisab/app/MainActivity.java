@@ -30,6 +30,17 @@ public class MainActivity extends Activity {
 
     public class BackupBridge {
         @JavascriptInterface
+        public void requestNotificationPermission() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 33
+                        && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    MainActivity.this.requestPermissions(
+                            new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void saveBackup(String json) {
             runOnUiThread(() -> {
                 try {
@@ -109,10 +120,6 @@ public class MainActivity extends Activity {
             }
         });
         setContentView(webView);
-        if (Build.VERSION.SDK_INT >= 33
-                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
-        }
         if (savedInstanceState == null) {
             webView.loadUrl("file:///android_asset/index.html");
         } else {
