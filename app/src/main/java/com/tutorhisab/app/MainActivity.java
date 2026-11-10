@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
         public void requestNotificationPermission() {
             runOnUiThread(() -> {
                 if (Build.VERSION.SDK_INT >= 33
-                        && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        && MainActivity.this.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                     MainActivity.this.requestPermissions(
                             new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
                 }
