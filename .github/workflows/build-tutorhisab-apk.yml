@@ -1,4 +1,4 @@
-name: Build Tutor Hisab Android APK
+name: Build Tutor Hisab Android APK (v1.1.0)
 
 on:
   workflow_dispatch:
