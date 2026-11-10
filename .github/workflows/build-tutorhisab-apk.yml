@@ -62,6 +62,11 @@ jobs:
               "deletedPaymentIds",
               "paymentIds=new Set()",
               "function restore()",
+              "signupName",
+              "signupMobile",
+              "signupInstitution",
+              "signupDesignation",
+              "signupPhotoInput",
               "function syncCloud()",
           ]
           missing = [item for item in required if item not in html]
