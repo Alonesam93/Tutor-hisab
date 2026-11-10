@@ -39,6 +39,11 @@ body{padding-bottom:75px}
 .onboarding-card h2{color:#087f5b;margin-top:0}
 .onboarding-card a{color:#087f5b}
 
+
+.auth-screen{position:fixed;inset:0;z-index:90;overflow:auto;background:linear-gradient(160deg,#e8f5ef,#f7faf8);padding:24px 16px calc(24px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center}
+.auth-screen[hidden]{display:none}
+.auth-card{width:100%;max-width:430px;background:#fff;border-radius:20px;padding:24px;box-shadow:0 10px 35px #0b51351c}
+.auth-brand{text-align:center;color:#087f5b;margin-bottom:20px}.auth-brand .logo{font-size:42px}.auth-brand h2{margin:6px 0}.auth-card label{display:block;font-weight:600;font-size:14px;margin-top:12px}.auth-card input{margin:6px 0 0}.auth-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}.auth-row label{display:flex;align-items:center;gap:7px;margin:0;font-weight:400}.auth-row input{width:auto;margin:0}.auth-link{color:#087f5b;text-decoration:none;font-weight:600;font-size:14px}.auth-submit{margin-top:14px;min-height:48px}.auth-switch{text-align:center;margin:16px 0 8px}.auth-switch button{width:auto;padding:4px 6px;background:none;color:#087f5b}.auth-error{color:#b42318;font-size:13px;min-height:18px;margin-top:8px}.auth-secondary{background:#eef6f1;color:#087f5b}
 </style>
 </head>
 <body>
@@ -47,6 +52,33 @@ body{padding-bottom:75px}
 আপনার শিক্ষার্থী ও মাসিক বেতনের হিসাব
 </header>
 
+<section id="authScreen" class="auth-screen" hidden>
+ <div class="auth-card">
+  <div class="auth-brand"><div class="logo">📚</div><h2>Tutor Hisab</h2><div>Student and monthly tuition management</div></div>
+  <div id="signInPanel">
+   <h3>Sign In</h3><p class="small">Sign in with your email and password</p>
+   <label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="Enter your email" required>
+   <label for="authPassword">Password</label><div style="position:relative"><input id="authPassword" type="password" autocomplete="current-password" placeholder="Enter your password" required style="padding-right:76px"><button type="button" id="togglePassword" class="auth-secondary" style="position:absolute;right:4px;top:4px;width:auto;padding:9px">Show</button></div>
+   <div class="auth-row"><label><input id="rememberMe" type="checkbox"> Remember Me</label><a href="#" id="forgotPassword" class="auth-link">Forgot Password?</a></div>
+   <button type="button" id="signInButton" class="auth-submit">Sign In</button>
+   <div class="auth-switch">নতুন অ্যাকাউন্ট তৈরি? <button type="button" id="openSignUp">Sign Up</button></div>
+  </div>
+  <div id="signUpPanel" hidden>
+   <h3>Create Account / নতুন অ্যাকাউন্ট</h3>
+   <label for="authName">Name</label><input id="authName" autocomplete="name" placeholder="Your name">
+   <label for="authSignUpEmail">Email</label><input id="authSignUpEmail" type="email" autocomplete="email" placeholder="Your email">
+   <label for="authSignUpPassword">Password</label><input id="authSignUpPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+   <label for="authConfirmPassword">Confirm Password</label><input id="authConfirmPassword" type="password" autocomplete="new-password" placeholder="Confirm password">
+   <label for="authMobile">Mobile Number (Optional)</label><input id="authMobile" type="tel" autocomplete="tel" placeholder="Mobile number">
+   <label for="authInstitution">Institution Name (Optional)</label><input id="authInstitution" placeholder="Institution name">
+   <label for="authDesignation">Designation (Optional)</label><input id="authDesignation" placeholder="e.g. Teacher">
+   <button type="button" id="signUpButton" class="auth-submit">Create Account</button>
+   <div class="auth-switch">Already have an account? <button type="button" id="openSignIn">Sign In</button></div>
+  </div>
+  <p id="authError" class="auth-error" role="alert"></p>
+  <p class="small" style="text-align:center"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="mailto:tutorhisab.support@gmail.com">Contact</a> · <a href="#">About</a></p>
+ </div>
+</section>
 <div id="firstRunOverlay" class="onboarding" hidden>
  <div class="onboarding-card">
   <section id="firstLanguageStep">
@@ -122,14 +154,11 @@ body{padding-bottom:75px}
  <div class="card"><h3>🔔 Notification</h3><p>এখনো কোনো নোটিফিকেশন নেই।</p><p class="small">পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে।</p></div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
-<h3>👤 My Profile / Account</h3><p id="authStatus" class="small">স্থানীয়ভাবে ব্যবহার অথবা অ্যাকাউন্টে Sign In করুন।</p>
+<h3>👤 My Profile</h3><p id="authStatus" class="small">Sign In করা নেই।</p>
 <label>নাম</label><input id="profileName" maxlength="100" placeholder="আপনার নাম">
 <label>মোবাইল নম্বর</label><input id="profileMobile" maxlength="20" inputmode="tel" placeholder="মোবাইল নম্বর">
 <label>প্রতিষ্ঠানের নাম</label><input id="profileInstitution" maxlength="120" placeholder="প্রতিষ্ঠানের নাম">
 <label>পদবি</label><input id="profileDesignation" maxlength="80" placeholder="যেমন: শিক্ষক">
-<label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="আপনার ইমেইল">
-<label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
-<button onclick="emailSignIn()">Sign In</button><button class="secondary" onclick="emailSignUp()">Sign Up</button>
 <button class="secondary" onclick="saveProfile()">প্রোফাইল সংরক্ষণ</button><button class="secondary" onclick="syncCloud()">এখনই Cloud Sync করুন</button>
 <button class="danger" onclick="emailSignOut()">Sign Out</button><p id="cloudStatus" class="small">Cloud Sync করতে ইন্টারনেট প্রয়োজন।</p>
 </div></section>
@@ -320,8 +349,14 @@ try{if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.aut
 function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
 function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
 function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim()};}
-function emailSignIn(){if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি।");return;}const e=$("authEmail").value.trim(),p=$("authPassword").value;if(!e||!p){alert("ইমেইল ও পাসওয়ার্ড লিখুন।");return;}auth.signInWithEmailAndPassword(e,p).catch(x=>alert("লগইন হয়নি: "+x.message));}
-async function emailSignUp(){if(!auth){alert("Firebase সংযোগ পাওয়া যায়নি।");return;}const e=$("authEmail").value.trim(),p=$("authPassword").value;if(!e||p.length<6){alert("সঠিক ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");return;}try{const u=await auth.createUserWithEmailAndPassword(e,p);await db.collection("users").doc(u.user.uid).set({email:u.user.email,profile:profileValues(),createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("অ্যাকাউন্ট তৈরি হয়েছে।");}catch(x){alert("অ্যাকাউন্ট তৈরি হয়নি: "+x.message);}}
+function setAuthError(message){$("authError").textContent=message||"";}
+function openAuthMode(mode){$("signInPanel").hidden=mode!=="signin";$("signUpPanel").hidden=mode!=="signup";setAuthError("");}
+async function emailSignIn(){if(!auth){setAuthError("Firebase সংযোগ পাওয়া যায়নি।");return;}const e=$("authEmail").value.trim(),p=$("authPassword").value;if(!e||!p){setAuthError("ইমেইল ও পাসওয়ার্ড লিখুন।");return;}try{if($("rememberMe").checked)localStorage.setItem("tutorHisabRememberEmail",e);else localStorage.removeItem("tutorHisabRememberEmail");await auth.signInWithEmailAndPassword(e,p);}catch(x){setAuthError("লগইন হয়নি: "+(x.code==="auth/wrong-password"||x.code==="auth/invalid-credential"?"ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।":x.message));}}
+async function emailSignUp(){if(!auth||!db){setAuthError("Firebase সংযোগ পাওয়া যায়নি।");return;}const name=$("authName").value.trim(),e=$("authSignUpEmail").value.trim(),p=$("authSignUpPassword").value,confirmPassword=$("authConfirmPassword").value;if(!name||!e||p.length<6||p!==confirmPassword){setAuthError("নাম, সঠিক ইমেইল, কমপক্ষে ৬ অক্ষরের একই পাসওয়ার্ড দুবার লিখুন।");return;}try{const u=await auth.createUserWithEmailAndPassword(e,p);await db.collection("users").doc(u.user.uid).set({email:u.user.email,profile:{name,mobile:$("authMobile").value.trim(),institution:$("authInstitution").value.trim(),designation:$("authDesignation").value.trim()},createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}catch(x){setAuthError("অ্যাকাউন্ট তৈরি হয়নি: "+x.message);}}
+async function sendPasswordReset(){const e=$("authEmail").value.trim();if(!e){setAuthError("পাসওয়ার্ড রিসেটের জন্য আগে ইমেইল লিখুন।");return;}if(!auth){setAuthError("Firebase সংযোগ পাওয়া যায়নি।");return;}try{await auth.sendPasswordResetEmail(e);setAuthError("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।");}catch(x){setAuthError("রিসেট ইমেইল পাঠানো যায়নি: "+x.message);}}
+async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
+$("signInButton").addEventListener("click",emailSignIn);$("signUpButton").addEventListener("click",emailSignUp);$("forgotPassword").addEventListener("click",e=>{e.preventDefault();sendPasswordReset();});$("openSignUp").addEventListener("click",()=>openAuthMode("signup"));$("openSignIn").addEventListener("click",()=>openAuthMode("signin"));$("togglePassword").addEventListener("click",()=>{const p=$("authPassword"),show=p.type==="password";p.type=show?"text":"password";$("togglePassword").textContent=show?"Hide":"Show";});
+const rememberedEmail=localStorage.getItem("tutorHisabRememberEmail");if(rememberedEmail){$("authEmail").value=rememberedEmail;$("rememberMe").checked=true;}
 async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
 async function readCloudData(uid){const base=db.collection("users").doc(uid),r=await Promise.all([base.get(),base.collection("students").get(),base.collection("payments").get()]),v=r[0].exists?r[0].data():{};return{students:r[1].docs.map(x=>({id:x.id,...x.data()})),payments:r[2].docs.map(x=>({id:x.id,...x.data()})),profile:v.profile||{}};}
 function stableRecord(value){
@@ -356,13 +391,15 @@ async function syncCloud(){
  }catch(e){console.error("Safe Cloud Sync:",e);cloudMessage("Cloud Sync বন্ধ রাখা হয়েছে: "+e.message);}
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}try{await db.collection("users").doc(currentUser.uid).set({profile:profileValues(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল সংরক্ষণ হয়নি: "+e.message);}}
-if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;if(u){const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);try{const cloud=await readCloudData(u.uid);$("profileName").value=cloud.profile.name||"";$("profileMobile").value=cloud.profile.mobile||"";$("profileInstitution").value=cloud.profile.institution||"";$("profileDesignation").value=cloud.profile.designation||"";await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}}else{currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");}
+if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;if(u){$("authScreen").hidden=true;const guest=data;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():guest;if(!saved)save();else render();authMessage("Sign In: "+u.email);try{const cloud=await readCloudData(u.uid);$("profileName").value=cloud.profile.name||"";$("profileMobile").value=cloud.profile.mobile||"";$("profileInstitution").value=cloud.profile.institution||"";$("profileDesignation").value=cloud.profile.designation||"";await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}showTab("home");}else{currentUser=null;STORAGE_KEY="tutorHisabData";data=loadData();render();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");$("authScreen").hidden=false;showTab("home");}});}else{$("authScreen").hidden=false;setAuthError("Firebase SDK পাওয়া যায়নি।");authMessage("Firebase SDK পাওয়া যায়নি।");}
 
 
 function finishOnboarding(tab){
  localStorage.setItem("tutorHisabOnboardingDone","yes");
  $("firstRunOverlay").hidden=true;
- showTab(tab);
+ $("authScreen").hidden=false;
+ openAuthMode("signin");
+ showTab("home");
 }
 document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventListener("click",()=>{
  const lang=btn.dataset.firstLanguage;
@@ -371,15 +408,17 @@ document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventList
  $("firstLanguageStep").hidden=true;
  $("firstAccountStep").hidden=false;
 }));
-$("firstOpenAccount").addEventListener("click",()=>finishOnboarding("profile"));
-$("firstContinueOffline").addEventListener("click",()=>finishOnboarding("home"));
+$ ("firstOpenAccount").addEventListener("click",()=>finishOnboarding("home"));
+$("firstContinueOffline").hidden=true;
 if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
+ $("authScreen").hidden=true;
  $("firstRunOverlay").hidden=false;
  $("firstLanguageStep").hidden=false;
  $("firstAccountStep").hidden=true;
 }
 
 render();
+if(!auth){$("authScreen").hidden=false;}
 </script>
 </body>
 </html>
