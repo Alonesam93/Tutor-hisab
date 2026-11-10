@@ -4,14 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - build/capacitor-debug-apk
-      - fix/white-screen-onboarding
       - fix/final-design-and-core-fixes
     paths:
       - index.html
       - app/**
       - build.gradle
       - settings.gradle
+      - firestore.rules
       - .github/workflows/build-tutorhisab-apk.yml
 
 permissions:
@@ -24,21 +23,16 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK packages
-        run: |
-          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
-          if [ -z "$SDKMANAGER" ]; then echo "Android SDK manager not found"; exit 1; fi
-          yes | "$SDKMANAGER" --licenses
-          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Prepare current app screens and legal pages
+      - name: Prepare Android assets
         run: |
           mkdir -p app/src/main/assets
           cp index.html app/src/main/assets/index.html
@@ -46,30 +40,47 @@ jobs:
           cp hosting/terms.html app/src/main/assets/terms.html
           cp about.html app/src/main/assets/about.html
 
-      - name: Validate bundled JavaScript and required login flow
+      - name: Validate required app flows and source synchronization
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
           html = Path("app/src/main/assets/index.html").read_text(encoding="utf-8")
+          root = Path("index.html").read_text(encoding="utf-8")
+          if html != root:
+              raise SystemExit("Android HTML asset is not synchronized with root index.html")
           required = [
               "firebase-auth-compat.js",
               "signInWithEmailAndPassword",
               "createUserWithEmailAndPassword",
-              "firstRunOverlay",
+              "sendPasswordResetEmail",
+              "firstNotificationStep",
               "firstLanguageStep",
               "firstAuthStep",
+              "tutorHisabData_",
+              "deletedStudentIds",
+              "deletedPaymentIds",
+              "paymentIds=new Set()",
+              "function restore()",
+              "function syncCloud()",
           ]
           missing = [item for item in required if item not in html]
           if missing:
-              raise SystemExit("Required app/login content missing from bundled Android asset: " + ", ".join(missing))
-          scripts = re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>", html, flags=re.I | re.S)
+              raise SystemExit("Required app functionality missing: " + ", ".join(missing))
+          nav = re.search(r'<nav class="bottom-nav".*?</nav>', html, re.S)
+          if not nav or len(re.findall(r'<button[^>]+data-tab=', nav.group(0))) != 5:
+              raise SystemExit("Expected exactly five permanent bottom navigation tabs")
+          home = re.search(r'<div class="home-tabs".*?</div>', html, re.S)
+          if not home or len(re.findall(r'data-home-tab=', home.group(0))) != 4:
+              raise SystemExit("Expected exactly four homepage sections")
+          scripts = re.findall(r"<script(?:\\s[^>]*)?>(.*?)</script>", html, flags=re.I | re.S)
           inline_scripts = [script for script in scripts if script.strip()]
           if not inline_scripts:
-              raise SystemExit("No inline JavaScript found in bundled Android asset")
-          Path("/tmp/tutor-hisab-inline.js").write_text("\n;\n".join(inline_scripts), encoding="utf-8")
+              raise SystemExit("No inline JavaScript found")
+          Path("/tmp/tutor-hisab-inline.js").write_text("\\n;\\n".join(inline_scripts), encoding="utf-8")
           PY
           node --check /tmp/tutor-hisab-inline.js
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -78,9 +89,9 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Tutor-Hisab-debug-APK
+          name: Tutor-Hisab-1.1.0-debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
