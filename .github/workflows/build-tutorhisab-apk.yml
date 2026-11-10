@@ -6,6 +6,7 @@ on:
     branches:
       - build/capacitor-debug-apk
       - fix/white-screen-onboarding
+      - fix/final-design-and-core-fixes
     paths:
       - index.html
       - app/**
