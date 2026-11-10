@@ -528,7 +528,11 @@ function showTab(tab,pushHistory=true){
  home.hidden=tab!=="home";
  Object.entries(screens).forEach(([key,el])=>{el.hidden=key!==tab;});
  document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.classList.toggle("active",btn.dataset.tab===tab));
+ const previousTab=activeTab;
  activeTab=tab;
+ if(previousTab && previousTab!==tab && window.Android && typeof window.Android.onSafeAdOpportunity==="function"){
+  try{window.Android.onSafeAdOpportunity();}catch(e){console.warn("Ad placement skipped:",e);}
+ }
  if(pushHistory&&window.history&&history.pushState)history.pushState({tutorHisab:true,tab},"","#"+tab);
  window.scrollTo(0,0);
 }
