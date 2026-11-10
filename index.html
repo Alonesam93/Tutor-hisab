@@ -648,7 +648,10 @@ if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
 }
 function continueAfterNotification(){ $("firstNotificationStep").hidden=true; $("firstLanguageStep").hidden=false; }
 $("allowNotifications").addEventListener("click",async()=>{
- try{if("Notification" in window)await Notification.requestPermission();}catch(e){console.warn("Notification permission:",e);}
+ try{
+  if(window.Android&&typeof window.Android.requestNotificationPermission==="function")window.Android.requestNotificationPermission();
+  else if("Notification" in window)await Notification.requestPermission();
+ }catch(e){console.warn("Notification permission:",e);}
  localStorage.setItem("tutorHisabNotificationChoice","allow");
  continueAfterNotification();
 });
