@@ -82,6 +82,7 @@ body{padding-bottom:75px}
 .setting-copy b{display:block;font-size:14px;margin-bottom:3px}
 .setting-copy small{display:block;color:#718078;font-size:12px;line-height:1.4}
 .setting-arrow{color:#9aa79f;font-size:22px}
+.setting-row.action-row{width:100%;margin:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
 .home-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
 .home-tabs button{font-size:12px;line-height:1.35;min-height:54px}
 .onboarding-prompt{text-align:center}
@@ -243,7 +244,7 @@ body{padding-bottom:75px}
   <div class="settings-list">
    <div class="setting-row"><div class="setting-icon" style="background:#e3f5eb">💾</div><div class="setting-copy"><b>Save Your Progress</b><small>ব্যাকআপ ডাউনলোড ও আগের তথ্য রিস্টোর করুন</small></div><button type="button" style="width:auto;margin:0;padding:9px 12px" onclick="backup()">Backup</button></div>
    <div class="setting-row"><div class="setting-icon" style="background:#e8f0fc">🌐</div><div class="setting-copy"><b>Language / ভাষা</b><small>অ্যাপের ভাষা নির্বাচন করুন</small></div><select id="languageSelect" aria-label="Language" style="width:auto;max-width:112px;margin:0;padding:9px"><option value="bn">বাংলা</option><option value="en">English</option></select></div>
-   <div class="setting-row"><div class="setting-icon" style="background:#f2eafb">📖</div><div class="setting-copy"><b>Guideline / নির্দেশিকা</b><small>শিক্ষার্থী, পেমেন্ট ও রিপোর্ট ব্যবহারের নিয়ম</small></div><span class="setting-arrow">›</span></div>
+   <button type="button" class="setting-row action-row" onclick="showGuideline()"><div class="setting-icon" style="background:#f2eafb">📖</div><div class="setting-copy"><b>Guideline / নির্দেশিকা</b><small>শিক্ষার্থী, পেমেন্ট ও রিপোর্ট ব্যবহারের নিয়ম</small></div><span class="setting-arrow">›</span></button>
   </div>
   <div class="settings-group">BACKUP RESTORE</div>
   <div class="setting-row" style="display:block">
@@ -502,7 +503,8 @@ const originalRender=render;
 render=function(){originalRender();applyLanguage();};
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="languageSelect"){localStorage.setItem("tutorHisabLanguage",e.target.value);render();}});
 
-function showHomePanel(tab){const panels={student:$("homeStudentsPanel"),payments:$("homePaymentsPanel"),list:$("homeListPanel"),reports:$("homeReportsPanel")};Object.entries(panels).forEach(([key,el])=>el.hidden=key!==tab);document.querySelectorAll("[data-home-tab]").forEach(btn=>btn.classList.toggle("active",btn.dataset.homeTab===tab));}
+let activeHomePanel="student";
+function showHomePanel(tab,pushHistory=true){const panels={student:$("homeStudentsPanel"),payments:$("homePaymentsPanel"),list:$("homeListPanel"),reports:$("homeReportsPanel")};Object.entries(panels).forEach(([key,el])=>el.hidden=key!==tab);document.querySelectorAll("[data-home-tab]").forEach(btn=>btn.classList.toggle("active",btn.dataset.homeTab===tab));activeHomePanel=tab;if(pushHistory&&window.history&&history.pushState)history.pushState({tutorHisab:true,tab:activeTab||"home",homePanel:tab},"","#"+(activeTab||"home"));}
 document.querySelector(".home-tabs").addEventListener("click",e=>{const btn=e.target.closest("[data-home-tab]");if(btn)showHomePanel(btn.dataset.homeTab);});
 let activeTab="home";
 function showTab(tab,pushHistory=true){
@@ -516,12 +518,15 @@ function showTab(tab,pushHistory=true){
  if(pushHistory&&window.history&&history.pushState)history.pushState({tutorHisab:true,tab},"","#"+tab);
  window.scrollTo(0,0);
 }
-if(window.history&&history.replaceState)history.replaceState({tutorHisab:true,tab:"home"},"","#home");
-window.addEventListener("popstate",()=>{
+if(window.history&&history.replaceState)history.replaceState({tutorHisab:true,tab:"home",homePanel:"student"},"","#home");
+window.addEventListener("popstate",event=>{
  if(editingStudentId){cancelStudentEdit();return;}
  if(editingPaymentId){cancelPaymentEdit();return;}
- if(activeTab!=="home"){showTab("home",false);return;}
- if(window.history&&history.pushState)history.pushState({tutorHisab:true,tab:"home"},"","#home");
+ if(activeTab==="profile"&&!$("profileEditForm").hidden){cancelProfileEdit();return;}
+ if(activeTab!=="home"){showTab("home",false);if(event.state&&event.state.homePanel)showHomePanel(event.state.homePanel,false);return;}
+ if(event.state&&event.state.homePanel){showHomePanel(event.state.homePanel,false);return;}
+ if(activeHomePanel!=="student"){showHomePanel("student",false);return;}
+ if(window.history&&history.pushState)history.pushState({tutorHisab:true,tab:"home",homePanel:"student"},"","#home");
 });
 document.querySelector(".bottom-nav").addEventListener("click",e=>{
  const btn=e.target.closest("[data-tab]");if(btn)showTab(btn.dataset.tab);
@@ -611,6 +616,7 @@ async function saveProfile(){if(!currentUser){alert("আগে Sign In করু
 window.addEventListener("online",()=>{if(currentUser&&db)syncCloud();});
 if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);data=saved?loadData():emptyData();if(!saved)save(false);else render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home");}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile");if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
 
+function showGuideline(){alert("Tutor Hisab ব্যবহারের নিয়ম:\\n১. শিক্ষার্থী অপশনে নাম, শ্রেণি, মোবাইল, মাসিক বেতন ও হিসাব শুরুর মাস দিন।\\n২. টাকা জমা অপশনে শিক্ষার্থী, পরিমাণ, মাস ও তারিখ দিয়ে সংরক্ষণ করুন।\\n৩. শিক্ষার্থী তালিকা থেকে তথ্য সম্পাদনা বা মুছুন।\\n৪. রিপোর্ট অপশনে মাস নির্বাচন করে হিসাব দেখুন।\\n৫. Settings থেকে নিয়মিত Backup ডাউনলোড করে রাখুন।");}
 function shareTutorHisab(event){
  if(event)event.preventDefault();
  const payload={title:"Tutor Hisab",text:"Tutor Hisab — শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়ার হিসাব রাখুন।"};
