@@ -5,6 +5,7 @@ plugins {
 android {
     namespace 'com.tutorhisab.app'
     compileSdk 35
+    buildFeatures { buildConfig true }
 
     defaultConfig {
         applicationId 'com.tutorhisab.app'
