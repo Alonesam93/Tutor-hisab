@@ -88,9 +88,9 @@ body{padding-bottom:75px}
   </section>
   <section id="firstAccountStep" hidden>
    <h2>Welcome / স্বাগতম</h2>
-   <p id="firstAccountMessage">Sign in or create an account to sync your data. You can also continue offline.</p>
+   <p id="firstAccountMessage">Sign in or create an account to securely access your tutoring records.</p>
    <button type="button" id="firstOpenAccount">Sign In / Sign Up</button>
-   <button type="button" class="secondary" id="firstContinueOffline">Continue Offline</button>
+   
    <p><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="mailto:tutorhisab.support@gmail.com">Contact</a></p>
   </section>
  </div>
@@ -397,8 +397,8 @@ if(auth){auth.onAuthStateChanged(async u=>{currentUser=u||null;if(u){$("authScre
 function finishOnboarding(tab){
  localStorage.setItem("tutorHisabOnboardingDone","yes");
  $("firstRunOverlay").hidden=true;
- $("authScreen").hidden=false;
- openAuthMode("signin");
+ $("authScreen").hidden=!currentUser;
+ if(!currentUser)openAuthMode("signin");
  showTab("home");
 }
 document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventListener("click",()=>{
@@ -408,8 +408,7 @@ document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventList
  $("firstLanguageStep").hidden=true;
  $("firstAccountStep").hidden=false;
 }));
-$ ("firstOpenAccount").addEventListener("click",()=>finishOnboarding("home"));
-$("firstContinueOffline").hidden=true;
+$("firstOpenAccount").addEventListener("click",()=>finishOnboarding("home"));
 if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
  $("authScreen").hidden=true;
  $("firstRunOverlay").hidden=false;
