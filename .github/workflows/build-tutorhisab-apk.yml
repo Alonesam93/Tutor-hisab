@@ -1,10 +1,11 @@
-name: Build Tutor Hisab Android APK (v1.1.0)
+name: Build Tutor Hisab Android APK (v1.2.0)
 
 on:
   workflow_dispatch:
   push:
     branches:
       - fix/final-design-and-core-fixes
+      - feat/admob-gma-nextgen-v1.2.0
     paths:
       - index.html
       - app/**
@@ -84,6 +85,13 @@ jobs:
           inline_scripts = [script for script in scripts if script.strip()]
           if not inline_scripts:
               raise SystemExit("No inline JavaScript found")
+          for ad_id in ["ca-app-pub-3940256099942544/9214589741", "ca-app-pub-3940256099942544/1033173712"]:
+              if ad_id not in Path("app/src/main/java/com/tutorhisab/app/MainActivity.java").read_text(encoding="utf-8"):
+                  raise SystemExit("Google test ad unit missing: " + ad_id)
+          java = Path("app/src/main/java/com/tutorhisab/app/MainActivity.java").read_text(encoding="utf-8")
+          for required in ["ca-app-pub-7526847355861260~8505766194", "ca-app-pub-7526847355861260/7040429257", "ca-app-pub-7526847355861260/9835226943", "onSafeAdOpportunity", "scheduleNextInterstitialWindow"]:
+              if required not in java:
+                  raise SystemExit("AdMob integration missing: " + required)
           Path("/tmp/tutor-hisab-inline.js").write_text("\n;\n".join(inline_scripts), encoding="utf-8")
           PY
           node --check /tmp/tutor-hisab-inline.js
@@ -99,6 +107,6 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Tutor-Hisab-1.1.0-debug-APK
+          name: Tutor-Hisab-1.2.0-debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
