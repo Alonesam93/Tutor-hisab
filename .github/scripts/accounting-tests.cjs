@@ -60,6 +60,16 @@ assert.ok(firestoreRules.includes("deletedStudentIds") && firestoreRules.include
 assert.ok(html.includes("cloud.deletedStudentIds") && html.includes("cloud.deletedPaymentIds"), "Cloud sync must import deletion tombstones from the account document");
 assert.ok(html.includes("local.replaceCloud===true") && html.includes("FieldValue.arrayUnion(...deletedStudents)"), "Restore must replace cloud data and normal sync must propagate deletion tombstones");
 
+const privacyHtml = fs.readFileSync("app/src/main/assets/privacy.html", "utf8");
+const termsHtml = fs.readFileSync("app/src/main/assets/terms.html", "utf8");
+assert.ok(privacyHtml.includes("developers.google.com/admob/android/next-gen/privacy/play-data-disclosure"), "Privacy policy must disclose Google Mobile Ads data handling");
+assert.ok(termsHtml.includes("বিজ্ঞাপন"), "Terms must explain advertising");
+for (const document of [privacyHtml, termsHtml, html]) {
+  assert.ok(!document.includes("tutorhisab.support@gmail.com"), "Unverified support email must not be published");
+  assert.ok(!document.includes("01872466893"), "Unverified support phone must not be published");
+}
+assert.ok(html.includes("github.com/Alonesam93/Tutor-hisab/issues"), "Contact and feedback links must point to the verified project issue tracker");
+
 const androidJava = fs.readFileSync("app/src/main/java/com/tutorhisab/app/MainActivity.java", "utf8");
 assert.ok(androidJava.includes("BuildConfig.DEBUG"), "Debug and release ad configuration must be separated");
 assert.ok(androidJava.includes("ca-app-pub-3940256099942544/9214589741"), "Debug banner must use Google's test ad unit");
