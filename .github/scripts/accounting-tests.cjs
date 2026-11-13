@@ -27,7 +27,10 @@ vm.runInContext(
     extractFunction("validMonth"),
     extractFunction("monthsBetween"),
     extractFunction("paidFor"),
-    extractFunction("dueFor")
+    extractFunction("dueFor"),
+    extractFunction("stableRecord"),
+    extractFunction("preferLocalRecord"),
+    extractFunction("mergeRecordMaps")
   ].join("\n"),
   context
 );
@@ -45,6 +48,15 @@ assert.equal(context.dueFor(student, "2026-04"), 2100, "Payments after the cutof
 context.data.payments.push({ id: "p5", studentId: "s1", amount: 10000, month: "2026-05" });
 assert.equal(context.dueFor(student, "2026-05"), 0, "Due must never become negative");
 assert.equal(context.dueFor({ id: "s2", fee: 800, start: "2026-03", opening: 0 }, "2026-03"), 550, "Each student's payments must remain isolated");
+assert.equal(context.preferLocalRecord({ updatedAt: 20 }, { updatedAt: 10 }), true, "Newer local edits must win");
+assert.equal(context.preferLocalRecord({ updatedAt: 10 }, { updatedAt: 20 }), false, "Newer cloud edits must not be overwritten by stale local data");
+const localRecords = new Map([["s1", { id: "s1", fee: 1200, updatedAt: 20 }], ["s2", { id: "s2", fee: 1500, updatedAt: 10 }], ["s4", { id: "s4", fee: 900, updatedAt: 5 }]]);
+const cloudRecords = new Map([["s1", { id: "s1", fee: 1000, updatedAt: 10 }], ["s2", { id: "s2", fee: 1800, updatedAt: 30 }], ["s3", { id: "s3", fee: 700, updatedAt: 5 }]]);
+const mergedRecords = context.mergeRecordMaps(localRecords, cloudRecords, new Set(["s3"]));
+assert.equal(mergedRecords.get("s1").fee, 1200, "Newer local record must sync");
+assert.equal(mergedRecords.get("s2").fee, 1800, "Newer cloud record must be preserved");
+assert.equal(mergedRecords.get("s4").fee, 900, "Local-only record must be retained");
+assert.equal(mergedRecords.has("s3"), false, "Deleted records must remain excluded");
 
 const firestoreRules = fs.readFileSync("firestore.rules", "utf8");
 assert.match(firestoreRules, /match \/users\/\{userId\}/, "User-scoped Firestore rule is required");
