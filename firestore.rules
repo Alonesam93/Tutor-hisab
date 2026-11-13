@@ -22,6 +22,7 @@ service cloud.firestore {
         // A deleted student ID is tombstoned in the parent user document.
         // This prevents an offline/stale device from recreating that record.
         allow create, update: if isOwner(userId)
+          && request.resource.data.id == studentId
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0
           && request.resource.data.fee is number
@@ -33,6 +34,7 @@ service cloud.firestore {
       match /payments/{paymentId} {
         allow read, delete: if isOwner(userId);
         allow create, update: if isOwner(userId)
+          && request.resource.data.id == paymentId
           && request.resource.data.studentId is string
           && studentExistsAfter(userId, request.resource.data.studentId)
           && request.resource.data.amount is number
