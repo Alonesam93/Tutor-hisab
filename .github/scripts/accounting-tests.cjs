@@ -6,7 +6,9 @@ const html = fs.readFileSync("app/src/main/assets/index.html", "utf8");
 function extractFunction(name) {
   const start = html.indexOf("function " + name + "(");
   assert.notEqual(start, -1, "Missing production function: " + name);
-  const next = html.indexOf("\nfunction ", start + 1);
+  const nextFunction = html.indexOf("\nfunction ", start + 1);
+  const nextAsyncFunction = html.indexOf("\nasync function ", start + 1);
+  const next = [nextFunction, nextAsyncFunction].filter(index => index !== -1).sort((a, b) => a - b)[0] ?? -1;
   return html.slice(start, next === -1 ? html.length : next);
 }
 
