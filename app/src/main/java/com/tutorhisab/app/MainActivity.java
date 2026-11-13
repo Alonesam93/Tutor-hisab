@@ -15,7 +15,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
-import android.webkit.ValueCallback;
+import android.webkit.ValueCallback;\nimport android.window.OnBackInvokedCallback;\nimport android.window.OnBackInvokedDispatcher;
 import android.graphics.Color;
 import android.widget.Toast;
 import java.io.File;
@@ -26,7 +26,7 @@ import java.io.IOException;
 public class MainActivity extends Activity {
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
-    private static final int FILE_CHOOSER_REQUEST = 1001;
+    private static final int FILE_CHOOSER_REQUEST = 1001;\n    private OnBackInvokedCallback backInvokedCallback;
 
     public class ShareBridge {
         @JavascriptInterface
@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        setContentView(webView);
+        setContentView(webView);\n        if (Build.VERSION.SDK_INT >= 33) {\n            backInvokedCallback = this::dispatchBackAction;\n            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(\n                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, backInvokedCallback);\n        }
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
@@ -157,19 +157,34 @@ public class MainActivity extends Activity {
         super.onSaveInstanceState(outState);
     }
 
-    @Override
-    public void onBackPressed() {
-        if (webView != null) {
-            webView.evaluateJavascript(
-                "(function(){return window.handleAppBack ? window.handleAppBack() : false;})()",
+    private void dispatchBackAction() {
+        if (webView == null) {
+            finish();
+            return;
+        }
+        webView.evaluateJavascript(
+                "(function(){try{return window.handleAppBack ? window.handleAppBack() : false;}catch(e){return false;}})()",
                 value -> {
+                    if (isFinishing()) return;
                     if (!"true".equals(value)) {
-                        MainActivity.super.onBackPressed();
+                        // Legal/help pages are normal WebView pages; return to the app first.
+                        if (webView != null && webView.canGoBack()) webView.goBack();
+                        else finish();
                     }
                 }
-            );
-        } else {
-            super.onBackPressed();
+        );
+    }
+
+    @Override
+    public void onBackPressed() {
+        dispatchBackAction();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (Build.VERSION.SDK_INT >= 33 && backInvokedCallback != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backInvokedCallback);
         }
+        super.onDestroy();
     }
 }
