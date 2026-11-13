@@ -54,7 +54,7 @@ jobs:
           const tabs = [...html.matchAll(/data-tab="(home|store|notification|profile|settings)"/g)].map(m => m[1]);
           assert(tabs.length === 5 && new Set(tabs).size === 5, 'Expected exactly five unique bottom-navigation tabs');
           for (const id of ['homeStudentsPanel','homePaymentsPanel','homeStudentListPanel','homeReportsPanel']) assert(html.includes('id="'+id+'"'), 'Missing Homepage panel: '+id);
-          for (const label of ['Homepage','My Store','Notification','My Profile','Settings']) assert(html.includes('>'+label+'</span>'), 'Missing bottom-nav label: '+label);
+          for (const label of ['Homepage','My Store','Notification','My Profile','Settings']) assert(new RegExp('<span class="nav-label">'+label+'</span>').test(html), 'Missing visible bottom-nav label: '+label);
           for (const label of ['SMS Packages','Pro','Elite']) assert(html.includes(label), 'Missing Store item: '+label);
           assert(html.includes('onclick="backup()"') && html.includes('id="restoreFile"'), 'Backup/restore must remain in Settings');
           assert(html.includes('id="loginEmail"') && html.includes('id="loginPassword"') && html.includes('id="confirmPassword"'), 'Email/password authentication fields missing');
