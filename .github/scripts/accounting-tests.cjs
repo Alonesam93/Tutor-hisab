@@ -106,6 +106,7 @@ assert.ok(html.includes('id="signupPhotoInput"') && html.includes('photoData:sig
 assert.ok(html.includes('<details class="signup-extra-details">') && html.includes('id="signupName" type="text" autocomplete="name" required'), "Sign-up must prioritize required identity fields and collapse optional profile details");
 assert.ok(html.includes('id="passwordHint"') && html.includes("কমপক্ষে ৬ অক্ষরের"), "Sign-up password requirements must be clearly explained");
 assert.ok(html.includes('id="authPrivacyNote"') && html.includes("kept separate for each account"), "Authentication screens must explain per-account data separation");
+assert.ok(html.includes('<form id="authForm" autocomplete="on">') && html.includes('type="submit" id="loginSignIn"') && html.includes('event.preventDefault();emailSignIn();'), "Authentication must use a semantic form for autofill and keyboard submission");
 assert.ok(html.includes('"নোটিফিকেশন চালু রাখবেন?":"Enable notifications?"') && html.includes('"প্রোফাইল ছবি (ঐচ্ছিক)":"Profile photo (optional)"'), "Onboarding and sign-up controls must be translated to English");
 
 const rootHtml = fs.readFileSync("index.html", "utf8");
