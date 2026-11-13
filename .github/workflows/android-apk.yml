@@ -10,7 +10,8 @@ on:
       - fix/audit-and-data-integrity
       - fix/white-screen-onboarding
       - fix/account-isolation-profile-cancel
-      - fix/ui-navigation-language-branding\n      - fix/back-login-polish-2026-11-13
+      - fix/ui-navigation-language-branding
+      - fix/back-login-polish-2026-11-13
 
 jobs:
   build:
@@ -39,7 +40,8 @@ jobs:
 
       - name: Check embedded JavaScript syntax
         run: |
-          node -e 'const fs=require("fs"); const html=fs.readFileSync("app/src/main/assets/index.html","utf8"); const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(s=>s.trim()); if(scripts.length!==1) throw new Error(`Expected one inline script, found ${scripts.length}`); fs.writeFileSync("/tmp/tutor-hisab-inline.js",scripts.join("\n"));'
+          node -e 'const fs=require("fs"); const html=fs.readFileSync("app/src/main/assets/index.html","utf8"); const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(s=>s.trim()); if(scripts.length!==1) throw new Error(`Expected one inline script, found ${scripts.length}`); fs.writeFileSync("/tmp/tutor-hisab-inline.js",scripts.join("
+"));'
           node --check /tmp/tutor-hisab-inline.js
 
       - name: Build debug APK
