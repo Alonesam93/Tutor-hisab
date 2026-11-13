@@ -19,8 +19,6 @@ service cloud.firestore {
 
       match /students/{studentId} {
         allow read, delete: if isOwner(userId);
-        // A deleted student ID is tombstoned in the parent user document.
-        // This prevents an offline/stale device from recreating that record.
         allow create, update: if isOwner(userId)
           && request.resource.data.id == studentId
           && request.resource.data.name is string
@@ -28,7 +26,10 @@ service cloud.firestore {
           && request.resource.data.fee is number
           && request.resource.data.fee > 0
           && request.resource.data.start is string
-          && request.resource.data.start.matches('^[0-9]{4}-(0[1-9]|1[0-2])
+          && request.resource.data.start.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+          && request.resource.data.opening is number
+          && request.resource.data.opening >= 0
+          && !(studentId in userData(userId).get('deletedStudentIds', []));
       }
 
       match /payments/{paymentId} {
@@ -40,64 +41,9 @@ service cloud.firestore {
           && request.resource.data.amount is number
           && request.resource.data.amount > 0
           && request.resource.data.month is string
-          && request.resource.data.month.matches('^[0-9]{4}-(0[1-9]|1[0-2])
-      }
-    }
-  }
-}
-)
-          && request.resource.data.opening is number
-          && request.resource.data.opening >= 0
-          && !(studentId in userData(userId).get('deletedStudentIds', []));
-      }
-
-      match /payments/{paymentId} {
-        allow read, delete: if isOwner(userId);
-        allow create, update: if isOwner(userId)
-          && !(paymentId in userData(userId).get('deletedPaymentIds', []))
-          && !(request.resource.data.studentId in userData(userId).get('deletedStudentIds', []));
-      }
-    }
-  }
-}
-)
+          && request.resource.data.month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
           && request.resource.data.date is string
-          && request.resource.data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-[0-9]{2}
-      }
-    }
-  }
-}
-)
-          && request.resource.data.opening is number
-          && request.resource.data.opening >= 0
-          && !(studentId in userData(userId).get('deletedStudentIds', []));
-      }
-
-      match /payments/{paymentId} {
-        allow read, delete: if isOwner(userId);
-        allow create, update: if isOwner(userId)
-          && !(paymentId in userData(userId).get('deletedPaymentIds', []))
-          && !(request.resource.data.studentId in userData(userId).get('deletedStudentIds', []));
-      }
-    }
-  }
-}
-)
-          && !(paymentId in userData(userId).get('deletedPaymentIds', []))
-          && !(request.resource.data.studentId in userData(userId).get('deletedStudentIds', []));
-      }
-    }
-  }
-}
-)
-          && request.resource.data.opening is number
-          && request.resource.data.opening >= 0
-          && !(studentId in userData(userId).get('deletedStudentIds', []));
-      }
-
-      match /payments/{paymentId} {
-        allow read, delete: if isOwner(userId);
-        allow create, update: if isOwner(userId)
+          && request.resource.data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-[0-9]{2}$')
           && !(paymentId in userData(userId).get('deletedPaymentIds', []))
           && !(request.resource.data.studentId in userData(userId).get('deletedStudentIds', []));
       }
