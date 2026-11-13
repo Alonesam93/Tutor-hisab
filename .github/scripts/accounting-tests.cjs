@@ -26,6 +26,8 @@ const context = {
 vm.createContext(context);
 vm.runInContext(
   [
+    extractFunction("emptyData"),
+    extractFunction("normalizeData"),
     extractFunction("validMonth"),
     extractFunction("monthsBetween"),
     extractFunction("paidFor"),
@@ -41,6 +43,16 @@ vm.runInContext(
 
 assert.equal(context.validMonth("2026-01"), true);
 assert.equal(context.validMonth("2026-13"), false);
+const normalizedLegacy = context.normalizeData({
+  students: [{ id: "legacy-s1", name: "Rahim", fee: "1200", start: "2026-01" }],
+  payments: [{ id: "legacy-p1", studentId: "legacy-s1", amount: "300", month: "2026-02" }],
+  deletedStudentIds: ["old-s1", 7, "old-s1"]
+});
+assert.equal(normalizedLegacy.students[0].opening, 0, "Legacy students missing opening balance must be normalized");
+assert.equal(normalizedLegacy.students[0].fee, 1200, "Legacy student fee strings must normalize to numbers");
+assert.equal(normalizedLegacy.payments[0].date, "2026-02-01", "Legacy payments missing a date must receive a safe month-start date");
+assert.equal(normalizedLegacy.payments[0].amount, 300, "Legacy payment amounts must normalize to numbers");
+assert.deepEqual(Array.from(normalizedLegacy.deletedStudentIds), ["old-s1"], "Legacy tombstones must be normalized and deduplicated");
 assert.equal(context.monthsBetween("2026-01", "2026-01"), 1, "Start month must be included");
 assert.equal(context.monthsBetween("2025-12", "2026-02"), 3, "Month count must cross year boundary");
 assert.equal(context.monthsBetween("2026-04", "2026-03"), 0, "Earlier end month must not accrue fees");
