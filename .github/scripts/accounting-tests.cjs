@@ -57,6 +57,7 @@ assert.ok(html.includes("cloud.deletedStudentIds") && html.includes("cloud.delet
 assert.ok(html.includes("local.replaceCloud===true") && html.includes("FieldValue.arrayUnion(...deletedStudents)"), "Restore must replace cloud data and normal sync must propagate deletion tombstones");
 assert.ok(html.includes("tutorHisabProfilePendingSync_") && html.includes("localStorage.removeItem(pendingProfileKey)"), "Offline profile writes must retry Cloud sync after reconnect");
 assert.ok(html.includes('id="firstNotificationStep"') && html.includes('id="firstNotificationContinue"') && html.includes('id="firstNotificationSkip"'), "First-run notification explanation and choices are required");
+assert.ok(html.includes('id="signupPhotoInput"') && html.includes('photoData:signupPhotoData') && html.includes("function compressProfileImage"), "Sign-up must support an optional compressed profile photo");
 
 const rootHtml = fs.readFileSync("index.html", "utf8");
 const privacyHtml = fs.readFileSync("app/src/main/assets/privacy.html", "utf8");
