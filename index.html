@@ -386,11 +386,24 @@ const today=new Date();
 const localDate=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
 const currentMonth=localDate.slice(0,7);
 function emptyData(){return {students:[],payments:[],deletedStudentIds:[],deletedPaymentIds:[]};}
+function normalizeData(parsed){
+ if(!parsed||!Array.isArray(parsed.students)||!Array.isArray(parsed.payments))return emptyData();
+ const students=parsed.students.map((s,i)=>{
+  const fee=Number(s.fee||0),opening=Number(s.opening||0),updatedAt=Number(s.updatedAt||0);
+  return {...s,id:String(s.id||("legacy-student-"+(i+1))),name:String(s.name||""),className:String(s.className||""),phone:String(s.phone||""),fee:Number.isFinite(fee)?fee:0,start:typeof s.start==="string"&&s.start?s.start:currentMonth,opening:Number.isFinite(opening)&&opening>=0?opening:0,updatedAt:Number.isFinite(updatedAt)&&updatedAt>=0?updatedAt:0};
+ });
+ const payments=parsed.payments.map((p,i)=>{
+  const month=typeof p.month==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(p.month)?p.month:currentMonth;
+  const amount=Number(p.amount||0),updatedAt=Number(p.updatedAt||0);
+  const date=typeof p.date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(p.date)?p.date:month+"-01";
+  return {...p,id:String(p.id||("legacy-payment-"+(i+1))),studentId:String(p.studentId||""),amount:Number.isFinite(amount)?amount:0,month,date,updatedAt:Number.isFinite(updatedAt)&&updatedAt>=0?updatedAt:0};
+ });
+ return {...parsed,students,payments,deletedStudentIds:[...new Set((Array.isArray(parsed.deletedStudentIds)?parsed.deletedStudentIds:[]).filter(x=>typeof x==="string"))],deletedPaymentIds:[...new Set((Array.isArray(parsed.deletedPaymentIds)?parsed.deletedPaymentIds:[]).filter(x=>typeof x==="string"))]};
+}
 function loadData(){
  try{
   const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return emptyData();
-  const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.students)||!Array.isArray(parsed.payments))return emptyData();
-  return {...parsed,deletedStudentIds:Array.isArray(parsed.deletedStudentIds)?parsed.deletedStudentIds:[],deletedPaymentIds:Array.isArray(parsed.deletedPaymentIds)?parsed.deletedPaymentIds:[]};
+  return normalizeData(JSON.parse(raw));
  }catch(e){return emptyData();}
 }
 let data=loadData();
