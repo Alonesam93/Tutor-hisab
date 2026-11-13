@@ -5,18 +5,12 @@
 <script>
 function captureLegacyStorage(){
   const values={};
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const key=localStorage.key(i);
-      if(key&&key.startsWith("tutorHisab"))values[key]=localStorage.getItem(key);
-    }
-    if(window.MigrationBridge&&typeof window.MigrationBridge.saveLegacyStorage==="function"){
-      window.MigrationBridge.saveLegacyStorage(JSON.stringify(values));
-    }
-  }catch(error){
-    if(window.MigrationBridge&&typeof window.MigrationBridge.saveLegacyStorage==="function"){
-      window.MigrationBridge.saveLegacyStorage("{}");
-    }
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key&&key.startsWith("tutorHisab"))values[key]=localStorage.getItem(key);
+  }
+  if(window.MigrationBridge&&typeof window.MigrationBridge.saveLegacyStorage==="function"){
+    window.MigrationBridge.saveLegacyStorage(JSON.stringify(values));
   }
 }
 </script>
