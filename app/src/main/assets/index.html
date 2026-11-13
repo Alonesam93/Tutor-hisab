@@ -740,6 +740,7 @@ async function syncCloud(){
    let pendingProfile={};
    try{pendingProfile=JSON.parse(localStorage.getItem(profileKey)||"{}");}catch(e){}
    const profileDoc=await base.get();
+   if(!currentUser||currentUser.uid!==syncUid)return;
    const cloudProfile=profileDoc.exists?(profileDoc.data().profile||{}):{};
    if(Number(pendingProfile.updatedAt||0)>=Number(cloudProfile.updatedAt||0)){
     await base.set({email:currentUser.email||"",profile:pendingProfile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
