@@ -45,6 +45,9 @@ jobs:
           node -e 'const fs=require("fs"); const html=fs.readFileSync("app/src/main/assets/index.html","utf8"); const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(s=>s.trim()); if(scripts.length!==1) throw new Error(`Expected one inline script, found ${scripts.length}`); fs.writeFileSync("/tmp/tutor-hisab-inline.js",scripts.join("\n"));'
           node --check /tmp/tutor-hisab-inline.js
 
+      - name: Test accounting calculations
+        run: node .github/scripts/accounting-tests.cjs
+
       - name: Check Tutor Hisab UI requirements
         run: |
           node - <<'NODE'
