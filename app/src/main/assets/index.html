@@ -580,8 +580,10 @@ function showHomePanel(tab,addHistory=true){const panels={students:$("homeStuden
 document.querySelector(".home-tabs").addEventListener("click",e=>{const btn=e.target.closest("[data-home-tab]");if(btn)showHomePanel(btn.dataset.homeTab);});
 function showTab(tab,addHistory=true){
  if(!window.__tutorHisabSignedIn&&tab!=="profile")tab="profile";
+ const previousTab=activeAppTab;
  if(addHistory&&tab!==activeAppTab)rememberCurrentRoute();
  activeAppTab=tab;
+ if(tab==="store"&&previousTab!=="store"&&window.__tutorHisabSignedIn&&window.Android&&typeof window.Android.onSafeAdOpportunity==="function")window.Android.onSafeAdOpportunity();
  const home=$("homeScreen");
  const screens={store:$("storeScreen"),notification:$("notificationScreen"),profile:$("profileScreen"),settings:$("settingsScreen")};
  home.hidden=tab!=="home";
