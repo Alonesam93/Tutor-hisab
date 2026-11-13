@@ -55,6 +55,8 @@ assert.doesNotMatch(firestoreRules, /allow\s+(read|write|read,\s*write)\s*:\s*if
 assert.ok(firestoreRules.includes("deletedStudentIds") && firestoreRules.includes("deletedPaymentIds"), "Firestore must block writes to tombstoned records");
 assert.ok(html.includes("cloud.deletedStudentIds") && html.includes("cloud.deletedPaymentIds"), "Cloud sync must import deletion tombstones from the account document");
 assert.ok(html.includes("local.replaceCloud===true") && html.includes("FieldValue.arrayUnion(...deletedStudents)"), "Restore must replace cloud data and normal sync must propagate deletion tombstones");
+assert.ok(html.includes("tutorHisabProfilePendingSync_") && html.includes("localStorage.removeItem(pendingProfileKey)"), "Offline profile writes must retry Cloud sync after reconnect");
+assert.ok(html.includes('id="firstNotificationStep"') && html.includes('id="firstNotificationContinue"') && html.includes('id="firstNotificationSkip"'), "First-run notification explanation and choices are required");
 
 const rootHtml = fs.readFileSync("index.html", "utf8");
 const privacyHtml = fs.readFileSync("app/src/main/assets/privacy.html", "utf8");
