@@ -142,6 +142,8 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 @media(max-width:360px){main,.tab-screen{padding-left:12px;padding-right:12px}.home-tabs{gap:4px;padding:4px}.home-tabs button{font-size:10px;padding:6px 2px}.bottom-nav button .nav-label{font-size:8px}.bottom-nav button .nav-icon{font-size:18px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+
+#settingsScreen p.settings-link{display:flex;align-items:center;min-height:48px;margin:8px 0;padding:11px 13px;border:1px solid var(--th-line);border-radius:13px;background:#fff;box-shadow:0 2px 8px #28234f06}#settingsScreen p.settings-link a{display:block;width:100%;font-size:13px}#settingsScreen p.settings-link a:after{content:"›";float:right;color:#9b98ad;font-size:20px;line-height:16px}.page-intro{margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -197,6 +199,7 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 </div>
 
 <main id="homeScreen">
+<div class="page-intro"><span class="eyebrow">YOUR TEACHING OVERVIEW</span><h2>আজকের হিসাব</h2><p>শিক্ষার্থী, জমা ও বকেয়ার সারসংক্ষেপ</p></div>
 <div class="card stats">
 <div class="stat">মোট শিক্ষার্থী<b id="count">০</b></div>
 <div class="stat">এই মাসে জমা<b id="paid">৳০</b></div>
@@ -212,13 +215,13 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 <div id="homeStudentsPanel">
  <div class="card">
   <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
-  <input id="name" placeholder="শিক্ষার্থীর নাম" maxlength="100">
-  <input id="className" placeholder="শ্রেণি" maxlength="50">
-  <input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel" maxlength="20">
-  <input id="fee" type="number" min="1" step="0.01" placeholder="মাসিক বেতন">
+  <label for="name">শিক্ষার্থীর নাম</label><input id="name" autocomplete="off" placeholder="শিক্ষার্থীর নাম" maxlength="100">
+  <label for="className">শ্রেণি</label><input id="className" placeholder="যেমন: ষষ্ঠ শ্রেণি" maxlength="50">
+  <label for="phone">মোবাইল নম্বর</label><input id="phone" placeholder="মোবাইল নম্বর" inputmode="tel" maxlength="20">
+  <label for="fee">মাসিক বেতন (৳)</label><input id="fee" type="number" min="1" step="0.01" inputmode="decimal" placeholder="মাসিক বেতন">
   <label>বেতন গণনা শুরুর মাস</label>
   <input id="start" type="month">
-  <input id="opening" type="number" min="0" step="0.01" value="0" placeholder="আগের বকেয়া (টাকা)">
+  <label for="opening">আগের বকেয়া (৳)</label><input id="opening" type="number" min="0" step="0.01" inputmode="decimal" value="0" placeholder="আগের বকেয়া (টাকা)">
   <button id="studentSaveBtn" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
   <button id="studentCancelBtn" class="secondary" style="display:none" onclick="cancelStudentEdit()">সম্পাদনা বাতিল করুন</button>
  </div>
@@ -227,8 +230,8 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 <div id="homePaymentsPanel" hidden>
  <div class="card">
   <h3>💰 বেতন জমা করুন</h3>
-  <select id="payStudent"><option value="">শিক্ষার্থী নির্বাচন করুন</option></select>
-  <input id="payAmount" type="number" min="0.01" step="0.01" placeholder="জমার পরিমাণ">
+  <label for="payStudent">শিক্ষার্থী</label><select id="payStudent"><option value="">শিক্ষার্থী নির্বাচন করুন</option></select>
+  <label for="payAmount">জমার পরিমাণ (৳)</label><input id="payAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="জমার পরিমাণ">
   <label>কোন মাসের বেতন</label>
   <input id="payMonth" type="month">
   <label>জমার তারিখ</label>
@@ -254,7 +257,7 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 
 <section id="storeScreen" class="tab-screen" hidden><div class="coming-soon-screen"><div class="coming-soon-mark">✦</div><h2>Coming Soon</h2><p>নতুন সুবিধা খুব শীঘ্রই আসছে</p></div></section>
 <section id="notificationScreen" class="tab-screen" hidden>
- <div class="card"><h3>🔔 নোটিফিকেশন</h3><div id="notificationList"></div></div>
+ <div class="page-intro"><span class="eyebrow">UPDATES & REMINDERS</span><h2>🔔 নোটিফিকেশন</h2><p>বকেয়া ও সাম্প্রতিক জমার আপডেট</p></div><div class="card"><h3>সাম্প্রতিক আপডেট</h3><div id="notificationList"></div></div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
  <div class="profile-head">
@@ -282,7 +285,7 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
  <button type="button" class="danger profile-signout" onclick="emailSignOut()">লগ আউট</button>
 </div></section>
 <section id="settingsScreen" class="tab-screen" hidden>
- <div class="card"><h3>⚙️ সেটিংস</h3>
+ <div class="page-intro"><span class="eyebrow">PREFERENCES & SUPPORT</span><h2>⚙️ সেটিংস</h2><p>অ্যাপ ও আপনার তথ্য পরিচালনা করুন</p></div><div class="card">
   <h4>💾 আপনার অগ্রগতি সংরক্ষণ</h4>
   <div class="card">
 <h3>💾 ব্যাকআপ ও রিস্টোর</h3>
@@ -294,11 +297,11 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
   <hr><h4>ভাষা</h4><select id="languageSelect" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select>
   <hr><h4>নির্দেশিকা</h4><p>শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।</p>
   <hr><h4>সহায়তা</h4>
-  <p><a href="privacy.html">গোপনীয়তা নীতি</a></p>
-  <p><a href="terms.html">ব্যবহারের শর্তাবলি</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a></p><p><a href="about.html">পরিচিতি / About Tutor Hisab</a></p>
-  <p><a href="#" onclick="shareTutorHisab(event)">শেয়ার করুন / Share</a></p>
+  <p class="settings-link"><a href="privacy.html">গোপনীয়তা নীতি</a></p>
+  <p class="settings-link"><a href="terms.html">ব্যবহারের শর্তাবলি</a></p>
+  <p class="settings-link"><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></p>
+  <p class="settings-link"><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a></p><p class="settings-link"><a href="about.html">পরিচিতি / About Tutor Hisab</a></p>
+  <p class="settings-link"><a href="#" onclick="shareTutorHisab(event)">শেয়ার করুন / Share</a></p>
   <p>রেটিং দিন / Rate Us — শীঘ্রই আসছে</p>
  </div>
 </section>
