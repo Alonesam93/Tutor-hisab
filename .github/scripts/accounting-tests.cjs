@@ -59,6 +59,7 @@ assert.equal(mergedRecords.get("s1").fee, 1200, "Newer local record must sync");
 assert.equal(mergedRecords.get("s2").fee, 1800, "Newer cloud record must be preserved");
 assert.equal(mergedRecords.get("s4").fee, 900, "Local-only record must be retained");
 assert.equal(mergedRecords.has("s3"), false, "Deleted records must remain excluded");
+assert.ok(html.includes("function markChangedRecords()") && html.includes("item.updatedAt=changedAt"), "Edits must carry a local update timestamp for safe multi-device sync");
 
 const firestoreRules = fs.readFileSync("firestore.rules", "utf8");
 assert.match(firestoreRules, /match \/users\/\{userId\}/, "User-scoped Firestore rule is required");
