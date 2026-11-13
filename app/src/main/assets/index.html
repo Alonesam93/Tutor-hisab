@@ -695,9 +695,11 @@ async function syncCloud(){
 
   // An explicit restore replaces the cloud snapshot; ordinary syncs merge records.
   if(local.replaceCloud===true){
-   const restoredDeletedStudents=new Set((local.deletedStudentIds||[]).map(String));
-   const restoredDeletedPayments=new Set((local.deletedPaymentIds||[]).map(String));
+   const restoredDeletedStudents=new Set([...(cloud.deletedStudentIds||[]),...(local.deletedStudentIds||[])].map(String));
+   const restoredDeletedPayments=new Set([...(cloud.deletedPaymentIds||[]),...(local.deletedPaymentIds||[])].map(String));
+   for(const id of cloudStudents.keys()){if(!localStudents.has(id))restoredDeletedStudents.add(id);}
    for(const id of localStudents.keys())restoredDeletedStudents.delete(id);
+   for(const id of cloudPayments.keys()){if(!localPayments.has(id))restoredDeletedPayments.add(id);}
    for(const id of localPayments.keys())restoredDeletedPayments.delete(id);
    for(const [id,p] of localPayments){if(restoredDeletedStudents.has(String(p.studentId)))restoredDeletedPayments.add(id);}
    await base.set({
@@ -719,7 +721,10 @@ async function syncCloud(){
    const latestDeletedStudents=new Set([...restoredDeletedStudents,...(latest.deletedStudentIds||[]).map(String)]);
    const latestDeletedPayments=new Set([...restoredDeletedPayments,...(latest.deletedPaymentIds||[]).map(String)]);
    for(const [id,p] of (latest.payments||[]).map(x=>[String(x.id),x])){if(latestDeletedStudents.has(String(p.studentId)))latestDeletedPayments.add(id);}
-   data={...latest,replaceCloud:false,deletedStudentIds:[...latestDeletedStudents],deletedPaymentIds:[...latestDeletedPayments]};
+   data={...latest,replaceCloud:false,
+    students:(latest.students||[]).filter(s=>!latestDeletedStudents.has(String(s.id))),
+    payments:(latest.payments||[]).filter(p=>!latestDeletedPayments.has(String(p.id))&&!latestDeletedStudents.has(String(p.studentId))),
+    deletedStudentIds:[...latestDeletedStudents],deletedPaymentIds:[...latestDeletedPayments]};
    save(false);
    cloudMessage("ব্যাকআপের তথ্য Cloud-এ প্রতিস্থাপন হয়েছে।");
    return;
