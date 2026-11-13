@@ -61,6 +61,7 @@ assert.ok(html.includes('id="signupPhotoInput"') && html.includes('photoData:sig
 assert.ok(html.includes('id="passwordHint"') && html.includes("কমপক্ষে ৬ অক্ষরের"), "Sign-up password requirements must be clearly explained");
 
 const rootHtml = fs.readFileSync("index.html", "utf8");
+assert.equal(rootHtml, html, "Repository preview and Android app must use the same UI source");
 const privacyHtml = fs.readFileSync("app/src/main/assets/privacy.html", "utf8");
 const termsHtml = fs.readFileSync("app/src/main/assets/terms.html", "utf8");
 assert.ok(privacyHtml.includes("developers.google.com/admob/android/next-gen/privacy/play-data-disclosure"), "Privacy policy must disclose Google Mobile Ads data handling");
