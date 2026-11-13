@@ -224,7 +224,7 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 <div class="page-intro"><span class="eyebrow">YOUR TEACHING OVERVIEW</span><h2>আজকের হিসাব</h2><p>শিক্ষার্থী, জমা ও বকেয়ার সারসংক্ষেপ</p></div>
 <div class="card stats">
 <div class="stat">মোট শিক্ষার্থী<b id="count">০</b></div>
-<div class="stat">এই মাসে জমা<b id="paid">৳০</b></div>
+<div class="stat">মোট জমা<b id="paid">৳০</b></div>
 <div class="stat">মোট বকেয়া<b id="due">৳০</b></div>
 <div class="stat">এই মাসের নির্ধারিত বেতন<b id="monthly">৳০</b></div>
 </div>
@@ -400,6 +400,9 @@ function dueFor(s,upto=currentMonth){
 function scheduledFeeForMonth(students,month){
  return (students||[]).filter(s=>validMonth(s.start)&&s.start<=month).reduce((sum,s)=>sum+Number(s.fee||0),0);
 }
+function totalPaidAllTime(payments){
+ return (payments||[]).reduce((sum,p)=>sum+Number(p.amount||0),0);
+}
 function addStudent(){
  const name=$("name").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
  if(!name||!Number.isFinite(fee)||fee<=0||!validMonth(start)){alert("নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন।");return;}
@@ -448,7 +451,7 @@ function removeStudent(id){
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
- const totalPaid=data.payments.filter(p=>String(p.month||"")===currentMonth).reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
+ const totalPaid=totalPaidAllTime(data.payments),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
  $("count").textContent=data.students.length.toLocaleString(numberLocale());$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(scheduledFeeForMonth(data.students,currentMonth));
  $("students").innerHTML=data.students.length?data.students.map(s=>`
  <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
