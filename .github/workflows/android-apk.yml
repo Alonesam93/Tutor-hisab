@@ -83,6 +83,7 @@ jobs:
           assert(java.includes('webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")') && gradle.includes('androidx.webkit:webkit:1.18.0'), 'App assets must load through the stable AndroidX WebViewAssetLoader');
           assert(java.includes('startLegacyStorageCapture()') && java.includes('saveLegacyStorage(String json)') && java.includes('markLegacyStorageMigrated()'), 'Existing file-origin local data must be migrated before secure WebView startup');
           assert(html.includes('window.AppMigration.getLegacyStorage') && html.includes('markLegacyStorageMigrated'), 'The app must import existing local data before initializing account storage');
+          assert(html.includes('tutorHisabMigrationNotice') && html.includes('সংরক্ষিত হিসাব দেখতে আবার Sign In করুন।'), 'Users must be told when a one-time sign-in is required after data migration');
           const migrationPage = fs.readFileSync('app/src/main/assets/legacy-storage-migration.html', 'utf8');
           assert(migrationPage.includes('captureLegacyStorage') && migrationPage.includes('key.startsWith("tutorHisab")'), 'Legacy migration must copy only Tutor Hisab data keys');
           console.log('Tutor Hisab UI contract checks passed.');
