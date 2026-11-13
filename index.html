@@ -362,6 +362,19 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 </nav>
 
 <script>
+// One-time migration of existing file:// localStorage into the secure HTTPS app origin.
+try{
+ if(window.AppMigration&&typeof window.AppMigration.getLegacyStorage==="function"){
+  const raw=window.AppMigration.getLegacyStorage();
+  if(raw){
+   const legacyValues=JSON.parse(raw);
+   Object.entries(legacyValues).forEach(([key,value])=>{
+    if(key.startsWith("tutorHisab")&&typeof value==="string"&&localStorage.getItem(key)===null)localStorage.setItem(key,value);
+   });
+  }
+  if(typeof window.AppMigration.markLegacyStorageMigrated==="function")window.AppMigration.markLegacyStorageMigrated();
+ }
+}catch(migrationError){console.error("Tutor Hisab local data migration will retry:",migrationError);}
 let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
 const numberLocale=()=>((localStorage.getItem("tutorHisabLanguage")||"bn")==="bn"?"bn-BD":"en-US");
