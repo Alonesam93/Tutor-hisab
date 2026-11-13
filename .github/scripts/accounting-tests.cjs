@@ -76,6 +76,7 @@ assert.equal(mergedRecords.get("s2").fee, 1800, "Newer cloud record must be pres
 assert.equal(mergedRecords.get("s4").fee, 900, "Local-only record must be retained");
 assert.equal(mergedRecords.has("s3"), false, "Deleted records must remain excluded");
 assert.ok(html.includes("function markChangedRecords()") && html.includes("item.updatedAt=changedAt"), "Edits must carry a local update timestamp for safe multi-device sync");
+assert.ok(html.includes("const paymentIds=new Set()") && html.includes("paymentIds.has(p.id)"), "Backup restore must reject duplicate payment IDs");
 const trackingContext = {
   data: {
     students: [
