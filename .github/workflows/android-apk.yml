@@ -11,6 +11,7 @@ on:
       - fix/white-screen-onboarding
       - fix/account-isolation-profile-cancel
       - fix/ui-navigation-language-branding
+      - fix/back-login-polish-2026-11-13
 
 jobs:
   build:
