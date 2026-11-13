@@ -156,8 +156,15 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 
 <div id="firstRunOverlay" class="onboarding" hidden>
  <div class="onboarding-card login-card">
-  <section id="firstLanguageStep">
-   <h2>Tutor Hisab-এ স্বাগতম</h2><p>ভাষা নির্বাচন করুন</p>
+  <section id="firstNotificationStep">
+   <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
+   <h3 style="text-align:center">নোটিফিকেশন চালু রাখবেন?</h3>
+   <p class="login-subtitle">শিক্ষার্থীর বেতন, পেমেন্ট ও গুরুত্বপূর্ণ আপডেটের সময়মতো খবর পেতে নোটিফিকেশন অনুমতি দিন। চাইলে পরে ফোনের Settings থেকেও এটি পরিবর্তন করতে পারবেন।</p>
+   <button type="button" id="firstNotificationContinue" class="login-primary">চালিয়ে যান</button>
+   <button type="button" id="firstNotificationSkip" class="login-secondary">এখন নয়</button>
+  </section>
+  <section id="firstLanguageStep" hidden>
+   <h2>Tutor Hisab-এ স্বাগতম</h2><p>আপনার পছন্দের ভাষা নির্বাচন করুন</p>
    <button type="button" data-first-language="bn">বাংলা</button>
    <button type="button" data-first-language="en">English</button>
   </section>
@@ -799,6 +806,7 @@ function handleAppBack(){
    if(authMode==="signup"){setAuthMode("signin");return true;}
    $("firstAuthStep").hidden=true;$("firstAccountStep").hidden=false;return true;
   }
+  if(!$("firstLanguageStep").hidden){$("firstLanguageStep").hidden=true;$("firstNotificationStep").hidden=false;return true;}
   if(!$("firstAccountStep").hidden){$("firstAccountStep").hidden=true;$("firstLanguageStep").hidden=false;return true;}
   return false;
  }
@@ -818,6 +826,16 @@ function finishOnboarding(tab){
  $("firstRunOverlay").hidden=true;
  showTab(tab);
 }
+function continueFromNotificationPrompt(){
+ try{if(window.Android&&typeof window.Android.requestNotificationPermission==="function")window.Android.requestNotificationPermission();}catch(e){}
+ $("firstNotificationStep").hidden=true;
+ $("firstLanguageStep").hidden=false;
+}
+$("firstNotificationContinue").addEventListener("click",continueFromNotificationPrompt);
+$("firstNotificationSkip").addEventListener("click",()=>{
+ $("firstNotificationStep").hidden=true;
+ $("firstLanguageStep").hidden=false;
+});
 document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventListener("click",()=>{
  const lang=btn.dataset.firstLanguage;
  localStorage.setItem("tutorHisabLanguage",lang);
@@ -835,7 +853,8 @@ $("togglePassword").addEventListener("click",()=>{const p=$("loginPassword"),con
 setAuthMode("signin");
 if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
  $("firstRunOverlay").hidden=false;
- $("firstLanguageStep").hidden=false;
+ $("firstNotificationStep").hidden=false;
+ $("firstLanguageStep").hidden=true;
  $("firstAccountStep").hidden=true;
 }
 
