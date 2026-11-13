@@ -106,6 +106,11 @@ body{padding-bottom:75px}
 .login-error{min-height:22px;margin:10px 0;color:#b42318;line-height:1.5;text-align:center}.login-footer{line-height:1.8}
 #signupFields{padding:12px 14px 4px;margin:0 0 8px;border:1px solid #e8e1f1;border-radius:14px;background:#ffffffb8}
 #confirmPasswordWrap{margin-top:4px}.login-row input{width:18px;height:18px;accent-color:#51418f}.bottom-nav button{min-height:56px}
+.signup-photo-row{display:flex;align-items:center;gap:14px;padding:4px 0 10px}
+.signup-photo-preview{width:64px;height:64px;flex:none;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#eeeaf8;border:2px solid #ded5ee;font-size:28px}
+.signup-photo-preview img{width:100%;height:100%;object-fit:cover}
+.signup-photo-control{flex:1;min-width:0}.signup-photo-control .login-label{margin-top:0}
+.signup-photo-control .login-input{min-height:42px;padding:8px;font-size:13px}
 @media(max-height:700px){.onboarding-card{justify-content:flex-start}.login-brand{margin-bottom:12px}.login-subtitle{margin-bottom:10px}.login-label{margin-top:8px}.login-input{min-height:46px;padding:11px 13px}}
 
 /* Tutor Hisab Professional Design System */
@@ -180,6 +185,10 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
    <h3 id="authHeading" style="text-align:center;color:#32245f;margin-bottom:5px">লগইন করুন</h3>
    <p id="authSubtitle" class="login-subtitle">আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন</p>
    <div id="signupFields" hidden>
+    <div class="signup-photo-row">
+     <div class="signup-photo-preview"><img id="signupPhotoPreview" alt="প্রোফাইল ছবির প্রিভিউ" hidden><span id="signupPhotoFallback">👤</span></div>
+     <div class="signup-photo-control"><label class="login-label" for="signupPhotoInput">প্রোফাইল ছবি (ঐচ্ছিক)</label><input class="login-input" id="signupPhotoInput" type="file" accept="image/*"></div>
+    </div>
     <label class="login-label" for="signupName">আপনার নাম</label>
     <input class="login-input" id="signupName" type="text" autocomplete="name" placeholder="আপনার পূর্ণ নাম">
     <label class="login-label" for="signupMobile">মোবাইল নম্বর (ঐচ্ছিক)</label>
@@ -620,7 +629,7 @@ showTab("home",false);
 
 const firebaseConfig={apiKey:"AIzaSyCafBcI740GbEfMOIbR8dWhNpaypH-Z8Vw",authDomain:"tutor-hisab.firebaseapp.com",projectId:"tutor-hisab",storageBucket:"tutor-hisab.firebasestorage.app",messagingSenderId:"910571768792",appId:"1:910571768792:web:5e01f9a066b3d40ec600ad"};
 window.__tutorHisabSignedIn=false;
-let auth=null,db=null,currentUser=null,profilePhotoData="",savedProfileData={};
+let auth=null,db=null,currentUser=null,profilePhotoData="",signupPhotoData="",savedProfileData={};
 try{if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn("Auth persistence:",e));}}catch(e){console.error(e);}
 function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
 function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
@@ -629,7 +638,9 @@ function setProfilePhoto(data){profilePhotoData=data||"";const img=$("profileAva
 function updateProfileView(){const p=profileValues(),lang=localStorage.getItem("tutorHisabLanguage")||"bn";$("profileDisplayName").textContent=p.name||(lang==="bn"?"আমার প্রোফাইল":"My Profile");$("profileDisplayEmail").textContent=currentUser?.email||"";$("profileViewName").textContent=p.name||"—";$("profileViewMobile").textContent=p.mobile||"—";$("profileViewInstitution").textContent=p.institution||"—";$("profileViewDesignation").textContent=p.designation||"—";setProfilePhoto(profilePhotoData);}
 function editProfile(){$("profileView").hidden=true;$("profileEditForm").hidden=false;$("profileEditBtn").hidden=true;}
 function cancelProfileEdit(){if(window.__tutorHisabProfileSetupRequired){alert("অ্যাকাউন্ট চালু করতে আপনার নাম লিখে প্রোফাইল সংরক্ষণ করুন।");$("profileName").focus();return;}$("profileName").value=savedProfileData.name||"";$("profileMobile").value=savedProfileData.mobile||"";$("profileInstitution").value=savedProfileData.institution||"";$("profileDesignation").value=savedProfileData.designation||"";setProfilePhoto(savedProfileData.photoData||"");$("profilePhotoInput").value="";$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();}
-function handleProfilePhoto(event){const file=event.target.files&&event.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");return;}if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");return;}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);setProfilePhoto(canvas.toDataURL("image/jpeg",.72));};img.src=reader.result;};reader.readAsDataURL(file);}
+function compressProfileImage(file,onReady){if(!file)return;if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");return;}if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");return;}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext("2d");if(!ctx){alert("ছবিটি প্রস্তুত করা যায়নি।");return;}ctx.drawImage(img,0,0,canvas.width,canvas.height);onReady(canvas.toDataURL("image/jpeg",.72));};img.onerror=()=>alert("ছবিটি খোলা যায়নি। অন্য ছবি নির্বাচন করুন।");img.src=reader.result;};reader.onerror=()=>alert("ছবিটি পড়া যায়নি। আবার চেষ্টা করুন।");reader.readAsDataURL(file);}
+function handleProfilePhoto(event){const file=event.target.files&&event.target.files[0];compressProfileImage(file,data=>setProfilePhoto(data));}
+function handleSignupPhoto(event){const file=event.target.files&&event.target.files[0];compressProfileImage(file,data=>{signupPhotoData=data;$("signupPhotoPreview").src=data;$("signupPhotoPreview").hidden=false;$("signupPhotoFallback").hidden=true;});}
 function loginValues(){return{email:$("loginEmail").value.trim(),password:$("loginPassword").value};}
 function showLoginError(message,success=false){const box=$("loginError");box.textContent=message||"";box.style.color=success?"#18794e":"#b42318";}
 let authMode="signin";
@@ -651,7 +662,7 @@ async function emailSignIn(){
  try{
   await auth.setPersistence($("rememberMe").checked?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION);
   if(authMode==="signup"){
-   const profile={name:$("signupName").value.trim(),mobile:$("signupMobile").value.trim(),institution:$("signupInstitution").value.trim(),designation:$("signupDesignation").value.trim(),photoData:"",email};
+   const profile={name:$("signupName").value.trim(),mobile:$("signupMobile").value.trim(),institution:$("signupInstitution").value.trim(),designation:$("signupDesignation").value.trim(),photoData:signupPhotoData,email};
    const credential=await auth.createUserWithEmailAndPassword(email,password);
    localStorage.setItem("tutorHisabProfile_"+credential.user.uid,JSON.stringify(profile));
    try{await db.collection("users").doc(credential.user.uid).set({email:credential.user.email,profile,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});localStorage.removeItem("tutorHisabProfilePendingSync_"+credential.user.uid);}
@@ -854,6 +865,7 @@ $("firstOpenAccount").addEventListener("click",()=>{ $("firstAccountStep").hidde
 $("loginSignIn").addEventListener("click",emailSignIn);
 ["loginEmail","loginPassword","confirmPassword","signupName","signupMobile","signupInstitution","signupDesignation"].forEach(id=>{const field=$(id);if(field)field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();emailSignIn();}});});
 $("profilePhotoInput").addEventListener("change",handleProfilePhoto);
+$("signupPhotoInput").addEventListener("change",handleSignupPhoto);
 $("loginSignUp").addEventListener("click",e=>{e.preventDefault();if(authBusy)return;setAuthMode(authMode==="signin"?"signup":"signin");});
 $("forgotPassword").addEventListener("click",e=>{e.preventDefault();resetLoginPassword();});
 $("togglePassword").addEventListener("click",()=>{const p=$("loginPassword"),confirm=$("confirmPassword"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",visible=p.type==="password";p.type=visible?"text":"password";confirm.type=visible?"text":"password";$("togglePassword").textContent=visible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password");});
