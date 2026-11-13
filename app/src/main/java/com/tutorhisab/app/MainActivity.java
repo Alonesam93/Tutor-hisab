@@ -14,6 +14,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.window.OnBackInvokedCallback;
@@ -153,9 +154,36 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+        settings.setAllowFileAccessFromFileURLs(false);
+        settings.setAllowUniversalAccessFromFileURLs(false);
         webView.addJavascriptInterface(new BackupBridge(), "Android");
         webView.addJavascriptInterface(new ShareBridge(), "Share");
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            private boolean handleNavigation(Uri uri) {
+                if (uri == null) return true;
+                if ("file".equals(uri.getScheme()) && uri.getPath() != null
+                        && uri.getPath().startsWith("/android_asset/")) return false;
+                if ("https".equals(uri.getScheme()) || "http".equals(uri.getScheme())) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "লিংকটি খোলা যায়নি।", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                // Never load remote or unknown pages inside the WebView that exposes native bridges.
+                return true;
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return handleNavigation(request.getUrl());
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleNavigation(Uri.parse(url));
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
