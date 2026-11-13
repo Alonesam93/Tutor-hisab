@@ -15,7 +15,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
-import android.webkit.ValueCallback;\nimport android.window.OnBackInvokedCallback;\nimport android.window.OnBackInvokedDispatcher;
+import android.webkit.ValueCallback;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 import android.graphics.Color;
 import android.widget.Toast;
 import java.io.File;
@@ -26,7 +28,8 @@ import java.io.IOException;
 public class MainActivity extends Activity {
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
-    private static final int FILE_CHOOSER_REQUEST = 1001;\n    private OnBackInvokedCallback backInvokedCallback;
+    private static final int FILE_CHOOSER_REQUEST = 1001;
+    private OnBackInvokedCallback backInvokedCallback;
 
     public class ShareBridge {
         @JavascriptInterface
@@ -126,7 +129,12 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        setContentView(webView);\n        if (Build.VERSION.SDK_INT >= 33) {\n            backInvokedCallback = this::dispatchBackAction;\n            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(\n                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, backInvokedCallback);\n        }
+        setContentView(webView);
+        if (Build.VERSION.SDK_INT >= 33) {
+            backInvokedCallback = this::dispatchBackAction;
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, backInvokedCallback);
+        }
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
