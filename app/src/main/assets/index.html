@@ -679,7 +679,7 @@ function handleAppBack(){
    $("firstAuthStep").hidden=true;$("firstAccountStep").hidden=false;return true;
   }
   if(!$("firstAccountStep").hidden){$("firstAccountStep").hidden=true;$("firstLanguageStep").hidden=false;return true;}
-  return true;
+  return false;
  }
  if(typeof editingStudentId!=="undefined"&&editingStudentId!==null){cancelStudentEdit();return true;}
  if(typeof editingPaymentId!=="undefined"&&editingPaymentId!==null){cancelPaymentEdit();return true;}
