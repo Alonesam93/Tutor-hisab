@@ -85,6 +85,16 @@ public class MainActivity extends Activity {
 
     public class BackupBridge {
         @JavascriptInterface
+        public void requestNotificationPermission() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 33
+                        && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void onSafeAdOpportunity() {
             runOnUiThread(() -> showInterstitialAtSafePoint());
         }
@@ -186,10 +196,6 @@ public class MainActivity extends Activity {
             backInvokedCallback = this::dispatchBackAction;
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, backInvokedCallback);
-        }
-        if (Build.VERSION.SDK_INT >= 33
-                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
         }
         if (savedInstanceState == null) {
             webView.loadUrl("file:///android_asset/index.html");
