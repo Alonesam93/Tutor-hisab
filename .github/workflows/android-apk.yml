@@ -78,8 +78,9 @@ jobs:
           assert(gradle.includes('versionCode 4') && gradle.includes("versionName '1.2.1'"), 'Android update version must increase for installation over previous builds');
           assert(java.includes('public void requestNotificationPermission()'), 'Native notification permission bridge missing');
           assert(!/if\s*\(Build\.VERSION\.SDK_INT\s*>=\s*33[\s\S]{0,220}requestPermissions\(/.test(java.slice(java.indexOf('protected void onCreate'), java.indexOf('private void scheduleNextInterstitialWindow'))), 'Notification permission must not be requested immediately during app startup');
-          assert(java.includes('shouldOverrideUrlLoading(WebView view, WebResourceRequest request)') && java.includes('startsWith("/android_asset/")'), 'WebView must keep only packaged app pages inside the native bridge');
-          assert(java.includes('setAllowUniversalAccessFromFileURLs(false)') && java.includes('setAllowFileAccessFromFileURLs(false)'), 'WebView file-origin access must be restricted');
+          assert(java.includes('shouldOverrideUrlLoading(WebView view, WebResourceRequest request)') && java.includes('appassets.androidplatform.net') && java.includes('startsWith("/assets/")'), 'WebView must keep only packaged HTTPS app assets inside the native bridge');
+          assert(java.includes('WebViewAssetLoader') && java.includes('setAllowFileAccess(false)') && java.includes('setAllowUniversalAccessFromFileURLs(false)') && java.includes('setAllowFileAccessFromFileURLs(false)'), 'WebView local file access must be restricted');
+          assert(java.includes('webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")') && gradle.includes('androidx.webkit:webkit:1.18.0'), 'App assets must load through the stable AndroidX WebViewAssetLoader');
           console.log('Tutor Hisab UI contract checks passed.');
           NODE
 
