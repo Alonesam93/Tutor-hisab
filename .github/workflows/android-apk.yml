@@ -72,6 +72,8 @@ jobs:
           const java = fs.readFileSync('app/src/main/java/com/tutorhisab/app/MainActivity.java', 'utf8');
           assert(java.includes('public void requestNotificationPermission()'), 'Native notification permission bridge missing');
           assert(!/if\s*\(Build\.VERSION\.SDK_INT\s*>=\s*33[\s\S]{0,220}requestPermissions\(/.test(java.slice(java.indexOf('protected void onCreate'), java.indexOf('private void scheduleNextInterstitialWindow'))), 'Notification permission must not be requested immediately during app startup');
+          assert(java.includes('shouldOverrideUrlLoading(WebView view, WebResourceRequest request)') && java.includes('startsWith("/android_asset/")'), 'WebView must keep only packaged app pages inside the native bridge');
+          assert(java.includes('setAllowUniversalAccessFromFileURLs(false)') && java.includes('setAllowFileAccessFromFileURLs(false)'), 'WebView file-origin access must be restricted');
           console.log('Tutor Hisab UI contract checks passed.');
           NODE
 
