@@ -31,6 +31,7 @@ vm.runInContext(
     extractFunction("paidFor"),
     extractFunction("dueFor"),
     extractFunction("scheduledFeeForMonth"),
+    extractFunction("totalPaidAllTime"),
     extractFunction("stableRecord"),
     extractFunction("preferLocalRecord"),
     extractFunction("mergeRecordMaps")
@@ -49,6 +50,7 @@ assert.equal(context.paidFor("s1", "2026-03"), 500, "Monthly payment history mus
 assert.equal(context.dueFor(student, "2026-03"), 1800, "Due must include opening balance and fees through selected month");
 assert.equal(context.dueFor(student, "2026-04"), 2100, "Payments after the cutoff must be excluded from earlier due");
 assert.equal(context.scheduledFeeForMonth([{ fee: 1000, start: "2026-01" }, { fee: 500, start: "2026-04" }], "2026-03"), 1000, "Students whose fee start month is in the future must not inflate this month's scheduled tuition");
+assert.equal(context.totalPaidAllTime([{ amount: 1000, month: "2026-01" }, { amount: 500, month: "2026-03" }]), 1500, "Homepage total deposits must include all payment months");
 context.data.payments.push({ id: "p5", studentId: "s1", amount: 10000, month: "2026-05" });
 assert.equal(context.dueFor(student, "2026-05"), 0, "Due must never become negative");
 assert.equal(context.dueFor({ id: "s2", fee: 800, start: "2026-03", opening: 0 }, "2026-03"), 550, "Each student's payments must remain isolated");
