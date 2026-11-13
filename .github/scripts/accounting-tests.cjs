@@ -64,6 +64,29 @@ assert.equal(mergedRecords.get("s2").fee, 1800, "Newer cloud record must be pres
 assert.equal(mergedRecords.get("s4").fee, 900, "Local-only record must be retained");
 assert.equal(mergedRecords.has("s3"), false, "Deleted records must remain excluded");
 assert.ok(html.includes("function markChangedRecords()") && html.includes("item.updatedAt=changedAt"), "Edits must carry a local update timestamp for safe multi-device sync");
+const trackingContext = {
+  data: {
+    students: [
+      { id: "s1", fee: 1200, updatedAt: 100 },
+      { id: "s2", fee: 800 }
+    ],
+    payments: [{ id: "p1", amount: 150, updatedAt: 100 }]
+  },
+  STORAGE_KEY: "account-data",
+  localStorage: {
+    getItem: () => JSON.stringify({
+      students: [{ id: "s1", fee: 1000, updatedAt: 100 }],
+      payments: [{ id: "p1", amount: 100, updatedAt: 100 }]
+    })
+  },
+  Date: { now: () => 999 }
+};
+vm.createContext(trackingContext);
+vm.runInContext([extractFunction("recordContent"), extractFunction("markChangedRecords")].join("\\n"), trackingContext);
+trackingContext.markChangedRecords();
+assert.equal(trackingContext.data.students[0].updatedAt, 999, "Edited student must receive a new update timestamp");
+assert.equal(trackingContext.data.students[1].updatedAt, 999, "New student must receive an update timestamp");
+assert.equal(trackingContext.data.payments[0].updatedAt, 999, "Edited payment must receive a new update timestamp");
 
 const firestoreRules = fs.readFileSync("firestore.rules", "utf8");
 assert.match(firestoreRules, /match \/users\/\{userId\}/, "User-scoped Firestore rule is required");
