@@ -66,6 +66,12 @@ jobs:
           assert(html.includes('onclick="backup()"') && html.includes('id="restoreFile"'), 'Backup/restore must remain in Settings');
           assert(html.includes('id="loginEmail"') && html.includes('id="loginPassword"') && html.includes('id="confirmPassword"'), 'Email/password authentication fields missing');
           assert(html.includes('prefers-reduced-motion') && html.includes('min-height:48px'), 'Accessibility sizing or reduced-motion support missing');
+          assert(html.includes('id="firstNotificationStep"') && html.indexOf('id="firstNotificationStep"') < html.indexOf('id="firstLanguageStep"'), 'First-run notification explanation must appear before language selection');
+          assert(html.includes('id="firstNotificationContinue"') && html.includes('id="firstNotificationSkip"'), 'Notification permission needs clear continue and skip actions');
+          assert(html.includes('requestNotificationPermission') && html.includes('autocomplete="current-password"') && html.includes('autocomplete="new-password"'), 'Permission bridge or password-manager-friendly auth fields missing');
+          const java = fs.readFileSync('app/src/main/java/com/tutorhisab/app/MainActivity.java', 'utf8');
+          assert(java.includes('public void requestNotificationPermission()'), 'Native notification permission bridge missing');
+          assert(!/if\s*\(Build\.VERSION\.SDK_INT\s*>=\s*33[\s\S]{0,220}requestPermissions\(/.test(java.slice(java.indexOf('protected void onCreate'), java.indexOf('private void scheduleNextInterstitialWindow'))), 'Notification permission must not be requested immediately during app startup');
           console.log('Tutor Hisab UI contract checks passed.');
           NODE
 
