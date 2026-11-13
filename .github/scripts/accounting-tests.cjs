@@ -48,13 +48,9 @@ assert.equal(context.dueFor({ id: "s2", fee: 800, start: "2026-03", opening: 0 }
 
 const firestoreRules = fs.readFileSync("firestore.rules", "utf8");
 assert.match(firestoreRules, /match \/users\/\{userId\}/, "User-scoped Firestore rule is required");
-for (const collection of ["students", "payments"]) {
-  assert.match(
-    firestoreRules,
-    new RegExp("match \\/" + collection + "\\/\\{[^}]+\\}[\\s\\S]*?request\\.auth\\.uid\\s*==\\s*userId"),
-    "Firestore " + collection + " must be restricted to the signed-in user's UID"
-  );
-}
+assert.match(firestoreRules, /function isOwner\\(userId\\)[\\s\\S]*request\\.auth\\.uid\\s*==\\s*userId/, "Firestore owner check must compare the signed-in UID");
+assert.match(firestoreRules, /match \\/students\\/\\{studentId\\}[\\s\\S]*allow create, update: if isOwner\\(userId\\)[\\s\\S]*deletedStudentIds/, "Student writes must be owner-only and reject tombstoned IDs");
+assert.match(firestoreRules, /match \\/payments\\/\\{paymentId\\}[\\s\\S]*allow create, update: if isOwner\\(userId\\)[\\s\\S]*deletedPaymentIds[\\s\\S]*deletedStudentIds/, "Payment writes must be owner-only and reject tombstoned IDs");
 assert.doesNotMatch(firestoreRules, /allow\s+(read|write|read,\s*write)\s*:\s*if\s+true/, "Public Firestore access is forbidden");
 assert.ok(firestoreRules.includes("deletedStudentIds") && firestoreRules.includes("deletedPaymentIds"), "Firestore must block writes to tombstoned records");
 assert.ok(html.includes("cloud.deletedStudentIds") && html.includes("cloud.deletedPaymentIds"), "Cloud sync must import deletion tombstones from the account document");
