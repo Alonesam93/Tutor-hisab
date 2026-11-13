@@ -268,13 +268,13 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 </section>
 <section id="notificationScreen" class="tab-screen" hidden>
  <div class="page-intro"><span class="eyebrow">UPDATES & REMINDERS</span><h2>🔔 নোটিফিকেশন</h2><p>বকেয়া, সাম্প্রতিক জমা ও সেবার আপডেট</p></div>
- <div class="card"><h3>সাম্প্রতিক আপডেট</h3><div id="notificationList"></div></div>
+ <div class="card"><h3>সাম্প্রতিক আপডেট</h3><div id="notificationList" aria-live="polite" aria-atomic="false"></div></div>
  <div class="card"><h3>সেবা ও সাবস্ক্রিপশন স্ট্যাটাস</h3>
   <div class="store-product"><div class="store-product-icon">💬</div><div class="store-product-info"><b>SMS Packages</b><p>এসএমএস রিমাইন্ডার সুবিধা</p></div><span class="store-soon">Coming Soon</span></div>
   <div class="store-product"><div class="store-product-icon">⭐</div><div class="store-product-info"><b>Pro</b><p>প্রো সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
   <div class="store-product"><div class="store-product-icon">👑</div><div class="store-product-info"><b>Elite</b><p>এলিট সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
  </div>
- <div class="card"><h3>অ্যাপ আপডেট</h3><p>নতুন সংস্করণ প্রকাশ হলে এখানে জানানো হবে।</p></div>
+ <div class="card" id="appUpdatesNotice" role="status" aria-live="polite"><h3>অ্যাপ আপডেট</h3><p>নতুন সংস্করণ প্রকাশ হলে এখানে জানানো হবে।</p></div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
  <div class="profile-head">
