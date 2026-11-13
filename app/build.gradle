@@ -18,4 +18,5 @@ android {
 
 dependencies {
     implementation 'com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0'
+    implementation 'androidx.webkit:webkit:1.18.0'
 }
