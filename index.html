@@ -397,6 +397,9 @@ function dueFor(s,upto=currentMonth){
  const paid=data.payments.filter(p=>p.studentId===s.id&&validMonth(p.month)&&p.month<=upto).reduce((v,p)=>v+Number(p.amount||0),0);
  return Math.max(0,accrued-paid);
 }
+function scheduledFeeForMonth(students,month){
+ return (students||[]).filter(s=>validMonth(s.start)&&s.start<=month).reduce((sum,s)=>sum+Number(s.fee||0),0);
+}
 function addStudent(){
  const name=$("name").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
  if(!name||!Number.isFinite(fee)||fee<=0||!validMonth(start)){alert("নাম, সঠিক মাসিক বেতন ও শুরুর মাস লিখুন।");return;}
@@ -446,7 +449,7 @@ function removeStudent(id){
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
  const totalPaid=data.payments.filter(p=>String(p.month||"")===currentMonth).reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
- $("count").textContent=data.students.length.toLocaleString(numberLocale());$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
+ $("count").textContent=data.students.length.toLocaleString(numberLocale());$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(scheduledFeeForMonth(data.students,currentMonth));
  $("students").innerHTML=data.students.length?data.students.map(s=>`
  <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
  <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div><div>মাসিক বেতন: ${money(s.fee)}</div><div>মোট জমা: ${money(paidFor(s.id))}</div>
