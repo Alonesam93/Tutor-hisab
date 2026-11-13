@@ -20,6 +20,7 @@ import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 import android.graphics.Color;
 import android.widget.Toast;
+import android.view.View;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -92,8 +93,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(Color.rgb(81, 65, 143));
-        getWindow().setNavigationBarColor(Color.rgb(50, 36, 95));
+        getWindow().setStatusBarColor(Color.rgb(41, 36, 79));
+        getWindow().setNavigationBarColor(Color.rgb(245, 246, 251));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        }
         webView = new WebView(this);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
