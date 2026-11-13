@@ -9,12 +9,14 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.window.OnBackInvokedCallback;
@@ -51,6 +53,8 @@ import java.io.IOException;
 public class MainActivity extends Activity {
     private WebView webView;
     private WebViewAssetLoader assetLoader;
+    private WebView legacyWebView;
+    private SharedPreferences migrationPreferences;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
@@ -151,6 +155,7 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         }
+        migrationPreferences = getSharedPreferences("tutor_hisab_webview_migration", MODE_PRIVATE);
         webView = new WebView(this);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -167,6 +172,7 @@ public class MainActivity extends Activity {
         settings.setAllowUniversalAccessFromFileURLs(false);
         webView.addJavascriptInterface(new BackupBridge(), "Android");
         webView.addJavascriptInterface(new ShareBridge(), "Share");
+        webView.addJavascriptInterface(new MigrationBridge(), "AppMigration");
         webView.setWebViewClient(new WebViewClientCompat() {
             private boolean isPackagedAsset(Uri uri) {
                 return uri != null
@@ -251,14 +257,72 @@ public class MainActivity extends Activity {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, backInvokedCallback);
         }
-        if (savedInstanceState == null) {
-            webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+        // Copy existing file:// localStorage before switching the app to its secure HTTPS asset origin.
+        if (!migrationPreferences.getBoolean("legacy_storage_captured", false)) {
+            startLegacyStorageCapture();
         } else {
-            webView.restoreState(savedInstanceState);
+            loadSecureApp();
         }
         // Never show an interstitial on launch; wait 5-10 minutes and a safe Store navigation.
         scheduleNextInterstitialWindow();
         initializeAds();
+    }
+
+    private void startLegacyStorageCapture() {
+        legacyWebView = new WebView(this);
+        WebSettings legacySettings = legacyWebView.getSettings();
+        legacySettings.setJavaScriptEnabled(true);
+        legacySettings.setDomStorageEnabled(true);
+        legacySettings.setAllowFileAccess(true);
+        legacyWebView.addJavascriptInterface(new MigrationBridge(), "MigrationBridge");
+        legacyWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                if (url != null && url.startsWith("file:///android_asset/legacy-storage-migration.html")) {
+                    view.evaluateJavascript("captureLegacyStorage()", null);
+                }
+            }
+        });
+        legacyWebView.loadUrl("file:///android_asset/legacy-storage-migration.html");
+    }
+
+    private void loadSecureApp() {
+        runOnUiThread(() -> {
+            if (legacyWebView != null) {
+                legacyWebView.stopLoading();
+                legacyWebView.destroy();
+                legacyWebView = null;
+            }
+            if (webView != null) {
+                webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+            }
+        });
+    }
+
+    private class MigrationBridge {
+        @JavascriptInterface
+        public void saveLegacyStorage(String json) {
+            if (json == null) return;
+            if (migrationPreferences.getBoolean("legacy_storage_captured", false)) return;
+            migrationPreferences.edit()
+                    .putString("legacy_storage", json)
+                    .putBoolean("legacy_storage_captured", true)
+                    .apply();
+            loadSecureApp();
+        }
+
+        @JavascriptInterface
+        public String getLegacyStorage() {
+            return migrationPreferences.getString("legacy_storage", "{}");
+        }
+
+        @JavascriptInterface
+        public void markLegacyStorageMigrated() {
+            migrationPreferences.edit()
+                    .putBoolean("legacy_storage_migrated", true)
+                    .remove("legacy_storage")
+                    .apply();
+        }
     }
 
     private void scheduleNextInterstitialWindow() {
@@ -388,6 +452,11 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (legacyWebView != null) {
+            legacyWebView.stopLoading();
+            legacyWebView.destroy();
+            legacyWebView = null;
+        }
         if (Build.VERSION.SDK_INT >= 33 && backInvokedCallback != null) {
             getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backInvokedCallback);
         }
