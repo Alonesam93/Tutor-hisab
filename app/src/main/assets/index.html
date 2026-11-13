@@ -257,9 +257,24 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 
 </main>
 
-<section id="storeScreen" class="tab-screen" hidden><div class="coming-soon-screen"><div class="coming-soon-mark">✦</div><h2>Coming Soon</h2><p>নতুন সুবিধা খুব শীঘ্রই আসছে</p></div></section>
+<section id="storeScreen" class="tab-screen" hidden>
+ <div class="page-intro"><span class="eyebrow">STORE & PLANS</span><h2>🛍️ My Store</h2><p>শিক্ষকদের জন্য অতিরিক্ত সুবিধা ও সাবস্ক্রিপশন</p></div>
+ <div class="card">
+  <div class="store-product"><div class="store-product-icon">💬</div><div class="store-product-info"><b>SMS Packages</b><p>শিক্ষার্থীদের বেতন রিমাইন্ডার পাঠানোর জন্য এসএমএস ক্রেডিট</p></div><span class="store-soon">Coming Soon</span></div>
+  <div class="store-product"><div class="store-product-icon">⭐</div><div class="store-product-info"><b>Pro</b><p>উন্নত হিসাব ও অতিরিক্ত সুবিধার সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
+  <div class="store-product"><div class="store-product-icon">👑</div><div class="store-product-info"><b>Elite</b><p>প্রিমিয়াম সুবিধা ও উন্নত ব্যবস্থাপনার সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
+ </div>
+ <p class="store-note">এসএমএস ও প্রিমিয়াম সুবিধা চালু হলে এই পেজ থেকেই বিস্তারিত দেখা যাবে।</p>
+</section>
 <section id="notificationScreen" class="tab-screen" hidden>
- <div class="page-intro"><span class="eyebrow">UPDATES & REMINDERS</span><h2>🔔 নোটিফিকেশন</h2><p>বকেয়া ও সাম্প্রতিক জমার আপডেট</p></div><div class="card"><h3>সাম্প্রতিক আপডেট</h3><div id="notificationList"></div></div>
+ <div class="page-intro"><span class="eyebrow">UPDATES & REMINDERS</span><h2>🔔 নোটিফিকেশন</h2><p>বকেয়া, সাম্প্রতিক জমা ও সেবার আপডেট</p></div>
+ <div class="card"><h3>সাম্প্রতিক আপডেট</h3><div id="notificationList"></div></div>
+ <div class="card"><h3>সেবা ও সাবস্ক্রিপশন স্ট্যাটাস</h3>
+  <div class="store-product"><div class="store-product-icon">💬</div><div class="store-product-info"><b>SMS Packages</b><p>এসএমএস রিমাইন্ডার সুবিধা</p></div><span class="store-soon">Coming Soon</span></div>
+  <div class="store-product"><div class="store-product-icon">⭐</div><div class="store-product-info"><b>Pro</b><p>প্রো সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
+  <div class="store-product"><div class="store-product-icon">👑</div><div class="store-product-info"><b>Elite</b><p>এলিট সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
+ </div>
+ <div class="card"><h3>অ্যাপ আপডেট</h3><p>নতুন সংস্করণ প্রকাশ হলে এখানে জানানো হবে।</p></div>
 </section>
 <section id="profileScreen" class="tab-screen" hidden><div class="card">
  <div class="profile-head">
@@ -484,7 +499,7 @@ const translations={
 "👨‍🎓 শিক্ষার্থীদের তালিকা":"👨‍🎓 Student List","এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।":"No students added yet.",
 "📊 মাসিক রিপোর্ট":"📊 Monthly Report","রিপোর্ট দেখুন":"View Report","এই মাসে জমা:":"Paid this month:","এই মাস পর্যন্ত মোট বকেয়া:":"Total due through this month:",
 "💾 ব্যাকআপ ও রিস্টোর":"💾 Backup & Restore","ব্যাকআপ ডাউনলোড করুন":"Download Backup","ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন":"Restore data from backup file","ব্যাকআপ রিস্টোর করুন":"Restore Backup",
-"🛍️ My Store":"🛍️ My Store","SMS Packages":"SMS Packages","Coming Soon":"Coming Soon","🔔 Notification":"🔔 Notification","এখনো কোনো নোটিফিকেশন নেই।":"No notifications yet.",
+"🛍️ My Store":"🛍️ My Store","SMS Packages":"SMS Packages","Coming Soon":"Coming Soon","নতুন সুবিধা খুব শীঘ্রই আসছে":"New features are coming soon","শিক্ষকদের জন্য অতিরিক্ত সুবিধা ও সাবস্ক্রিপশন":"Extra tools and subscriptions for teachers","শিক্ষার্থীদের বেতন রিমাইন্ডার পাঠানোর জন্য এসএমএস ক্রেডিট":"SMS credits for sending tuition reminders to students","উন্নত হিসাব ও অতিরিক্ত সুবিধার সাবস্ক্রিপশন":"Subscription for advanced accounting and extra features","প্রিমিয়াম সুবিধা ও উন্নত ব্যবস্থাপনার সাবস্ক্রিপশন":"Subscription for premium benefits and enhanced management","এসএমএস ও প্রিমিয়াম সুবিধা চালু হলে এই পেজ থেকেই বিস্তারিত দেখা যাবে।":"Details will be available here when SMS and premium features launch.","বকেয়া, সাম্প্রতিক জমা ও সেবার আপডেট":"Due reminders, recent payments and service updates","সেবা ও সাবস্ক্রিপশন স্ট্যাটাস":"Service and subscription status","এসএমএস রিমাইন্ডার সুবিধা":"SMS reminder service","প্রো সাবস্ক্রিপশন":"Pro subscription","এলিট সাবস্ক্রিপশন":"Elite subscription","অ্যাপ আপডেট":"App updates","নতুন সংস্করণ প্রকাশ হলে এখানে জানানো হবে।":"New version announcements will appear here.","🔔 Notification":"🔔 Notification","এখনো কোনো নোটিফিকেশন নেই।":"No notifications yet.",
 "পেমেন্ট রিমাইন্ডার ও অ্যাপ আপডেটের নোটিফিকেশন পরবর্তী ধাপে যুক্ত হবে。":"Payment reminders and app update notifications will be added in a later update.",
 "👤 My Profile":"👤 My Profile","প্রোফাইল ও অ্যাকাউন্ট ব্যবস্থাপনা Login/Signup যুক্ত হওয়ার পর সক্রিয় হবে।":"Profile and account management will be available after Login/Signup is implemented.",
 "⚙️ Settings":"⚙️ Settings","💾 Save Your Progress":"💾 Save Your Progress","Language":"Language","Guideline":"Guideline",
