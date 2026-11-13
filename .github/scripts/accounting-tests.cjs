@@ -95,6 +95,7 @@ assert.match(firestoreRules, /match \/students\/\{studentId\}[\s\S]*allow create
 assert.match(firestoreRules, /match \/payments\/\{paymentId\}[\s\S]*allow create, update: if isOwner\(userId\)[\s\S]*deletedPaymentIds[\s\S]*deletedStudentIds/, "Payment writes must be owner-only and reject tombstoned IDs");
 assert.doesNotMatch(firestoreRules, /allow\s+(read|write|read,\s*write)\s*:\s*if\s+true/, "Public Firestore access is forbidden");
 assert.ok(firestoreRules.includes("deletedStudentIds") && firestoreRules.includes("deletedPaymentIds"), "Firestore must block writes to tombstoned records");
+assert.ok(firestoreRules.includes("existsAfter(") && firestoreRules.includes("request.resource.data.amount > 0") && firestoreRules.includes("request.resource.data.fee > 0"), "Firestore must validate payment references and positive accounting amounts");
 assert.ok(html.includes("cloud.deletedStudentIds") && html.includes("cloud.deletedPaymentIds"), "Cloud sync must import deletion tombstones from the account document");
 assert.ok(html.includes("local.replaceCloud===true") && html.includes("FieldValue.arrayUnion(...deletedStudents)"), "Restore must replace cloud data and normal sync must propagate deletion tombstones");
 assert.ok(html.includes("tutorHisabProfilePendingSync_") && html.includes("localStorage.removeItem(pendingProfileKey)"), "Offline profile writes must retry Cloud sync after reconnect");
