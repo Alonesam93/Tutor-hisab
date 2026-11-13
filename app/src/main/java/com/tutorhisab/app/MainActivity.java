@@ -21,6 +21,24 @@ import android.window.OnBackInvokedDispatcher;
 import android.graphics.Color;
 import android.widget.Toast;
 import android.view.View;
+import android.view.Gravity;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.os.SystemClock;
+import java.util.concurrent.ThreadLocalRandom;
+
+import com.google.android.libraries.ads.mobile.sdk.MobileAds;
+import com.google.android.libraries.ads.mobile.sdk.initialization.InitializationConfig;
+import com.google.android.libraries.ads.mobile.sdk.banner.AdSize;
+import com.google.android.libraries.ads.mobile.sdk.banner.AdView;
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAd;
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest;
+import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback;
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError;
+import com.google.android.libraries.ads.mobile.sdk.common.AdRequest;
+import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError;
+import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAd;
+import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAdEventCallback;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -32,6 +50,21 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
     private boolean backDispatchPending = false;
+    private FrameLayout bannerContainer;
+    private AdView bannerAdView;
+    private InterstitialAd interstitialAd;
+    private long nextInterstitialEligibleAt;
+    private boolean adsInitialized = false;
+
+    private static final String APP_ID = BuildConfig.DEBUG
+            ? "ca-app-pub-3940256099942544~3347511713"
+            : "ca-app-pub-7526847355861260~8505766194";
+    private static final String BANNER_ID = BuildConfig.DEBUG
+            ? "ca-app-pub-3940256099942544/9214589741"
+            : "ca-app-pub-7526847355861260/7040429257";
+    private static final String INTERSTITIAL_ID = BuildConfig.DEBUG
+            ? "ca-app-pub-3940256099942544/1033173712"
+            : "ca-app-pub-7526847355861260/9835226943";
 
     public class ShareBridge {
         @JavascriptInterface
@@ -51,6 +84,11 @@ public class MainActivity extends Activity {
     }
 
     public class BackupBridge {
+        @JavascriptInterface
+        public void onSafeAdOpportunity() {
+            runOnUiThread(() -> showInterstitialAtSafePoint());
+        }
+
         @JavascriptInterface
         public void saveBackup(String json) {
             runOnUiThread(() -> {
@@ -134,7 +172,16 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        setContentView(webView);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.addView(webView, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        bannerContainer = new FrameLayout(this);
+        bannerContainer.setBackgroundColor(Color.WHITE);
+        bannerContainer.setVisibility(View.GONE);
+        root.addView(bannerContainer, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        setContentView(root);
         if (Build.VERSION.SDK_INT >= 33) {
             backInvokedCallback = this::dispatchBackAction;
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
@@ -149,6 +196,89 @@ public class MainActivity extends Activity {
         } else {
             webView.restoreState(savedInstanceState);
         }
+        // Never show an interstitial on launch; wait 5-10 minutes and a safe Store navigation.
+        scheduleNextInterstitialWindow();
+        initializeAds();
+    }
+
+    private void scheduleNextInterstitialWindow() {
+        long delay = ThreadLocalRandom.current().nextLong(5L * 60L * 1000L, 10L * 60L * 1000L + 1L);
+        nextInterstitialEligibleAt = SystemClock.elapsedRealtime() + delay;
+    }
+
+    private void initializeAds() {
+        new Thread(() -> {
+            try {
+                MobileAds.initialize(this,
+                        new InitializationConfig.Builder(APP_ID).build(),
+                        status -> runOnUiThread(() -> {
+                            adsInitialized = true;
+                            loadBannerAd();
+                            loadInterstitialAd();
+                        }));
+            } catch (Exception ignored) {
+                // Ads are optional; core app functionality must remain available.
+            }
+        }).start();
+    }
+
+    private void loadBannerAd() {
+        if (!adsInitialized || isFinishing()) return;
+        int widthDp = (int) (getResources().getDisplayMetrics().widthPixels
+                / getResources().getDisplayMetrics().density);
+        AdSize size = AdSize.getLargeAnchoredAdaptiveBannerAdSize(this, widthDp);
+        bannerAdView = new AdView(this);
+        bannerContainer.removeAllViews();
+        bannerContainer.addView(bannerAdView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+        BannerAdRequest request = new BannerAdRequest.Builder(BANNER_ID, size).build();
+        bannerAdView.loadAd(request, new AdLoadCallback<BannerAd>() {
+            @Override
+            public void onAdLoaded(BannerAd ad) {
+                runOnUiThread(() -> {
+                    if (!isFinishing()) bannerContainer.setVisibility(View.VISIBLE);
+                });
+            }
+            @Override
+            public void onAdFailedToLoad(LoadAdError error) {
+                runOnUiThread(() -> bannerContainer.setVisibility(View.GONE));
+            }
+        });
+    }
+
+    private void loadInterstitialAd() {
+        if (!adsInitialized || isFinishing()) return;
+        InterstitialAd.load(new AdRequest.Builder(INTERSTITIAL_ID).build(),
+                new AdLoadCallback<InterstitialAd>() {
+                    @Override
+                    public void onAdLoaded(InterstitialAd ad) {
+                        runOnUiThread(() -> interstitialAd = ad);
+                    }
+                    @Override
+                    public void onAdFailedToLoad(LoadAdError error) {
+                        runOnUiThread(() -> interstitialAd = null);
+                    }
+                });
+    }
+
+    private void showInterstitialAtSafePoint() {
+        if (!adsInitialized || isFinishing()
+                || SystemClock.elapsedRealtime() < nextInterstitialEligibleAt
+                || interstitialAd == null) return;
+        InterstitialAd ad = interstitialAd;
+        interstitialAd = null;
+        ad.setAdEventCallback(new InterstitialAdEventCallback() {
+            @Override
+            public void onAdDismissedFullScreenContent() {
+                runOnUiThread(() -> loadInterstitialAd());
+            }
+            @Override
+            public void onAdFailedToShowFullScreenContent(FullScreenContentError error) {
+                runOnUiThread(() -> loadInterstitialAd());
+            }
+        });
+        scheduleNextInterstitialWindow();
+        ad.show(this);
     }
 
     @Override
@@ -201,6 +331,7 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33 && backInvokedCallback != null) {
             getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backInvokedCallback);
         }
+        if (bannerAdView != null) bannerAdView.destroy();
         super.onDestroy();
     }
 }
