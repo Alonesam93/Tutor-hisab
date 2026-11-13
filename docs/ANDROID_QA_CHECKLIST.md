@@ -8,6 +8,8 @@
 - [ ] Offline profile updates are retried after network recovery
 - [ ] WebView external navigation cannot access the native JavaScript bridges
 - [ ] Root preview and Android asset UI remain identical
+- [ ] Upgrade from the previous file:// build preserves local student, payment, profile and onboarding data
+- [ ] If the prior Firebase session cannot carry over to the HTTPS origin, the user receives a clear one-time sign-in notice
 - [ ] Android versionCode is higher than the previously distributed APK
 - [ ] SMS Packages, Pro and Elite are present and marked Coming Soon
 - [ ] Backup and restore controls remain in Settings
