@@ -103,6 +103,7 @@ assert.ok(html.includes("Number(pendingProfile.updatedAt||0)>=Number(cloudProfil
 assert.ok(html.includes('photoData:signupPhotoData,email,updatedAt:Date.now()') && html.includes('profile={...profileValues(),updatedAt:Date.now()}'), "Profile creation and edits must record update timestamps");
 assert.ok(html.includes('id="firstNotificationStep"') && html.includes('id="firstNotificationContinue"') && html.includes('id="firstNotificationSkip"'), "First-run notification explanation and choices are required");
 assert.ok(html.includes('id="signupPhotoInput"') && html.includes('photoData:signupPhotoData') && html.includes("function compressProfileImage"), "Sign-up must support an optional compressed profile photo");
+assert.ok(html.includes('<details class="signup-extra-details">') && html.includes('id="signupName" type="text" autocomplete="name" required'), "Sign-up must prioritize required identity fields and collapse optional profile details");
 assert.ok(html.includes('id="passwordHint"') && html.includes("কমপক্ষে ৬ অক্ষরের"), "Sign-up password requirements must be clearly explained");
 assert.ok(html.includes('id="authPrivacyNote"') && html.includes("kept separate for each account"), "Authentication screens must explain per-account data separation");
 assert.ok(html.includes('"নোটিফিকেশন চালু রাখবেন?":"Enable notifications?"') && html.includes('"প্রোফাইল ছবি (ঐচ্ছিক)":"Profile photo (optional)"'), "Onboarding and sign-up controls must be translated to English");
