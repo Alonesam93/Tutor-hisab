@@ -46,4 +46,22 @@ context.data.payments.push({ id: "p5", studentId: "s1", amount: 10000, month: "2
 assert.equal(context.dueFor(student, "2026-05"), 0, "Due must never become negative");
 assert.equal(context.dueFor({ id: "s2", fee: 800, start: "2026-03", opening: 0 }, "2026-03"), 550, "Each student's payments must remain isolated");
 
-console.log("Tutor Hisab accounting calculation tests passed.");
+const firestoreRules = fs.readFileSync("firestore.rules", "utf8");
+assert.match(firestoreRules, /match \/users\/\{userId\}/, "User-scoped Firestore rule is required");
+for (const collection of ["students", "payments"]) {
+  assert.match(
+    firestoreRules,
+    new RegExp("match \\/" + collection + "\\/\\{[^}]+\\}[\\s\\S]*?request\\.auth\\.uid\\s*==\\s*userId"),
+    "Firestore " + collection + " must be restricted to the signed-in user's UID"
+  );
+}
+assert.doesNotMatch(firestoreRules, /allow\s+(read|write|read,\s*write)\s*:\s*if\s+true/, "Public Firestore access is forbidden");
+
+const androidJava = fs.readFileSync("app/src/main/java/com/tutorhisab/app/MainActivity.java", "utf8");
+assert.ok(androidJava.includes("BuildConfig.DEBUG"), "Debug and release ad configuration must be separated");
+assert.ok(androidJava.includes("ca-app-pub-3940256099942544/9214589741"), "Debug banner must use Google's test ad unit");
+assert.ok(androidJava.includes("ca-app-pub-3940256099942544/1033173712"), "Debug interstitial must use Google's test ad unit");
+assert.ok(androidJava.includes("onSafeAdOpportunity"), "Interstitials must be requested only through the safe navigation bridge");
+assert.ok(androidJava.includes("nextInterstitialEligibleAt"), "Interstitial frequency guard is required");
+
+console.log("Tutor Hisab accounting, security-rule, and ad-safety tests passed.");
