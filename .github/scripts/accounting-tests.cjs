@@ -76,6 +76,7 @@ assert.ok(html.includes("cloud.deletedStudentIds") && html.includes("cloud.delet
 assert.ok(html.includes("local.replaceCloud===true") && html.includes("FieldValue.arrayUnion(...deletedStudents)"), "Restore must replace cloud data and normal sync must propagate deletion tombstones");
 assert.ok(html.includes("tutorHisabProfilePendingSync_") && html.includes("localStorage.removeItem(pendingProfileKey)"), "Offline profile writes must retry Cloud sync after reconnect");
 assert.ok(html.includes("Number(pendingProfile.updatedAt||0)>=Number(cloudProfile.updatedAt||0)") && html.includes("profilePending?{...(cloud.profile||{}),...profile}"), "Offline profile edits must not be overwritten by an older Cloud profile");
+assert.ok(html.includes('photoData:signupPhotoData,email,updatedAt:Date.now()') && html.includes('profile={...profileValues(),updatedAt:Date.now()}'), "Profile creation and edits must record update timestamps");
 assert.ok(html.includes('id="firstNotificationStep"') && html.includes('id="firstNotificationContinue"') && html.includes('id="firstNotificationSkip"'), "First-run notification explanation and choices are required");
 assert.ok(html.includes('id="signupPhotoInput"') && html.includes('photoData:signupPhotoData') && html.includes("function compressProfileImage"), "Sign-up must support an optional compressed profile photo");
 assert.ok(html.includes('id="passwordHint"') && html.includes("কমপক্ষে ৬ অক্ষরের"), "Sign-up password requirements must be clearly explained");
