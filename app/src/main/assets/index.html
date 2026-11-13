@@ -554,10 +554,15 @@ function restore(){
    const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error("invalid");if(d.accountUid&&currentUser&&d.accountUid!==currentUser.uid)throw Error("wrong account");
    const ids=new Set();
    for(const s of d.students){if(!s||typeof s.id!=="string"||!s.id||ids.has(s.id)||typeof s.name!=="string"||!s.name.trim()||!validMonth(s.start)||!Number.isFinite(Number(s.fee))||Number(s.fee)<=0||!Number.isFinite(Number(s.opening||0))||Number(s.opening||0)<0)throw Error("student");ids.add(s.id);}
-   for(const p of d.payments){const student=d.students.find(s=>s.id===p.studentId);if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date)||p.month<student.start)throw Error("payment");}
+   const paymentIds=new Set();
+   for(const p of d.payments){
+    if(!p||typeof p.id!=="string"||!p.id||paymentIds.has(p.id)||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date))throw Error("payment");
+    const student=d.students.find(s=>s.id===p.studentId);if(!student||p.month<student.start)throw Error("payment");
+    paymentIds.add(p.id);
+   }
    for(const s of d.students){const months=[...new Set(d.payments.filter(p=>p.studentId===s.id).map(p=>p.month))].sort();for(const m of months){const accrued=Number(s.opening||0)+Number(s.fee)*monthsBetween(s.start,m);const paid=d.payments.filter(p=>p.studentId===s.id&&p.month<=m).reduce((sum,p)=>sum+Number(p.amount),0);if(paid>accrued)throw Error("overpaid");}}
    if(!confirm("বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?"))return;
-   data={...d,deletedStudentIds:Array.isArray(d.deletedStudentIds)?d.deletedStudentIds:[],deletedPaymentIds:Array.isArray(d.deletedPaymentIds)?d.deletedPaymentIds:[],replaceCloud:!!currentUser};save();alert("ব্যাকআপ রিস্টোর হয়েছে। Cloud-এ সাইন ইন থাকলে পুরোনো Cloud তথ্যও এই ব্যাকআপ দিয়ে প্রতিস্থাপন হবে।");
+   data={...d,deletedStudentIds:Array.isArray(d.deletedStudentIds)?[...new Set(d.deletedStudentIds.filter(x=>typeof x==="string"))]:[],deletedPaymentIds:Array.isArray(d.deletedPaymentIds)?[...new Set(d.deletedPaymentIds.filter(x=>typeof x==="string"))]:[],replaceCloud:!!currentUser};save();alert("ব্যাকআপ রিস্টোর হয়েছে। Cloud-এ সাইন ইন থাকলে পুরোনো Cloud তথ্যও এই ব্যাকআপ দিয়ে প্রতিস্থাপন হবে।");
   }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
  };reader.readAsText(file);
 }
