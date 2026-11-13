@@ -144,7 +144,6 @@ function addStudent(){
   Object.assign(old,{name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
   cancelStudentEdit();save();alert("শিক্ষার্থীর তথ্য সম্পাদনা করে সংরক্ষণ করা হয়েছে।");return;
  }
- if(data.students.length>=20){alert("সর্বোচ্চ ২০ জন শিক্ষার্থী যোগ করা যাবে।");return;}
  data.students.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString()+"-"+Math.random().toString(36).slice(2),name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
  ["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";save();
 }
