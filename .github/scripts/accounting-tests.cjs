@@ -58,6 +58,7 @@ assert.ok(html.includes("local.replaceCloud===true") && html.includes("FieldValu
 assert.ok(html.includes("tutorHisabProfilePendingSync_") && html.includes("localStorage.removeItem(pendingProfileKey)"), "Offline profile writes must retry Cloud sync after reconnect");
 assert.ok(html.includes('id="firstNotificationStep"') && html.includes('id="firstNotificationContinue"') && html.includes('id="firstNotificationSkip"'), "First-run notification explanation and choices are required");
 assert.ok(html.includes('id="signupPhotoInput"') && html.includes('photoData:signupPhotoData') && html.includes("function compressProfileImage"), "Sign-up must support an optional compressed profile photo");
+assert.ok(html.includes('id="passwordHint"') && html.includes("কমপক্ষে ৬ অক্ষরের"), "Sign-up password requirements must be clearly explained");
 
 const rootHtml = fs.readFileSync("index.html", "utf8");
 const privacyHtml = fs.readFileSync("app/src/main/assets/privacy.html", "utf8");
