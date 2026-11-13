@@ -30,6 +30,7 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
+    private boolean backDispatchPending = false;
 
     public class ShareBridge {
         @JavascriptInterface
@@ -166,13 +167,16 @@ public class MainActivity extends Activity {
     }
 
     private void dispatchBackAction() {
+        if (backDispatchPending) return;
         if (webView == null) {
             finish();
             return;
         }
+        backDispatchPending = true;
         webView.evaluateJavascript(
                 "(function(){try{return window.handleAppBack ? window.handleAppBack() : false;}catch(e){return false;}})()",
                 value -> {
+                    backDispatchPending = false;
                     if (isFinishing()) return;
                     if (!"true".equals(value)) {
                         // Legal/help pages are normal WebView pages; return to the app first.
