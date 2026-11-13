@@ -705,7 +705,8 @@ document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventList
  $("firstAccountStep").hidden=false;
 }));
 $("firstOpenAccount").addEventListener("click",()=>{ $("firstAccountStep").hidden=true; $("firstAuthStep").hidden=false; showLoginError(""); });
-$("loginSignIn").addEventListener("click",emailSignIn);\n["loginEmail","loginPassword","confirmPassword","signupName","signupMobile","signupInstitution","signupDesignation"].forEach(id=>{const field=$(id);if(field)field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();emailSignIn();}});});
+$("loginSignIn").addEventListener("click",emailSignIn);
+["loginEmail","loginPassword","confirmPassword","signupName","signupMobile","signupInstitution","signupDesignation"].forEach(id=>{const field=$(id);if(field)field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();emailSignIn();}});});
 $("profilePhotoInput").addEventListener("change",handleProfilePhoto);
 $("loginSignUp").addEventListener("click",e=>{e.preventDefault();if(authBusy)return;setAuthMode(authMode==="signin"?"signup":"signin");});
 $("forgotPassword").addEventListener("click",e=>{e.preventDefault();resetLoginPassword();});
