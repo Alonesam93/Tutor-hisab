@@ -362,6 +362,8 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 </nav>
 
 <script>
+if(location.search!=="?legacy-storage-migration"){
+
 // One-time migration of existing file:// localStorage into the secure HTTPS app origin.
 try{
  if(window.AppMigration&&typeof window.AppMigration.getLegacyStorage==="function"){
@@ -951,6 +953,8 @@ if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
 }
 
 render();
+
+}
 </script>
 </body>
 </html>
