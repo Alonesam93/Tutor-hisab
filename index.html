@@ -372,9 +372,19 @@ let cloudSyncInProgress=false,cloudSyncPending=false;
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
 function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
-function save(syncCloudNow=true){
+function recordContent(value){const copy={...(value||{})};delete copy.updatedAt;return JSON.stringify(copy);}
+function markChangedRecords(){
+ let previous={};try{previous=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");}catch(e){}
+ const oldStudents=new Map((previous.students||[]).map(x=>[String(x.id),x]));
+ const oldPayments=new Map((previous.payments||[]).map(x=>[String(x.id),x]));
+ const changedAt=Date.now();
+ for(const item of data.students||[]){const old=oldStudents.get(String(item.id));if(!old||recordContent(old)!==recordContent(item))item.updatedAt=changedAt;}
+ for(const item of data.payments||[]){const old=oldPayments.get(String(item.id));if(!old||recordContent(old)!==recordContent(item))item.updatedAt=changedAt;}
+}
+function save(syncCloudNow=true,trackChanges=syncCloudNow){
  if(!Array.isArray(data.deletedStudentIds))data.deletedStudentIds=[];
  if(!Array.isArray(data.deletedPaymentIds))data.deletedPaymentIds=[];
+ if(trackChanges)markChangedRecords();
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render();
  if(syncCloudNow&&currentUser&&db)syncCloud();
 }
@@ -698,6 +708,16 @@ function stableRecord(value){
  const normalized={};keys.forEach(k=>normalized[k]=value[k]);
  return JSON.stringify(normalized);
 }
+function preferLocalRecord(localRecord,cloudRecord){
+ if(!cloudRecord)return true;
+ return Number(localRecord.updatedAt||0)>=Number(cloudRecord.updatedAt||0);
+}
+function mergeRecordMaps(localRecords,cloudRecords,deletedIds){
+ const merged=new Map(cloudRecords);
+ for(const [id,item] of localRecords){if(!deletedIds.has(id)&&preferLocalRecord(item,cloudRecords.get(id)))merged.set(id,item);}
+ for(const id of deletedIds)merged.delete(id);
+ return merged;
+}
 async function syncCloud(){
  if(!currentUser||!db)return;
  if(cloudSyncInProgress){cloudSyncPending=true;return;}
@@ -769,11 +789,14 @@ async function syncCloud(){
   await base.set(tombstoneUpdate,{merge:true});
   if(!currentUser||currentUser.uid!==syncUid)return;
 
+  const mergedStudents=mergeRecordMaps(localStudents,cloudStudents,deletedStudents);
+  const mergedPayments=mergeRecordMaps(localPayments,cloudPayments,deletedPayments);
+  for(const [id,p] of mergedPayments){if(deletedStudents.has(String(p.studentId)))mergedPayments.delete(id);}
   const writes=[];
   for(const id of deletedStudents)writes.push(batch=>batch.delete(base.collection("students").doc(id)));
   for(const id of deletedPayments)writes.push(batch=>batch.delete(base.collection("payments").doc(id)));
-  for(const [id,item] of localStudents){if(!deletedStudents.has(id))writes.push(batch=>batch.set(base.collection("students").doc(id),item));}
-  for(const [id,item] of localPayments){if(!deletedPayments.has(id)&&!deletedStudents.has(String(item.studentId)))writes.push(batch=>batch.set(base.collection("payments").doc(id),item));}
+  for(const [id,item] of mergedStudents){const cloudItem=cloudStudents.get(id);if(!cloudItem||stableRecord(item)!==stableRecord(cloudItem))writes.push(batch=>batch.set(base.collection("students").doc(id),item));}
+  for(const [id,item] of mergedPayments){const cloudItem=cloudPayments.get(id);if(!cloudItem||stableRecord(item)!==stableRecord(cloudItem))writes.push(batch=>batch.set(base.collection("payments").doc(id),item));}
   // Firestore batches are limited; commit in safe chunks.
   for(let i=0;i<writes.length;i+=450){
    const batch=db.batch();writes.slice(i,i+450).forEach(write=>write(batch));await batch.commit();
@@ -784,13 +807,12 @@ async function syncCloud(){
   const latest=JSON.parse(JSON.stringify(data));
   const latestDeletedStudents=new Set([...deletedStudents,...(latest.deletedStudentIds||[]).map(String)]);
   const latestDeletedPayments=new Set([...deletedPayments,...(latest.deletedPaymentIds||[]).map(String)]);
-  const mergedStudents=new Map(cloudStudents),mergedPayments=new Map(cloudPayments);
+  const latestStudents=new Map((latest.students||[]).map(x=>[String(x.id),x]));
+  const latestPayments=new Map((latest.payments||[]).map(x=>[String(x.id),x]));
+  for(const [id,item] of latestStudents){if(!latestDeletedStudents.has(id)&&preferLocalRecord(item,mergedStudents.get(id)))mergedStudents.set(id,item);}
+  for(const [id,item] of latestPayments){if(!latestDeletedPayments.has(id)&&!latestDeletedStudents.has(String(item.studentId))&&preferLocalRecord(item,mergedPayments.get(id)))mergedPayments.set(id,item);}
   for(const id of latestDeletedStudents)mergedStudents.delete(id);
   for(const id of latestDeletedPayments)mergedPayments.delete(id);
-  for(const [id,item] of localStudents){if(!latestDeletedStudents.has(id))mergedStudents.set(id,item);}
-  for(const [id,item] of localPayments){if(!latestDeletedPayments.has(id)&&!latestDeletedStudents.has(String(item.studentId)))mergedPayments.set(id,item);}
-  for(const [id,item] of (latest.students||[]).map(x=>[String(x.id),x])){if(!latestDeletedStudents.has(id))mergedStudents.set(id,item);}
-  for(const [id,item] of (latest.payments||[]).map(x=>[String(x.id),x])){if(!latestDeletedPayments.has(id)&&!latestDeletedStudents.has(String(item.studentId)))mergedPayments.set(id,item);}
   for(const [id,p] of mergedPayments){if(latestDeletedStudents.has(String(p.studentId))){latestDeletedPayments.add(id);mergedPayments.delete(id);}}
   data={...latest,replaceCloud:false,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],
    deletedStudentIds:[...latestDeletedStudents],deletedPaymentIds:[...latestDeletedPayments]};
@@ -810,7 +832,7 @@ async function syncCloud(){
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}const profile=profileValues(),uid=currentUser.uid;savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+uid,JSON.stringify(profile));$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home",false);}try{await db.collection("users").doc(uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});localStorage.removeItem("tutorHisabProfilePendingSync_"+uid);authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){localStorage.setItem("tutorHisabProfilePendingSync_"+uid,"yes");cloudMessage("প্রোফাইল ডিভাইসে সংরক্ষিত হয়েছে; ইন্টারনেট ফিরলে Cloud-এ পাঠানো হবে।");}}
 window.addEventListener("online",()=>{if(currentUser&&db)syncCloud();});
-if(auth){auth.onAuthStateChanged(async u=>{appNavigationStack.length=0;currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const legacyKey="tutorHisabData";const migrationFlag="tutorHisabLegacyMigrationDone";const migrationDone=localStorage.getItem(migrationFlag)==="yes";const legacyRaw=localStorage.getItem(legacyKey);STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);if(saved){data=loadData();}else if(!migrationDone&&legacyRaw){try{const legacy=JSON.parse(legacyRaw);data=legacy&&Array.isArray(legacy.students)&&Array.isArray(legacy.payments)?{...legacy,deletedStudentIds:Array.isArray(legacy.deletedStudentIds)?legacy.deletedStudentIds:[],deletedPaymentIds:Array.isArray(legacy.deletedPaymentIds)?legacy.deletedPaymentIds:[]}:emptyData();}catch(e){data=emptyData();}save(false);}else{data=emptyData();save(false);}if(!migrationDone){if(saved&&legacyRaw)localStorage.setItem("tutorHisabLegacyBackup",legacyRaw);localStorage.setItem(migrationFlag,"yes");localStorage.removeItem(legacyKey);}if(saved)render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home",false);}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile",false);if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
+if(auth){auth.onAuthStateChanged(async u=>{appNavigationStack.length=0;currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const legacyKey="tutorHisabData";const migrationFlag="tutorHisabLegacyMigrationDone";const migrationDone=localStorage.getItem(migrationFlag)==="yes";const legacyRaw=localStorage.getItem(legacyKey);STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);if(saved){data=loadData();}else if(!migrationDone&&legacyRaw){try{const legacy=JSON.parse(legacyRaw);data=legacy&&Array.isArray(legacy.students)&&Array.isArray(legacy.payments)?{...legacy,deletedStudentIds:Array.isArray(legacy.deletedStudentIds)?legacy.deletedStudentIds:[],deletedPaymentIds:Array.isArray(legacy.deletedPaymentIds)?legacy.deletedPaymentIds:[]}:emptyData();}catch(e){data=emptyData();}save(false,true);}else{data=emptyData();save(false);}if(!migrationDone){if(saved&&legacyRaw)localStorage.setItem("tutorHisabLegacyBackup",legacyRaw);localStorage.setItem(migrationFlag,"yes");localStorage.removeItem(legacyKey);}if(saved)render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home",false);}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile",false);if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
 
 function shareTutorHisab(event){
  if(event)event.preventDefault();
