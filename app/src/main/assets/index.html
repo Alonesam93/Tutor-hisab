@@ -393,9 +393,9 @@ function normalizeData(parsed){
   return {...s,id:String(s.id||("legacy-student-"+(i+1))),name:String(s.name||""),className:String(s.className||""),phone:String(s.phone||""),fee:Number.isFinite(fee)?fee:0,start:typeof s.start==="string"&&s.start?s.start:currentMonth,opening:Number.isFinite(opening)&&opening>=0?opening:0,updatedAt:Number.isFinite(updatedAt)&&updatedAt>=0?updatedAt:0};
  });
  const payments=parsed.payments.map((p,i)=>{
-  const month=typeof p.month==="string"&&/^\\d{4}-(0[1-9]|1[0-2])$/.test(p.month)?p.month:currentMonth;
+  const month=typeof p.month==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(p.month)?p.month:currentMonth;
   const amount=Number(p.amount||0),updatedAt=Number(p.updatedAt||0);
-  const date=typeof p.date==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(p.date)?p.date:month+"-01";
+  const date=typeof p.date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(p.date)?p.date:month+"-01";
   return {...p,id:String(p.id||("legacy-payment-"+(i+1))),studentId:String(p.studentId||""),amount:Number.isFinite(amount)?amount:0,month,date,updatedAt:Number.isFinite(updatedAt)&&updatedAt>=0?updatedAt:0};
  });
  return {...parsed,students,payments,deletedStudentIds:[...new Set((Array.isArray(parsed.deletedStudentIds)?parsed.deletedStudentIds:[]).filter(x=>typeof x==="string"))],deletedPaymentIds:[...new Set((Array.isArray(parsed.deletedPaymentIds)?parsed.deletedPaymentIds:[]).filter(x=>typeof x==="string"))]};
