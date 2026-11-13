@@ -74,6 +74,10 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 <button onclick="addPayment()">জমা সংরক্ষণ করুন</button>
 </div>
 <div class="card">
+<h3>🧾 জমার ইতিহাস</h3>
+<div id="paymentHistory">এখনো কোনো জমা নেই।</div>
+</div>
+<div class="card">
 <h3>👨‍🎓 শিক্ষার্থীদের তালিকা</h3>
 <div id="students">এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।</div>
 </div>
@@ -121,6 +125,7 @@ function loadData(){
 }
 let data=loadData();
 let editingStudentId=null;
+let editingPaymentId=null;
 $("start").value=currentMonth;$("payMonth").value=currentMonth;$("reportMonth").value=currentMonth;$("payDate").value=localDate;
 function validMonth(v){return typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v);}
 function validDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const [y,m,d]=v.split("-").map(Number);const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
@@ -144,7 +149,6 @@ function addStudent(){
   Object.assign(old,{name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
   cancelStudentEdit();save();alert("শিক্ষার্থীর তথ্য সম্পাদনা করে সংরক্ষণ করা হয়েছে।");return;
  }
- if(data.students.length>=20){alert("সর্বোচ্চ ২০ জন শিক্ষার্থী যোগ করা যাবে।");return;}
  data.students.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString()+"-"+Math.random().toString(36).slice(2),name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
  ["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";save();
 }
@@ -152,9 +156,12 @@ function addPayment(){
  const id=$("payStudent").value,amount=Number($("payAmount").value),month=$("payMonth").value,date=$("payDate").value,student=data.students.find(s=>s.id===id);
  if(!student||!Number.isFinite(amount)||amount<=0||!validMonth(month)||!validDate(date)){alert("শিক্ষার্থী, সঠিক জমার পরিমাণ, মাস ও তারিখ দিন।");return;}
  if(month<student.start){alert("শিক্ষার্থীর বেতন গণনা শুরুর মাসের আগের মাসে জমা নেওয়া যাবে না।");return;}
- const outstanding=dueFor(student,month);
+ const otherPayments=data.payments.filter(p=>p.studentId===id&&p.id!==editingPaymentId&&validMonth(p.month)&&p.month<=month).reduce((sum,p)=>sum+Number(p.amount||0),0);
+ const accrued=Number(student.opening||0)+Number(student.fee||0)*monthsBetween(student.start,month);
+ const outstanding=Math.max(0,accrued-otherPayments);
  if(outstanding<=0){alert("নির্বাচিত মাস পর্যন্ত কোনো বকেয়া নেই।");return;}
- if(amount>outstanding){alert("এই মাস পর্যন্ত বকেয়া "+money(outstanding)+"। এর বেশি জমা নেওয়া যাবে না।");return;}
+ if(amount>outstanding){alert("এই মাস পর্যন্ত অবশিষ্ট বকেয়া "+money(outstanding)+"। এর বেশি জমা নেওয়া যাবে না।");return;}
+ if(editingPaymentId){const old=data.payments.find(p=>p.id===editingPaymentId);if(!old){cancelPaymentEdit();alert("জমার তথ্য পাওয়া যায়নি।");return;}Object.assign(old,{studentId:id,amount,month,date});cancelPaymentEdit();save();alert("জমার তথ্য সম্পাদনা হয়েছে।");return;}
  data.payments.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(),studentId:id,amount,month,date});
  $("payAmount").value="";save();alert("জমা সংরক্ষণ হয়েছে।");
 }
@@ -176,8 +183,14 @@ function render(){
  <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div><div class="small">হিসাব শুরুর মাস: ${esc(s.start)} | আগের বকেয়া: ${money(s.opening)}</div>
  <button class="secondary" data-edit-id="${esc(s.id)}">সম্পাদনা</button><button class="danger" data-remove-id="${esc(s.id)}">শিক্ষার্থী মুছুন</button></div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
  $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+ const history=[...data.payments].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+ $("paymentHistory").innerHTML=history.length?history.map(p=>{const st=data.students.find(s=>s.id===p.studentId);return '<div class="student"><b>'+esc(st?st.name:"শিক্ষার্থী নেই")+'</b><div>পরিমাণ: '+money(p.amount)+' | মাস: '+esc(p.month)+' | তারিখ: '+esc(p.date)+'</div><button class="secondary" data-payment-edit="'+esc(p.id)+'">জমা সম্পাদনা</button><button class="danger" data-payment-remove="'+esc(p.id)+'">জমা মুছুন</button></div>';}).join(""):"এখনো কোনো জমা নেই।";
 }
 $("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data-edit-id]");if(editBtn){editStudent(editBtn.dataset.editId);return;}const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
+$("paymentHistory").addEventListener("click",e=>{const edit=e.target.closest("[data-payment-edit]");if(edit){editPayment(edit.dataset.paymentEdit);return;}const del=e.target.closest("[data-payment-remove]");if(del)removePayment(del.dataset.paymentRemove);});
+function editPayment(id){const p=data.payments.find(x=>x.id===id);if(!p)return;editingPaymentId=id;$("payStudent").value=p.studentId;$("payAmount").value=p.amount;$("payMonth").value=p.month;$("payDate").value=p.date;const btn=document.querySelector('button[onclick="addPayment()"]');if(btn)btn.textContent="জমার পরিবর্তন সংরক্ষণ করুন";$("payStudent").scrollIntoView({behavior:"smooth",block:"center"});}
+function cancelPaymentEdit(){editingPaymentId=null;$("payAmount").value="";$("payMonth").value=currentMonth;$("payDate").value=localDate;const btn=document.querySelector('button[onclick="addPayment()"]');if(btn)btn.textContent="জমা সংরক্ষণ করুন";}
+function removePayment(id){if(!confirm("এই জমার তথ্য মুছে ফেলবেন?"))return;data.payments=data.payments.filter(p=>p.id!==id);if(editingPaymentId===id)cancelPaymentEdit();save();}
 function report(){
  const m=$("reportMonth").value;if(!validMonth(m)){alert("সঠিক মাস নির্বাচন করুন");return;}
  const rows=data.students.map(s=>({name:s.name,paid:paidFor(s.id,m),due:dueFor(s,m)}));
