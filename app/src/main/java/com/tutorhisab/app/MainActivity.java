@@ -278,12 +278,14 @@ public class MainActivity extends Activity {
         legacyWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                if (url != null && url.startsWith("file:///android_asset/legacy-storage-migration.html")) {
-                    view.evaluateJavascript("captureLegacyStorage()", null);
+                if (url != null && url.startsWith("file:///android_asset/index.html?legacy-storage-migration")) {
+                    String captureScript = "(function(){var values={};for(var i=0;i<localStorage.length;i++){var key=localStorage.key(i);if(key&&key.indexOf('tutorHisab')===0)values[key]=localStorage.getItem(key);}if(window.MigrationBridge&&typeof window.MigrationBridge.saveLegacyStorage==='function')window.MigrationBridge.saveLegacyStorage(JSON.stringify(values));})()";
+                    view.evaluateJavascript(captureScript, null);
                 }
             }
         });
-        legacyWebView.loadUrl("file:///android_asset/legacy-storage-migration.html");
+        // Use the exact previous index.html path plus a query so its old file:// storage origin is preserved.
+        legacyWebView.loadUrl("file:///android_asset/index.html?legacy-storage-migration");
     }
 
     private void loadSecureApp() {
