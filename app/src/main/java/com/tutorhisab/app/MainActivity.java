@@ -13,8 +13,8 @@ import android.net.Uri;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.window.OnBackInvokedCallback;
@@ -27,6 +27,9 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.os.SystemClock;
 import java.util.concurrent.ThreadLocalRandom;
+
+import androidx.webkit.WebViewAssetLoader;
+import androidx.webkit.WebViewClientCompat;
 
 import com.google.android.libraries.ads.mobile.sdk.MobileAds;
 import com.google.android.libraries.ads.mobile.sdk.initialization.InitializationConfig;
@@ -47,6 +50,7 @@ import java.io.IOException;
 
 public class MainActivity extends Activity {
     private WebView webView;
+    private WebViewAssetLoader assetLoader;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
@@ -152,18 +156,29 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-        settings.setAllowFileAccess(true);
+        // Serve packaged assets from a secure HTTPS origin for correct same-origin behavior.
+        assetLoader = new WebViewAssetLoader.Builder()
+                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .build();
+        settings.setAllowFileAccess(false);
+        // Content URIs are needed by the Android document picker used for backup restore.
         settings.setAllowContentAccess(true);
         settings.setAllowFileAccessFromFileURLs(false);
         settings.setAllowUniversalAccessFromFileURLs(false);
         webView.addJavascriptInterface(new BackupBridge(), "Android");
         webView.addJavascriptInterface(new ShareBridge(), "Share");
-        webView.setWebViewClient(new WebViewClient() {
+        webView.setWebViewClient(new WebViewClientCompat() {
+            private boolean isPackagedAsset(Uri uri) {
+                return uri != null
+                        && "https".equals(uri.getScheme())
+                        && "appassets.androidplatform.net".equals(uri.getHost())
+                        && uri.getPath() != null
+                        && uri.getPath().startsWith("/assets/");
+            }
+
             private boolean handleNavigation(Uri uri) {
-                if (uri == null) return true;
-                if ("file".equals(uri.getScheme()) && uri.getPath() != null
-                        && uri.getPath().startsWith("/android_asset/")) return false;
-                if ("https".equals(uri.getScheme()) || "http".equals(uri.getScheme())) {
+                if (isPackagedAsset(uri)) return false;
+                if (uri != null && ("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))) {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, uri));
                     } catch (Exception e) {
@@ -172,6 +187,17 @@ public class MainActivity extends Activity {
                 }
                 // Never load remote or unknown pages inside the WebView that exposes native bridges.
                 return true;
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }
+
+            @Override
+            @SuppressWarnings("deprecation")
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                return assetLoader.shouldInterceptRequest(Uri.parse(url));
             }
 
             @Override
@@ -226,7 +252,7 @@ public class MainActivity extends Activity {
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, backInvokedCallback);
         }
         if (savedInstanceState == null) {
-            webView.loadUrl("file:///android_asset/index.html");
+            webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
         } else {
             webView.restoreState(savedInstanceState);
         }
