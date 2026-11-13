@@ -82,7 +82,7 @@ const trackingContext = {
   Date: { now: () => 999 }
 };
 vm.createContext(trackingContext);
-vm.runInContext([extractFunction("recordContent"), extractFunction("markChangedRecords")].join("\\n"), trackingContext);
+vm.runInContext([extractFunction("recordContent"), extractFunction("markChangedRecords")].join("\n"), trackingContext);
 trackingContext.markChangedRecords();
 assert.equal(trackingContext.data.students[0].updatedAt, 999, "Edited student must receive a new update timestamp");
 assert.equal(trackingContext.data.students[1].updatedAt, 999, "New student must receive an update timestamp");
