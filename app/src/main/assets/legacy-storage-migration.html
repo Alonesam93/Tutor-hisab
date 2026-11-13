@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preparing Tutor Hisab</title></head>
+<body>
+<script>
+function captureLegacyStorage(){
+  const values={};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      if(key&&key.startsWith("tutorHisab"))values[key]=localStorage.getItem(key);
+    }
+    if(window.MigrationBridge&&typeof window.MigrationBridge.saveLegacyStorage==="function"){
+      window.MigrationBridge.saveLegacyStorage(JSON.stringify(values));
+    }
+  }catch(error){
+    if(window.MigrationBridge&&typeof window.MigrationBridge.saveLegacyStorage==="function"){
+      window.MigrationBridge.saveLegacyStorage("{}");
+    }
+  }
+}
+</script>
+</body>
+</html>
