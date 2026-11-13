@@ -81,6 +81,10 @@ jobs:
           assert(java.includes('shouldOverrideUrlLoading(WebView view, WebResourceRequest request)') && java.includes('appassets.androidplatform.net') && java.includes('startsWith("/assets/")'), 'WebView must keep only packaged HTTPS app assets inside the native bridge');
           assert(java.includes('WebViewAssetLoader') && java.includes('setAllowFileAccess(false)') && java.includes('setAllowUniversalAccessFromFileURLs(false)') && java.includes('setAllowFileAccessFromFileURLs(false)'), 'WebView local file access must be restricted');
           assert(java.includes('webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")') && gradle.includes('androidx.webkit:webkit:1.18.0'), 'App assets must load through the stable AndroidX WebViewAssetLoader');
+          assert(java.includes('startLegacyStorageCapture()') && java.includes('saveLegacyStorage(String json)') && java.includes('markLegacyStorageMigrated()'), 'Existing file-origin local data must be migrated before secure WebView startup');
+          assert(html.includes('window.AppMigration.getLegacyStorage') && html.includes('markLegacyStorageMigrated'), 'The app must import existing local data before initializing account storage');
+          const migrationPage = fs.readFileSync('app/src/main/assets/legacy-storage-migration.html', 'utf8');
+          assert(migrationPage.includes('captureLegacyStorage') && migrationPage.includes('key.startsWith("tutorHisab")'), 'Legacy migration must copy only Tutor Hisab data keys');
           console.log('Tutor Hisab UI contract checks passed.');
           NODE
 
