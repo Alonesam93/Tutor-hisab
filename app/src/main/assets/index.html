@@ -106,6 +106,7 @@ body{padding-bottom:75px}
 .login-error{min-height:22px;margin:10px 0;color:#b42318;line-height:1.5;text-align:center}.login-footer{line-height:1.8}
 #signupFields{padding:12px 14px 4px;margin:0 0 8px;border:1px solid #e8e1f1;border-radius:14px;background:#ffffffb8}
 #confirmPasswordWrap{margin-top:4px}.login-row input{width:18px;height:18px;accent-color:#51418f}.bottom-nav button{min-height:56px}
+.auth-help{font-size:12px;color:#756b83;margin:-5px 2px 8px;line-height:1.45}
 .signup-photo-row{display:flex;align-items:center;gap:14px;padding:4px 0 10px}
 .signup-photo-preview{width:64px;height:64px;flex:none;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#eeeaf8;border:2px solid #ded5ee;font-size:28px}
 .signup-photo-preview img{width:100%;height:100%;object-fit:cover}
@@ -201,7 +202,8 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
    <label class="login-label" for="loginEmail">ইমেইল</label>
    <input class="login-input" id="loginEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required placeholder="আপনার ইমেইল লিখুন">
    <label class="login-label" for="loginPassword">পাসওয়ার্ড</label>
-   <input class="login-input" id="loginPassword" type="password" autocomplete="current-password" required placeholder="আপনার পাসওয়ার্ড লিখুন">
+   <input class="login-input" id="loginPassword" type="password" autocomplete="current-password" aria-describedby="passwordHint" required placeholder="আপনার পাসওয়ার্ড লিখুন">
+   <p id="passwordHint" class="auth-help" hidden>পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।</p>
    <div id="confirmPasswordWrap" hidden>
     <label class="login-label" for="confirmPassword">পাসওয়ার্ড নিশ্চিত করুন</label>
     <input class="login-input" id="confirmPassword" type="password" autocomplete="new-password" placeholder="পাসওয়ার্ড আবার লিখুন">
@@ -644,7 +646,7 @@ function handleSignupPhoto(event){const file=event.target.files&&event.target.fi
 function loginValues(){return{email:$("loginEmail").value.trim(),password:$("loginPassword").value};}
 function showLoginError(message,success=false){const box=$("loginError");box.textContent=message||"";box.style.color=success?"#18794e":"#b42318";}
 let authMode="signin";
-function setAuthMode(mode){authMode=mode;authBusy=false;const bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",signup=mode==="signup";$("authHeading").textContent=signup?(bn?"নতুন অ্যাকাউন্ট তৈরি করুন":"Create your account"):(bn?"লগইন করুন":"Sign in");$("authSubtitle").textContent=signup?(bn?"আপনার তথ্য দিয়ে Tutor Hisab-এ যোগ দিন":"Enter your details to join Tutor Hisab"):(bn?"আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন":"Enter your account details to continue");$("signupFields").hidden=!signup;$("confirmPasswordWrap").hidden=!signup;$("loginSignIn").textContent=signup?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");$("authModePrompt").textContent=signup?(bn?"আগে থেকেই অ্যাকাউন্ট আছে?":"Already have an account?"):(bn?"অ্যাকাউন্ট নেই?":"Don't have an account?");$("loginSignUp").textContent=signup?(bn?"সাইন ইন করুন":"Sign in"):(bn?"রেজিস্ট্রেশন করুন":"Register");$("forgotPassword").hidden=signup;$("loginPassword").autocomplete=signup?"new-password":"current-password";$("loginPassword").type="password";$("confirmPassword").type="password";$("togglePassword").textContent=bn?"পাসওয়ার্ড দেখুন":"Show password";showLoginError("");}
+function setAuthMode(mode){authMode=mode;authBusy=false;const bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",signup=mode==="signup";$("authHeading").textContent=signup?(bn?"নতুন অ্যাকাউন্ট তৈরি করুন":"Create your account"):(bn?"লগইন করুন":"Sign in");$("authSubtitle").textContent=signup?(bn?"আপনার তথ্য দিয়ে Tutor Hisab-এ যোগ দিন":"Enter your details to join Tutor Hisab"):(bn?"আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন":"Enter your account details to continue");$("signupFields").hidden=!signup;$("confirmPasswordWrap").hidden=!signup;$("passwordHint").hidden=!signup;$("passwordHint").textContent=bn?"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।":"Use at least 6 characters for your password.";$("loginSignIn").textContent=signup?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");$("authModePrompt").textContent=signup?(bn?"আগে থেকেই অ্যাকাউন্ট আছে?":"Already have an account?"):(bn?"অ্যাকাউন্ট নেই?":"Don't have an account?");$("loginSignUp").textContent=signup?(bn?"সাইন ইন করুন":"Sign in"):(bn?"রেজিস্ট্রেশন করুন":"Register");$("forgotPassword").hidden=signup;$("loginPassword").autocomplete=signup?"new-password":"current-password";$("loginPassword").type="password";$("confirmPassword").type="password";$("togglePassword").textContent=bn?"পাসওয়ার্ড দেখুন":"Show password";showLoginError("");}
 let authBusy=false;
 function setAuthBusy(busy){authBusy=busy;const btn=$("loginSignIn"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn";btn.disabled=busy;btn.setAttribute("aria-busy",busy?"true":"false");if(busy)btn.textContent=bn?"অপেক্ষা করুন…":"Please wait…";else btn.textContent=authMode==="signup"?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");}
 async function emailSignIn(){
