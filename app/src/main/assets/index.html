@@ -465,7 +465,7 @@ function report(){
  $("reportResult").innerHTML=rows.map(r=>`<hr><b>${esc(r.name)}</b><br>এই মাসে জমা: ${money(r.paid)}<br>এই মাস পর্যন্ত মোট বকেয়া: ${money(r.due)}`).join("")||"কোনো তথ্য নেই";
 }
 function backup(){
- const payload={...data,backupVersion:2,accountUid:currentUser?.uid||null,exportedAt:new Date().toISOString()};
+ const payload={...data,replaceCloud:false,backupVersion:2,accountUid:currentUser?.uid||null,exportedAt:new Date().toISOString()};
  const json=JSON.stringify(payload,null,2);
  if(window.Android && typeof window.Android.saveBackup==="function"){window.Android.saveBackup(json);return;}
  const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
@@ -481,7 +481,7 @@ function restore(){
    for(const p of d.payments){const student=d.students.find(s=>s.id===p.studentId);if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date)||p.month<student.start)throw Error("payment");}
    for(const s of d.students){const months=[...new Set(d.payments.filter(p=>p.studentId===s.id).map(p=>p.month))].sort();for(const m of months){const accrued=Number(s.opening||0)+Number(s.fee)*monthsBetween(s.start,m);const paid=d.payments.filter(p=>p.studentId===s.id&&p.month<=m).reduce((sum,p)=>sum+Number(p.amount),0);if(paid>accrued)throw Error("overpaid");}}
    if(!confirm("বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?"))return;
-   data={...d,deletedStudentIds:Array.isArray(d.deletedStudentIds)?d.deletedStudentIds:[],deletedPaymentIds:Array.isArray(d.deletedPaymentIds)?d.deletedPaymentIds:[]};save();alert("ব্যাকআপ রিস্টোর হয়েছে।");
+   data={...d,deletedStudentIds:Array.isArray(d.deletedStudentIds)?d.deletedStudentIds:[],deletedPaymentIds:Array.isArray(d.deletedPaymentIds)?d.deletedPaymentIds:[],replaceCloud:!!currentUser};save();alert("ব্যাকআপ রিস্টোর হয়েছে। Cloud-এ সাইন ইন থাকলে পুরোনো Cloud তথ্যও এই ব্যাকআপ দিয়ে প্রতিস্থাপন হবে।");
   }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
  };reader.readAsText(file);
 }
@@ -658,7 +658,20 @@ async function emailSignIn(){
 async function emailSignUp(){setAuthMode("signup");}
 async function resetLoginPassword(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const email=$("loginEmail").value.trim();if(!email){showLoginError("আগে আপনার ইমেইল লিখুন।");return;}try{await auth.sendPasswordResetEmail(email);showLoginError("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।",true);}catch(x){showLoginError("রিসেট ইমেইল পাঠানো যায়নি: "+x.message);}}
 async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
-async function readCloudData(uid){const base=db.collection("users").doc(uid),r=await Promise.all([base.get(),base.collection("students").get(),base.collection("payments").get()]),v=r[0].exists?r[0].data():{};return{students:r[1].docs.map(x=>({id:x.id,...x.data()})),payments:r[2].docs.map(x=>({id:x.id,...x.data()})),profile:v.profile||{}};}
+async function readCloudData(uid){
+ const base=db.collection("users").doc(uid);
+ const [userDoc,studentsSnap,paymentsSnap]=await Promise.all([
+  base.get(),base.collection("students").get(),base.collection("payments").get()
+ ]);
+ const userData=userDoc.exists?userDoc.data():{};
+ return {
+  students:studentsSnap.docs.map(x=>({id:x.id,...x.data()})),
+  payments:paymentsSnap.docs.map(x=>({id:x.id,...x.data()})),
+  profile:userData.profile||{},
+  deletedStudentIds:Array.isArray(userData.deletedStudentIds)?userData.deletedStudentIds.map(String):[],
+  deletedPaymentIds:Array.isArray(userData.deletedPaymentIds)?userData.deletedPaymentIds.map(String):[]
+ };
+}
 function stableRecord(value){
  const keys=Object.keys(value||{}).sort();
  const normalized={};keys.forEach(k=>normalized[k]=value[k]);
@@ -675,46 +688,89 @@ async function syncCloud(){
   const cloud=await readCloudData(syncUid);
   if(!currentUser||currentUser.uid!==syncUid)return;
   const local=JSON.parse(JSON.stringify(data));
-  const localStudents=new Map(local.students.map(x=>[String(x.id),x]));
-  const localPayments=new Map(local.payments.map(x=>[String(x.id),x]));
-  const cloudStudents=new Map(cloud.students.map(x=>[String(x.id),x]));
-  const cloudPayments=new Map(cloud.payments.map(x=>[String(x.id),x]));
-  const deletedStudents=new Set(local.deletedStudentIds||[]);
-  const deletedPayments=new Set(local.deletedPaymentIds||[]);
+  const localStudents=new Map((local.students||[]).map(x=>[String(x.id),x]));
+  const localPayments=new Map((local.payments||[]).map(x=>[String(x.id),x]));
+  const cloudStudents=new Map((cloud.students||[]).map(x=>[String(x.id),x]));
+  const cloudPayments=new Map((cloud.payments||[]).map(x=>[String(x.id),x]));
+
+  // An explicit restore replaces the cloud snapshot; ordinary syncs merge records.
+  if(local.replaceCloud===true){
+   const restoredDeletedStudents=new Set((local.deletedStudentIds||[]).map(String));
+   const restoredDeletedPayments=new Set((local.deletedPaymentIds||[]).map(String));
+   for(const id of localStudents.keys())restoredDeletedStudents.delete(id);
+   for(const id of localPayments.keys())restoredDeletedPayments.delete(id);
+   for(const [id,p] of localPayments){if(restoredDeletedStudents.has(String(p.studentId)))restoredDeletedPayments.add(id);}
+   await base.set({
+    email:currentUser.email||"",
+    deletedStudentIds:[...restoredDeletedStudents],
+    deletedPaymentIds:[...restoredDeletedPayments],
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+   },{merge:true});
+   const replaceWrites=[];
+   for(const id of cloudStudents.keys())replaceWrites.push(batch=>batch.delete(base.collection("students").doc(id)));
+   for(const id of cloudPayments.keys())replaceWrites.push(batch=>batch.delete(base.collection("payments").doc(id)));
+   for(const [id,item] of localStudents)replaceWrites.push(batch=>batch.set(base.collection("students").doc(id),item));
+   for(const [id,item] of localPayments){if(!restoredDeletedPayments.has(id)&&!restoredDeletedStudents.has(String(item.studentId)))replaceWrites.push(batch=>batch.set(base.collection("payments").doc(id),item));}
+   for(let i=0;i<replaceWrites.length;i+=450){
+    const batch=db.batch();replaceWrites.slice(i,i+450).forEach(write=>write(batch));await batch.commit();
+   }
+   if(!currentUser||currentUser.uid!==syncUid)return;
+   const latest=JSON.parse(JSON.stringify(data));
+   const latestDeletedStudents=new Set([...restoredDeletedStudents,...(latest.deletedStudentIds||[]).map(String)]);
+   const latestDeletedPayments=new Set([...restoredDeletedPayments,...(latest.deletedPaymentIds||[]).map(String)]);
+   for(const [id,p] of (latest.payments||[]).map(x=>[String(x.id),x])){if(latestDeletedStudents.has(String(p.studentId)))latestDeletedPayments.add(id);}
+   data={...latest,replaceCloud:false,deletedStudentIds:[...latestDeletedStudents],deletedPaymentIds:[...latestDeletedPayments]};
+   save(false);
+   cloudMessage("ব্যাকআপের তথ্য Cloud-এ প্রতিস্থাপন হয়েছে।");
+   return;
+  }
+
+  const deletedStudents=new Set([...(cloud.deletedStudentIds||[]),...(local.deletedStudentIds||[])].map(String));
+  const deletedPayments=new Set([...(cloud.deletedPaymentIds||[]),...(local.deletedPaymentIds||[])].map(String));
   for(const [id,p] of cloudPayments){if(deletedStudents.has(String(p.studentId)))deletedPayments.add(id);}
+
+  // Publish deletion tombstones before writing records so another device cannot resurrect them.
+  const tombstoneUpdate={email:currentUser.email||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  if(deletedStudents.size)tombstoneUpdate.deletedStudentIds=firebase.firestore.FieldValue.arrayUnion(...deletedStudents);
+  if(deletedPayments.size)tombstoneUpdate.deletedPaymentIds=firebase.firestore.FieldValue.arrayUnion(...deletedPayments);
+  await base.set(tombstoneUpdate,{merge:true});
+  if(!currentUser||currentUser.uid!==syncUid)return;
+
   const writes=[];
   for(const id of deletedStudents)writes.push(batch=>batch.delete(base.collection("students").doc(id)));
   for(const id of deletedPayments)writes.push(batch=>batch.delete(base.collection("payments").doc(id)));
-  // Local edits are written back to the same teacher-scoped document IDs.
-  for(const [id,item] of localStudents)writes.push(batch=>batch.set(base.collection("students").doc(id),item));
-  for(const [id,item] of localPayments)writes.push(batch=>batch.set(base.collection("payments").doc(id),item));
+  for(const [id,item] of localStudents){if(!deletedStudents.has(id))writes.push(batch=>batch.set(base.collection("students").doc(id),item));}
+  for(const [id,item] of localPayments){if(!deletedPayments.has(id)&&!deletedStudents.has(String(item.studentId)))writes.push(batch=>batch.set(base.collection("payments").doc(id),item));}
   // Firestore batches are limited; commit in safe chunks.
   for(let i=0;i<writes.length;i+=450){
    const batch=db.batch();writes.slice(i,i+450).forEach(write=>write(batch));await batch.commit();
   }
   if(!currentUser||currentUser.uid!==syncUid)return;
-  // Keep any edits made while this sync was running; a follow-up sync will send them.
+
+  // Keep edits and deletions made while this sync was running.
   const latest=JSON.parse(JSON.stringify(data));
-  const latestDeletedStudents=new Set(latest.deletedStudentIds||[]);
-  const latestDeletedPayments=new Set(latest.deletedPaymentIds||[]);
+  const latestDeletedStudents=new Set([...deletedStudents,...(latest.deletedStudentIds||[]).map(String)]);
+  const latestDeletedPayments=new Set([...deletedPayments,...(latest.deletedPaymentIds||[]).map(String)]);
   const mergedStudents=new Map(cloudStudents),mergedPayments=new Map(cloudPayments);
-  for(const id of deletedStudents)mergedStudents.delete(id);
-  for(const id of deletedPayments)mergedPayments.delete(id);
-  for(const [id,item] of localStudents)mergedStudents.set(id,item);
-  for(const [id,item] of localPayments)mergedPayments.set(id,item);
   for(const id of latestDeletedStudents)mergedStudents.delete(id);
   for(const id of latestDeletedPayments)mergedPayments.delete(id);
-  for(const [id,item] of (latest.students||[]).map(x=>[String(x.id),x]))mergedStudents.set(id,item);
-  for(const [id,item] of (latest.payments||[]).map(x=>[String(x.id),x]))mergedPayments.set(id,item);
-  for(const [id,p] of mergedPayments){if(latestDeletedStudents.has(String(p.studentId)))mergedPayments.delete(id);}
-  data={...latest,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],
-   deletedStudentIds:[...latestDeletedStudents].filter(id=>!deletedStudents.has(id)),
-   deletedPaymentIds:[...latestDeletedPayments].filter(id=>!deletedPayments.has(id))};
+  for(const [id,item] of localStudents){if(!latestDeletedStudents.has(id))mergedStudents.set(id,item);}
+  for(const [id,item] of localPayments){if(!latestDeletedPayments.has(id)&&!latestDeletedStudents.has(String(item.studentId)))mergedPayments.set(id,item);}
+  for(const [id,item] of (latest.students||[]).map(x=>[String(x.id),x])){if(!latestDeletedStudents.has(id))mergedStudents.set(id,item);}
+  for(const [id,item] of (latest.payments||[]).map(x=>[String(x.id),x])){if(!latestDeletedPayments.has(id)&&!latestDeletedStudents.has(String(item.studentId)))mergedPayments.set(id,item);}
+  for(const [id,p] of mergedPayments){if(latestDeletedStudents.has(String(p.studentId))){latestDeletedPayments.add(id);mergedPayments.delete(id);}}
+  data={...latest,replaceCloud:false,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],
+   deletedStudentIds:[...latestDeletedStudents],deletedPaymentIds:[...latestDeletedPayments]};
   save(false);
-  await base.set({email:currentUser.email||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  cloudMessage("Cloud Sync সম্পন্ন। নতুন ও সম্পাদিত তথ্য সংরক্ষণ হয়েছে; মুছে ফেলা রেকর্ডও সিঙ্ক হয়েছে।");
- }catch(e){console.error("Safe Cloud Sync:",e);if(currentUser&&currentUser.uid===syncUid)cloudMessage("Cloud Sync সম্পন্ন হয়নি: "+e.message);}
- finally{
+  const finalTombstones={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  if(latestDeletedStudents.size)finalTombstones.deletedStudentIds=firebase.firestore.FieldValue.arrayUnion(...latestDeletedStudents);
+  if(latestDeletedPayments.size)finalTombstones.deletedPaymentIds=firebase.firestore.FieldValue.arrayUnion(...latestDeletedPayments);
+  await base.set(finalTombstones,{merge:true});
+  cloudMessage("Cloud Sync সম্পন্ন। নতুন ও সম্পাদিত তথ্য সংরক্ষণ হয়েছে; মুছে ফেলা রেকর্ড অন্য ডিভাইসেও আর ফিরে আসবে না।");
+ }catch(e){
+  console.error("Safe Cloud Sync:",e);
+  if(currentUser&&currentUser.uid===syncUid)cloudMessage("Cloud Sync সম্পন্ন হয়নি: "+e.message);
+ }finally{
   cloudSyncInProgress=false;
   if(cloudSyncPending){cloudSyncPending=false;Promise.resolve().then(syncCloud);}
  }
