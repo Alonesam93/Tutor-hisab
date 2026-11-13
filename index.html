@@ -30,7 +30,9 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 
 .tab-screen{max-width:700px;margin:auto;padding:14px 14px 90px}
 .bottom-nav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #dce5df;box-shadow:0 -2px 8px #0001}
-.bottom-nav button{font-size:10px;padding:10px 2px;margin:0;border-radius:7px;white-space:normal;min-height:44px}
+.bottom-nav button{font-size:10px;padding:5px 2px;margin:0;border-radius:9px;white-space:normal;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.15}
+.nav-icon{font-size:17px;line-height:1.1}
+.nav-label{font-size:9px;font-weight:700;letter-spacing:.05px;line-height:1.1}
 .bottom-nav button.active{background:#075b43}
 body{padding-bottom:75px}
 .onboarding{position:fixed;inset:0;z-index:100;background:#0b241dcc;display:flex;align-items:center;justify-content:center;padding:18px}
@@ -235,11 +237,11 @@ body{padding-bottom:75px}
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
- <button type="button" data-tab="home" aria-label="Homepage" title="Homepage">🏠</button>
- <button type="button" data-tab="store" aria-label="My Store" title="My Store">🛍️</button>
- <button type="button" data-tab="notification" aria-label="Notification" title="Notification">🔔</button>
- <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile">👤</button>
- <button type="button" data-tab="settings" aria-label="Settings" title="Settings">⚙️</button>
+ <button type="button" data-tab="home" aria-label="Homepage" title="Homepage"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">Homepage</span></button>
+ <button type="button" data-tab="store" aria-label="My Store" title="My Store"><span class="nav-icon" aria-hidden="true">🛍️</span><span class="nav-label">My Store</span></button>
+ <button type="button" data-tab="notification" aria-label="Notification" title="Notification"><span class="nav-icon" aria-hidden="true">🔔</span><span class="nav-label">Notification</span></button>
+ <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-label">My Profile</span></button>
+ <button type="button" data-tab="settings" aria-label="Settings" title="Settings"><span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-label">Settings</span></button>
 </nav>
 
 <script>
