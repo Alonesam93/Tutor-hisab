@@ -37,7 +37,7 @@ hr{border:0;border-top:1px solid #eee;margin:12px 0}
 body{padding-bottom:75px}
 .onboarding{position:fixed;inset:0;z-index:100;background:#0b241dcc;display:flex;align-items:center;justify-content:center;padding:18px}
 .onboarding[hidden]{display:none}
-.onboarding-card{background:#fff;width:100%;max-width:420px;padding:22px;border-radius:16px;box-shadow:0 12px 40px #0004}
+.onboarding-card{background:#fff;width:100%;max-width:420px;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;padding:22px 22px calc(24px + env(safe-area-inset-bottom));border-radius:16px;box-shadow:0 12px 40px #0004}
 .onboarding-card h2{color:#51418f;margin-top:0}
 .onboarding-card a{color:#e87520}
 .login-card{border:2px solid #e8a08c;background:#fff4ed}
@@ -156,6 +156,10 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 
 
 #settingsScreen p.settings-link{display:flex;align-items:center;min-height:48px;margin:8px 0;padding:11px 13px;border:1px solid var(--th-line);border-radius:13px;background:#fff;box-shadow:0 2px 8px #28234f06}#settingsScreen p.settings-link a{display:block;width:100%;font-size:13px}#settingsScreen p.settings-link a:after{content:"›";float:right;color:#9b98ad;font-size:20px;line-height:16px}.page-intro{margin-bottom:2px}
+
+.notification-count{position:absolute;top:1px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#d92d20;color:#fff;font-size:10px;font-weight:800;line-height:18px;text-align:center;box-shadow:0 1px 4px #0002}.bottom-nav button[data-tab="notification"]{position:relative}
+.onboarding{align-items:flex-start;padding:12px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto}.onboarding-card{margin:auto}
+@media(max-height:700px){.onboarding-card{padding:16px 18px calc(20px + env(safe-area-inset-bottom))}.login-brand{margin-bottom:8px}.login-subtitle{margin-bottom:10px}}
 </style>
 </head>
 <body>
@@ -168,22 +172,10 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
  <div class="onboarding-card login-card">
   <section id="firstNotificationStep">
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
-   <h3 style="text-align:center">নোটিফিকেশন চালু রাখবেন?</h3>
-   <p class="login-subtitle">শিক্ষার্থীর বেতন, পেমেন্ট ও গুরুত্বপূর্ণ আপডেটের সময়মতো খবর পেতে নোটিফিকেশন অনুমতি দিন। চাইলে পরে ফোনের Settings থেকেও এটি পরিবর্তন করতে পারবেন।</p>
-   <button type="button" id="firstNotificationContinue" class="login-primary">চালিয়ে যান</button>
-   <button type="button" id="firstNotificationSkip" class="login-secondary">এখন নয়</button>
-  </section>
-  <section id="firstLanguageStep" hidden>
-   <h2>Tutor Hisab-এ স্বাগতম</h2><p>আপনার পছন্দের ভাষা নির্বাচন করুন</p>
-   <button type="button" data-first-language="bn">বাংলা</button>
-   <button type="button" data-first-language="en">English</button>
-  </section>
-  <section id="firstAccountStep" hidden>
-   <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
-   <h3 style="text-align:center;color:#513a2a">স্বাগতম</h3>
-   <p class="login-subtitle">আপনার অ্যাকাউন্টে প্রবেশ করতে ইমেইল ব্যবহার করুন</p>
-   <button type="button" id="firstOpenAccount" class="login-primary">ইমেইল দিয়ে লগিন করুন</button>
-   <div class="login-footer"><a href="privacy.html">গোপনীয়তা নীতি</a> · <a href="https://github.com/Alonesam93/Tutor-hisab/issues">যোগাযোগ</a> · <a href="about.html">পরিচিতি</a></div>
+   <h3 style="text-align:center">Enable notifications?</h3>
+   <p class="login-subtitle">Allow Tutor Hisab to send reminders about tuition payments and important app updates. You can change this permission later in Android Settings.</p>
+   <button type="button" id="firstNotificationContinue" class="login-primary">Enable notifications</button>
+   <button type="button" id="firstNotificationSkip" class="login-secondary">Not now</button>
   </section>
   <section id="firstAuthStep" hidden>
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
@@ -225,7 +217,7 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
    <div class="login-footer"><span id="authModePrompt">নতুন অ্যাকাউন্ট প্রয়োজন?</span> <a href="#" id="loginSignUp">নতুন অ্যাকাউন্ট তৈরি করুন</a></div>
    <div id="loginError" class="login-error" role="status" aria-live="polite" aria-atomic="true"></div>
    </form>
-   <div class="login-footer"><a href="privacy.html">Privacy Policy</a> · <a href="https://github.com/Alonesam93/Tutor-hisab/issues">Contact</a> · <a href="about.html">About</a></div>
+   <div class="login-footer"><a href="privacy.html">Privacy Policy</a> · <a href="contact.html">Contact</a> · <a href="about.html">About</a></div>
   </section>
  </div>
 </div>
@@ -288,25 +280,23 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 </main>
 
 <section id="storeScreen" class="tab-screen" hidden>
- <div class="page-intro"><span class="eyebrow">STORE & PLANS</span><h2>🛍️ My Store</h2><p>শিক্ষকদের জন্য অতিরিক্ত সুবিধা ও সাবস্ক্রিপশন</p></div>
+ <div class="page-intro"><span class="eyebrow">STORE</span><h2>🛍️ My Store</h2><p>Optional services for your tutoring work</p></div>
  <div class="card">
-  <div class="store-product"><div class="store-product-icon">💬</div><div class="store-product-info"><b>SMS Packages</b><p>শিক্ষার্থীদের বেতন রিমাইন্ডার পাঠানোর জন্য এসএমএস ক্রেডিট</p></div><span class="store-soon">Coming Soon</span></div>
-  <div class="store-product"><div class="store-product-icon">⭐</div><div class="store-product-info"><b>Pro</b><p>উন্নত হিসাব ও অতিরিক্ত সুবিধার সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
-  <div class="store-product"><div class="store-product-icon">👑</div><div class="store-product-info"><b>Elite</b><p>প্রিমিয়াম সুবিধা ও উন্নত ব্যবস্থাপনার সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
+  <div class="store-product"><div class="store-product-icon">💬</div><div class="store-product-info"><b>SMS Packages</b><p>SMS credits for tuition payment reminders</p></div><span class="store-soon">Coming Soon</span></div>
+  <div class="store-product"><div class="store-product-icon">🚫</div><div class="store-product-info"><b>Remove Ad</b><p>Enjoy Tutor Hisab without advertisements</p></div><span class="store-soon">Coming Soon</span></div>
  </div>
- <p class="store-note">এসএমএস ও প্রিমিয়াম সুবিধা চালু হলে এই পেজ থেকেই বিস্তারিত দেখা যাবে।</p>
+ <p class="store-note">SMS Packages and Remove Ad will be available here when launched.</p>
 </section>
 <section id="notificationScreen" class="tab-screen" hidden>
  <div class="page-intro"><span class="eyebrow">UPDATES & REMINDERS</span><h2>🔔 নোটিফিকেশন</h2><p>বকেয়া, সাম্প্রতিক জমা ও সেবার আপডেট</p></div>
  <div class="card"><h3>সাম্প্রতিক আপডেট</h3><div id="notificationList" aria-live="polite" aria-atomic="false"></div></div>
- <div class="card"><h3>সেবা ও সাবস্ক্রিপশন স্ট্যাটাস</h3>
-  <div class="store-product"><div class="store-product-icon">💬</div><div class="store-product-info"><b>SMS Packages</b><p>এসএমএস রিমাইন্ডার সুবিধা</p></div><span class="store-soon">Coming Soon</span></div>
-  <div class="store-product"><div class="store-product-icon">⭐</div><div class="store-product-info"><b>Pro</b><p>প্রো সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
-  <div class="store-product"><div class="store-product-icon">👑</div><div class="store-product-info"><b>Elite</b><p>এলিট সাবস্ক্রিপশন</p></div><span class="store-soon">Coming Soon</span></div>
+ <div class="card"><h3>Service status</h3>
+  <div class="store-product"><div class="store-product-icon">💬</div><div class="store-product-info"><b>SMS Packages</b><p>SMS reminders</p></div><span class="store-soon">Coming Soon</span></div>
+  <div class="store-product"><div class="store-product-icon">🚫</div><div class="store-product-info"><b>Remove Ad</b><p>Ad-free experience</p></div><span class="store-soon">Coming Soon</span></div>
  </div>
  <div class="card" id="appUpdatesNotice" role="status" aria-live="polite"><h3>অ্যাপ আপডেট</h3><p>নতুন সংস্করণ প্রকাশ হলে এখানে জানানো হবে।</p></div>
 </section>
-<section id="profileScreen" class="tab-screen" hidden><div class="card">
+<section id="profileScreen" class="tab-screen" hidden><div class="page-intro"><span class="eyebrow">ACCOUNT</span><h2>👤 My Profile</h2><p>Manage your teacher information and account details.</p></div><div class="card">
  <div class="profile-head">
   <img id="profileAvatar" class="profile-avatar" alt="প্রোফাইল ছবি" hidden>
   <div id="profileAvatarFallback" class="profile-avatar-fallback" aria-hidden="true">👤</div>
@@ -346,8 +336,8 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
   <hr><h4>সহায়তা</h4>
   <p class="settings-link"><a href="privacy.html">গোপনীয়তা নীতি</a></p>
   <p class="settings-link"><a href="terms.html">ব্যবহারের শর্তাবলি</a></p>
-  <p class="settings-link"><a href="https://github.com/Alonesam93/Tutor-hisab/issues">Contact Us / যোগাযোগ</a></p>
-  <p class="settings-link"><a href="https://github.com/Alonesam93/Tutor-hisab/issues/new">Feedback / মতামত জানান</a></p>
+  <p class="settings-link"><a href="contact.html">Contact Us</a></p>
+  <p class="settings-link"><a href="feedback.html">Feedback</a></p>
   <p class="small">প্রকাশ্য পেজে শিক্ষার্থী বা ব্যক্তিগত তথ্য প্রকাশ করবেন না।</p><p class="settings-link"><a href="about.html">পরিচিতি / About Tutor Hisab</a></p>
   <p class="settings-link"><a href="#" onclick="shareTutorHisab(event)">শেয়ার করুন / Share</a></p>
   <p>রেটিং দিন / Rate Us — শীঘ্রই আসছে</p>
@@ -356,7 +346,7 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 <nav class="bottom-nav" aria-label="Main navigation">
  <button type="button" data-tab="home" aria-label="Homepage" title="Homepage"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">Homepage</span></button>
  <button type="button" data-tab="store" aria-label="My Store" title="My Store"><span class="nav-icon" aria-hidden="true">🛍️</span><span class="nav-label">My Store</span></button>
- <button type="button" data-tab="notification" aria-label="Notification" title="Notification"><span class="nav-icon" aria-hidden="true">🔔</span><span class="nav-label">Notification</span></button>
+ <button type="button" data-tab="notification" aria-label="Notification" title="Notification"><span class="nav-icon" aria-hidden="true">🔔</span><span class="nav-label">Notification</span><span class="notification-count" id="notificationCount" hidden>0</span></button>
  <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-label">My Profile</span></button>
  <button type="button" data-tab="settings" aria-label="Settings" title="Settings"><span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-label">Settings</span></button>
 </nav>
@@ -380,6 +370,7 @@ try{
 }catch(migrationError){console.error("Tutor Hisab local data migration will retry:",migrationError);}
 let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
+if(!localStorage.getItem("tutorHisabLanguage"))localStorage.setItem("tutorHisabLanguage","en");
 const numberLocale=()=>((localStorage.getItem("tutorHisabLanguage")||"bn")==="bn"?"bn-BD":"en-US");
 const money=n=>"৳"+Number(n||0).toLocaleString(numberLocale(),{maximumFractionDigits:2});
 const today=new Date();
@@ -472,6 +463,7 @@ function addPayment(){
 }
 function editStudent(id){
  const s=data.students.find(x=>x.id===id);if(!s)return;
+ if(activeAppTab==="home"&&activeHomePanel!=="students")showHomePanel("students");
  editingStudentId=id;$("name").value=s.name;$("className").value=s.className||"";$("phone").value=s.phone||"";$("fee").value=s.fee;$("start").value=s.start;$("opening").value=Number(s.opening||0);
  $("studentFormTitle").textContent="✏️ শিক্ষার্থীর তথ্য সম্পাদনা করুন";$("studentSaveBtn").textContent="পরিবর্তন সংরক্ষণ করুন";$("studentCancelBtn").style.display="block";
  $("name").scrollIntoView({behavior:"smooth",block:"center"});
@@ -522,6 +514,7 @@ function renderNotifications(){
  html+='<h4>'+(en?'App updates':'অ্যাপ আপডেট')+'</h4>';
  html+=section(en?'App announcements':'অ্যাপের ঘোষণা',en?'Important app updates will appear here.':'অ্যাপের গুরুত্বপূর্ণ আপডেট এখানে দেখানো হবে।');
  box.innerHTML=html;
+ const badge=$("notificationCount");if(badge){const count=box.querySelectorAll(".student").length;badge.textContent=count>99?"99+":String(count);badge.hidden=count===0;}
 }
 $("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data-edit-id]");if(editBtn){editStudent(editBtn.dataset.editId);return;}const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
 $("paymentHistory").addEventListener("click",e=>{const edit=e.target.closest("[data-payment-edit]");if(edit){editPayment(edit.dataset.paymentEdit);return;}const del=e.target.closest("[data-payment-remove]");if(del)removePayment(del.dataset.paymentRemove);});
@@ -650,7 +643,7 @@ const nativeAlert=window.alert.bind(window),nativeConfirm=window.confirm.bind(wi
 window.alert=message=>nativeAlert(localizeMessage(message));
 window.confirm=message=>nativeConfirm(localizeMessage(message));
 function applyLanguage(){
- const lang=localStorage.getItem("tutorHisabLanguage")||"bn";
+ const lang=localStorage.getItem("tutorHisabLanguage")||"en";
  document.documentElement.lang=lang;
  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
@@ -699,7 +692,7 @@ function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
 function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
 function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim(),photoData:profilePhotoData,email:currentUser?.email||""};}
 function setProfilePhoto(data){profilePhotoData=data||"";const img=$("profileAvatar"),fallback=$("profileAvatarFallback");if(profilePhotoData){img.src=profilePhotoData;img.hidden=false;fallback.hidden=true;}else{img.removeAttribute("src");img.hidden=true;fallback.hidden=false;}}
-function updateProfileView(){const p=profileValues(),lang=localStorage.getItem("tutorHisabLanguage")||"bn";$("profileDisplayName").textContent=p.name||(lang==="bn"?"আমার প্রোফাইল":"My Profile");$("profileDisplayEmail").textContent=currentUser?.email||"";$("profileViewName").textContent=p.name||"—";$("profileViewMobile").textContent=p.mobile||"—";$("profileViewInstitution").textContent=p.institution||"—";$("profileViewDesignation").textContent=p.designation||"—";setProfilePhoto(profilePhotoData);}
+function updateProfileView(){const p=profileValues(),lang=localStorage.getItem("tutorHisabLanguage")||"en";$("profileDisplayName").textContent=p.name||(lang==="bn"?"আমার প্রোফাইল":"My Profile");$("profileDisplayEmail").textContent=currentUser?.email||"";$("profileViewName").textContent=p.name||"—";$("profileViewMobile").textContent=p.mobile||"—";$("profileViewInstitution").textContent=p.institution||"—";$("profileViewDesignation").textContent=p.designation||"—";setProfilePhoto(profilePhotoData);}
 function editProfile(){$("profileView").hidden=true;$("profileEditForm").hidden=false;$("profileEditBtn").hidden=true;}
 function cancelProfileEdit(){if(window.__tutorHisabProfileSetupRequired){alert("অ্যাকাউন্ট চালু করতে আপনার নাম লিখে প্রোফাইল সংরক্ষণ করুন।");$("profileName").focus();return;}$("profileName").value=savedProfileData.name||"";$("profileMobile").value=savedProfileData.mobile||"";$("profileInstitution").value=savedProfileData.institution||"";$("profileDesignation").value=savedProfileData.designation||"";setProfilePhoto(savedProfileData.photoData||"");$("profilePhotoInput").value="";$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();}
 function compressProfileImage(file,onReady){if(!file)return;if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");return;}if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");return;}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext("2d");if(!ctx){alert("ছবিটি প্রস্তুত করা যায়নি।");return;}ctx.drawImage(img,0,0,canvas.width,canvas.height);onReady(canvas.toDataURL("image/jpeg",.72));};img.onerror=()=>alert("ছবিটি খোলা যায়নি। অন্য ছবি নির্বাচন করুন।");img.src=reader.result;};reader.onerror=()=>alert("ছবিটি পড়া যায়নি। আবার চেষ্টা করুন।");reader.readAsDataURL(file);}
@@ -753,7 +746,7 @@ async function resetLoginPassword(){
   showLoginError(messages[x.code]||(bn?"রিসেট ইমেইল পাঠানো যায়নি। আবার চেষ্টা করুন।":"Could not send the reset email. Please try again."));
  }
 }
-async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
+async async function emailSignOut(){if(!auth||!currentUser){alert("You are not signed in.");return;}try{await auth.signOut();}catch(error){alert("Sign out failed: "+(error&&error.message?error.message:"Please try again."));}}
 async function readCloudData(uid){
  const base=db.collection("users").doc(uid);
  const [userDoc,studentsSnap,paymentsSnap]=await Promise.all([
@@ -914,7 +907,7 @@ async function syncCloud(){
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}const profile={...profileValues(),updatedAt:Date.now()},uid=currentUser.uid;savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+uid,JSON.stringify(profile));$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home",false);}try{await db.collection("users").doc(uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});localStorage.removeItem("tutorHisabProfilePendingSync_"+uid);authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){localStorage.setItem("tutorHisabProfilePendingSync_"+uid,"yes");cloudMessage("প্রোফাইল ডিভাইসে সংরক্ষিত হয়েছে; ইন্টারনেট ফিরলে Cloud-এ পাঠানো হবে।");syncCloud();}}
 window.addEventListener("online",()=>{if(currentUser&&db)syncCloud();});
-if(auth){auth.onAuthStateChanged(async u=>{appNavigationStack.length=0;currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.removeItem("tutorHisabMigrationNotice");localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const legacyKey="tutorHisabData";const migrationFlag="tutorHisabLegacyMigrationDone";const migrationDone=localStorage.getItem(migrationFlag)==="yes";const legacyRaw=localStorage.getItem(legacyKey);STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);if(saved){data=loadData();}else if(!migrationDone&&legacyRaw){try{const legacy=JSON.parse(legacyRaw);data=legacy&&Array.isArray(legacy.students)&&Array.isArray(legacy.payments)?{...legacy,deletedStudentIds:Array.isArray(legacy.deletedStudentIds)?legacy.deletedStudentIds:[],deletedPaymentIds:Array.isArray(legacy.deletedPaymentIds)?legacy.deletedPaymentIds:[]}:emptyData();}catch(e){data=emptyData();}save(false,true);}else{data=emptyData();save(false);}if(!migrationDone){if(saved&&legacyRaw)localStorage.setItem("tutorHisabLegacyBackup",legacyRaw);localStorage.setItem(migrationFlag,"yes");localStorage.removeItem(legacyKey);}if(saved)render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);const profilePending=localStorage.getItem("tutorHisabProfilePendingSync_"+u.uid)==="yes";profile=profilePending?{...(cloud.profile||{}),...profile}:{...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;document.querySelector(".profile-signout").hidden=false;showTab("home",false);}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();$("profileEditForm").hidden=true;$("profileView").hidden=true;$("profileEditBtn").hidden=true;document.querySelector(".profile-signout").hidden=true;authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile",false);if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=true;$("firstAccountStep").hidden=true;$("firstAuthStep").hidden=false;const migrated=localStorage.getItem("tutorHisabMigrationNotice")==="yes";showLoginError(migrated?(localStorage.getItem("tutorHisabLanguage")==="en"?"Please sign in with your existing account after this update. Creating a new account will not show your previous records.":"আপডেটের পর আপনার আগের অ্যাকাউন্টে আবার Sign In করুন। নতুন অ্যাকাউন্ট খুললে পুরোনো হিসাব দেখা যাবে না।"):"");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
+if(auth){auth.onAuthStateChanged(async u=>{appNavigationStack.length=0;currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.removeItem("tutorHisabMigrationNotice");localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const legacyKey="tutorHisabData";const migrationFlag="tutorHisabLegacyMigrationDone";const migrationDone=localStorage.getItem(migrationFlag)==="yes";const legacyRaw=localStorage.getItem(legacyKey);STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);if(saved){data=loadData();}else if(!migrationDone&&legacyRaw){try{const legacy=JSON.parse(legacyRaw);data=legacy&&Array.isArray(legacy.students)&&Array.isArray(legacy.payments)?{...legacy,deletedStudentIds:Array.isArray(legacy.deletedStudentIds)?legacy.deletedStudentIds:[],deletedPaymentIds:Array.isArray(legacy.deletedPaymentIds)?legacy.deletedPaymentIds:[]}:emptyData();}catch(e){data=emptyData();}save(false,true);}else{data=emptyData();save(false);}if(!migrationDone){if(saved&&legacyRaw)localStorage.setItem("tutorHisabLegacyBackup",legacyRaw);localStorage.setItem(migrationFlag,"yes");localStorage.removeItem(legacyKey);}if(saved)render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);const profilePending=localStorage.getItem("tutorHisabProfilePendingSync_"+u.uid)==="yes";profile=profilePending?{...(cloud.profile||{}),...profile}:{...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;document.querySelector(".profile-signout").hidden=false;showTab("home",false);}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();$("profileEditForm").hidden=true;$("profileView").hidden=true;$("profileEditBtn").hidden=true;document.querySelector(".profile-signout").hidden=true;authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile",false);if(localStorage.getItem("tutorHisabOnboardingDone")==="yes"){$("firstRunOverlay").hidden=false;$("firstNotificationStep").hidden=true;$("firstAuthStep").hidden=false;const migrated=localStorage.getItem("tutorHisabMigrationNotice")==="yes";showLoginError(migrated?"Please sign in with your existing account after this update. Creating a new account will not show your previous records.":"");}}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
 
 function shareTutorHisab(event){
  if(event)event.preventDefault();
@@ -926,12 +919,7 @@ function shareTutorHisab(event){
 function copyShareText(message){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(message).then(()=>alert("শেয়ার করার লেখা কপি হয়েছে।")).catch(()=>alert(message));else alert(message);}
 function handleAppBack(){
  if(!$("firstRunOverlay").hidden){
-  if(!$("firstAuthStep").hidden){
-   if(authMode==="signup"){setAuthMode("signin");return true;}
-   $("firstAuthStep").hidden=true;$("firstAccountStep").hidden=false;return true;
-  }
-  if(!$("firstLanguageStep").hidden){$("firstLanguageStep").hidden=true;$("firstNotificationStep").hidden=false;return true;}
-  if(!$("firstAccountStep").hidden){$("firstAccountStep").hidden=true;$("firstLanguageStep").hidden=false;return true;}
+  if(!$("firstAuthStep").hidden){if(authMode==="signup"){setAuthMode("signin");return true;}return false;}
   return false;
  }
  if(typeof editingStudentId!=="undefined"&&editingStudentId!==null){cancelStudentEdit();return true;}
@@ -945,29 +933,17 @@ function handleAppBack(){
  return false;
 }
 window.handleAppBack=handleAppBack;
-window.addEventListener("popstate",()=>{if(activeAppTab!=="home")showTab("home",false);else if(activeHomePanel!=="students")showHomePanel("students");});
+// Keep the selected app tab when WebView returns from a local help or policy page.
 function finishOnboarding(tab){
  $("firstRunOverlay").hidden=true;
  showTab(tab);
 }
 function continueFromNotificationPrompt(){
  try{if(window.Android&&typeof window.Android.requestNotificationPermission==="function")window.Android.requestNotificationPermission();}catch(e){}
- $("firstNotificationStep").hidden=true;
- $("firstLanguageStep").hidden=false;
+ $("firstNotificationStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");
 }
 $("firstNotificationContinue").addEventListener("click",continueFromNotificationPrompt);
-$("firstNotificationSkip").addEventListener("click",()=>{
- $("firstNotificationStep").hidden=true;
- $("firstLanguageStep").hidden=false;
-});
-document.querySelectorAll("[data-first-language]").forEach(btn=>btn.addEventListener("click",()=>{
- const lang=btn.dataset.firstLanguage;
- localStorage.setItem("tutorHisabLanguage",lang);
- render();
- $("firstLanguageStep").hidden=true;
- $("firstAccountStep").hidden=false;
-}));
-$("firstOpenAccount").addEventListener("click",()=>{ $("firstAccountStep").hidden=true; $("firstAuthStep").hidden=false; showLoginError(""); });
+$("firstNotificationSkip").addEventListener("click",()=>{$("firstNotificationStep").hidden=true;$("firstAuthStep").hidden=false;showLoginError("");});
 $("authForm").addEventListener("submit",event=>{event.preventDefault();emailSignIn();});
 ["loginEmail","loginPassword","confirmPassword","signupName","signupMobile","signupInstitution","signupDesignation"].forEach(id=>{const field=$(id);if(field)field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();emailSignIn();}});});
 $("profilePhotoInput").addEventListener("change",handleProfilePhoto);
@@ -977,10 +953,7 @@ $("forgotPassword").addEventListener("click",e=>{e.preventDefault();resetLoginPa
 $("togglePassword").addEventListener("click",()=>{const p=$("loginPassword"),confirm=$("confirmPassword"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",visible=p.type==="password";p.type=visible?"text":"password";confirm.type=visible?"text":"password";$("togglePassword").textContent=visible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password");});
 setAuthMode("signin");
 if(localStorage.getItem("tutorHisabOnboardingDone")!=="yes"){
- $("firstRunOverlay").hidden=false;
- $("firstNotificationStep").hidden=false;
- $("firstLanguageStep").hidden=true;
- $("firstAccountStep").hidden=true;
+ $("firstRunOverlay").hidden=false;$("firstNotificationStep").hidden=false;$("firstAuthStep").hidden=true;
 }
 
 render();
