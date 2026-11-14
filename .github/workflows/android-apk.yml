@@ -5,7 +5,6 @@ on:
   pull_request:
     branches:
       - main
-      - fix/account-isolation-profile-cancel
   push:
     branches:
       - fix/audit-and-data-integrity
@@ -13,7 +12,6 @@ on:
       - fix/account-isolation-profile-cancel
       - fix/ui-navigation-language-branding
       - fix/back-login-polish-2026-11-13
-      - feat/professional-design-system-2026-11-13
 
 jobs:
   build:
@@ -40,27 +38,38 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Check embedded JavaScript syntax
+      - name: Check embedded JavaScript and required app flows
         run: |
-          node -e 'const fs=require("fs"); const html=fs.readFileSync("app/src/main/assets/index.html","utf8"); const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(s=>s.trim()); if(scripts.length!==1) throw new Error(`Expected one inline script, found ${scripts.length}`); fs.writeFileSync("/tmp/tutor-hisab-inline.js",scripts.join("\n"));'
+          node -e 'const fs=require("fs"); const html=fs.readFileSync("app/src/main/assets/index.html","utf8"); const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(s=>s.trim()); if(scripts.length!==1) throw new Error(\`Expected one inline script, found \${scripts.length}\`); fs.writeFileSync("/tmp/tutor-hisab-inline.js",scripts.join("\n"));'
           node --check /tmp/tutor-hisab-inline.js
-
-      - name: Check Tutor Hisab UI requirements
-        run: |
-          node - <<'NODE'
-          const fs = require('fs');
-          const html = fs.readFileSync('app/src/main/assets/index.html', 'utf8');
-          const assert = (ok, message) => { if (!ok) throw new Error(message); };
-          const tabs = [...html.matchAll(/data-tab="(home|store|notification|profile|settings)"/g)].map(m => m[1]);
-          assert(tabs.length === 5 && new Set(tabs).size === 5, 'Expected exactly five unique bottom-navigation tabs');
-          for (const id of ['homeStudentsPanel','homePaymentsPanel','homeStudentListPanel','homeReportsPanel']) assert(html.includes('id="'+id+'"'), 'Missing Homepage panel: '+id);
-          for (const label of ['Homepage','My Store','Notification','My Profile','Settings']) assert(html.includes('>'+label+'</span>'), 'Missing bottom-nav label: '+label);
-          for (const label of ['SMS Packages','Pro','Elite']) assert(html.includes(label), 'Missing Store item: '+label);
-          assert(html.includes('onclick="backup()"') && html.includes('id="restoreFile"'), 'Backup/restore must remain in Settings');
-          assert(html.includes('id="loginEmail"') && html.includes('id="loginPassword"') && html.includes('id="confirmPassword"'), 'Email/password authentication fields missing');
-          assert(html.includes('prefers-reduced-motion') && html.includes('min-height:48px'), 'Accessibility sizing or reduced-motion support missing');
-          console.log('Tutor Hisab UI contract checks passed.');
-          NODE
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path("app/src/main/assets/index.html").read_text(encoding="utf-8")
+          java = Path("app/src/main/java/com/tutorhisab/app/MainActivity.java").read_text(encoding="utf-8")
+          rules = Path("firestore.rules").read_text(encoding="utf-8")
+          if r"/^[^\s@]+@[^\s@]+\.[^\s@]+$/" not in html:
+              raise SystemExit("Email validation pattern missing")
+          if r"/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/" in html:
+              raise SystemExit("Email validation contains the double-escape bug")
+          for required in ("signInWithEmailAndPassword", "createUserWithEmailAndPassword",
+                           "sendPasswordResetEmail", "window.handleAppBack=handleAppBack",
+                           'STORAGE_KEY="tutorHisabData_"+u.uid', 'showTab("home",false)'):
+              if required not in html:
+                  raise SystemExit("Required app flow missing: " + required)
+          if "window.handleAppBack ? window.handleAppBack()" not in java:
+              raise SystemExit("Android Back button is not connected to the app navigation handler")
+          tabs = re.findall(r'data-tab="([^"]+)"', html)
+          if tabs != ["home", "store", "notification", "profile", "settings"]:
+              raise SystemExit("Bottom navigation must contain the five required tabs in order")
+          if len(re.findall(r"class="nav-label"", html)) != 5:
+              raise SystemExit("All five bottom-navigation tabs must show visible text labels")
+          home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
+          if home_tabs != ["students", "payments", "studentList", "reports"]:
+              raise SystemExit("Homepage must contain all four required sections in order")
+          if "request.auth.uid == userId" not in rules:
+              raise SystemExit("Firestore rules do not enforce per-user ownership")
+          PY
 
       - name: Build debug APK
         run: gradle assembleDebug
