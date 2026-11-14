@@ -574,7 +574,7 @@ async function emailSignIn(){
  if(!auth||!db){showLoginError("Firebase সংযোগ পাওয়া যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।");return;}
  const {email,password}=loginValues(),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn";
  if(!email||!password){showLoginError(bn?"ইমেইল ও পাসওয়ার্ড লিখুন।":"Enter your email and password.");return;}
- if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){showLoginError(bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.");$("loginEmail").focus();return;}
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showLoginError(bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.");$("loginEmail").focus();return;}
  if(authMode==="signup"){
   if(!$("signupName").value.trim()){showLoginError(bn?"আপনার নাম লিখুন।":"Enter your name.");$("signupName").focus();return;}
   if(password.length<6){showLoginError(bn?"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।":"Password must be at least 6 characters.");$("loginPassword").focus();return;}
