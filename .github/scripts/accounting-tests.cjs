@@ -110,6 +110,8 @@ assert.doesNotMatch(firestoreRules, /allow\s+(read|write|read,\s*write)\s*:\s*if
 assert.ok(firestoreRules.includes("deletedStudentIds") && firestoreRules.includes("deletedPaymentIds"), "Firestore must block writes to tombstoned records");
 assert.ok(firestoreRules.includes("existsAfter(") && firestoreRules.includes("request.resource.data.amount > 0") && firestoreRules.includes("request.resource.data.fee > 0"), "Firestore must validate payment references and positive accounting amounts");
 assert.ok(firestoreRules.includes("request.resource.data.id == studentId") && firestoreRules.includes("request.resource.data.id == paymentId"), "Firestore document IDs must match the stored record IDs");
+assert.ok(firestoreRules.includes("getAfter(/databases/$(database)/documents/users/$(userId)/students/$(studentId)).data.start") && firestoreRules.includes("request.resource.data.month >= studentStartMonthAfter(userId, request.resource.data.studentId)"), "Firestore must reject payments before the student fee start month");
+assert.ok(firestoreRules.includes("(0[1-9]|[12][0-9]|3[01])") , "Firestore must reject impossible payment day numbers");
 assert.ok(html.includes("cloud.deletedStudentIds") && html.includes("cloud.deletedPaymentIds"), "Cloud sync must import deletion tombstones from the account document");
 assert.ok(html.includes("local.replaceCloud===true") && html.includes("FieldValue.arrayUnion(...deletedStudents)"), "Restore must replace cloud data and normal sync must propagate deletion tombstones");
 assert.ok(html.includes("tutorHisabProfilePendingSync_") && html.includes("localStorage.removeItem(pendingProfileKey)"), "Offline profile writes must retry Cloud sync after reconnect");
