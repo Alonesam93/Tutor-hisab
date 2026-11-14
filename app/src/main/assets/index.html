@@ -498,7 +498,7 @@ function renderNotifications(){
  const box=$("notificationList");if(!box)return;
  const en=(localStorage.getItem("tutorHisabLanguage")||"bn")==="en";
  const due=data.students.map(s=>({student:s,amount:dueFor(s)})).filter(x=>x.amount>0).sort((a,b)=>b.amount-a.amount);
- const recent=[...data.payments].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,5);
+ const recent=[...data.payments].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
  const section=(title,body)=>'<div class="student"><b>'+title+'</b><p>'+body+'</p></div>';
  let html='';
  if(due.length){
@@ -514,7 +514,7 @@ function renderNotifications(){
  html+='<h4>'+(en?'App updates':'অ্যাপ আপডেট')+'</h4>';
  html+=section(en?'App announcements':'অ্যাপের ঘোষণা',en?'Important app updates will appear here.':'অ্যাপের গুরুত্বপূর্ণ আপডেট এখানে দেখানো হবে।');
  box.innerHTML=html;
- const badge=$("notificationCount");if(badge){const count=box.querySelectorAll(".student").length;badge.textContent=count>99?"99+":String(count);badge.hidden=count===0;}
+ const badge=$("notificationCount");if(badge){const count=due.length+recent.length;badge.textContent=count>99?"99+":String(count);badge.hidden=count===0;}
 }
 $("students").addEventListener("click",e=>{const editBtn=e.target.closest("[data-edit-id]");if(editBtn){editStudent(editBtn.dataset.editId);return;}const btn=e.target.closest("[data-remove-id]");if(btn)removeStudent(btn.dataset.removeId);});
 $("paymentHistory").addEventListener("click",e=>{const edit=e.target.closest("[data-payment-edit]");if(edit){editPayment(edit.dataset.paymentEdit);return;}const del=e.target.closest("[data-payment-remove]");if(del)removePayment(del.dataset.paymentRemove);});
