@@ -157,7 +157,7 @@ button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid #
 
 #settingsScreen p.settings-link{display:flex;align-items:center;min-height:48px;margin:8px 0;padding:11px 13px;border:1px solid var(--th-line);border-radius:13px;background:#fff;box-shadow:0 2px 8px #28234f06}#settingsScreen p.settings-link a{display:block;width:100%;font-size:13px}#settingsScreen p.settings-link a:after{content:"›";float:right;color:#9b98ad;font-size:20px;line-height:16px}.page-intro{margin-bottom:2px}
 
-.notification-count{position:absolute;top:1px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#d92d20;color:#fff;font-size:10px;font-weight:800;line-height:18px;text-align:center;box-shadow:0 1px 4px #0002}.bottom-nav button[data-tab="notification"]{position:relative}
+.notification-count{position:absolute;top:1px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#d92d20;color:#fff;font-size:10px;font-weight:800;line-height:18px;text-align:center;box-shadow:0 1px 4px #0002}.bottom-nav button[aria-label="Notification"]{position:relative}
 .onboarding{align-items:flex-start;padding:12px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto}.onboarding-card{margin:auto}
 @media(max-height:700px){.onboarding-card{padding:16px 18px calc(20px + env(safe-area-inset-bottom))}.login-brand{margin-bottom:8px}.login-subtitle{margin-bottom:10px}}
 </style>
@@ -758,7 +758,7 @@ async function resetLoginPassword(){
   showLoginError(messages[x.code]||(bn?"রিসেট ইমেইল পাঠানো যায়নি। আবার চেষ্টা করুন।":"Could not send the reset email. Please try again."));
  }
 }
-async async function emailSignOut(){if(!auth||!currentUser){alert("You are not signed in.");return;}try{await auth.signOut();}catch(error){alert("Sign out failed: "+(error&&error.message?error.message:"Please try again."));}}
+async function emailSignOut(){if(!auth||!currentUser){alert("You are not signed in.");return;}try{await auth.signOut();}catch(error){alert("Sign out failed: "+(error&&error.message?error.message:"Please try again."));}}
 async function readCloudData(uid){
  const base=db.collection("users").doc(uid);
  const [userDoc,studentsSnap,paymentsSnap]=await Promise.all([
