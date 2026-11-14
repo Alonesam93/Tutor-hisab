@@ -18,6 +18,7 @@ on:
       - fix/ui-navigation-language-branding
       - fix/back-login-polish-2026-11-13
       - feat/professional-design-system-2026-11-13
+      - fix/auth-profile-guard-and-validation-2026-11-14
 
 jobs:
   build:
@@ -75,7 +76,7 @@ jobs:
           assert(html.includes('requestNotificationPermission') && html.includes('autocomplete="current-password"') && html.includes('autocomplete="new-password"'), 'Permission bridge or password-manager-friendly auth fields missing');
           const java = fs.readFileSync('app/src/main/java/com/tutorhisab/app/MainActivity.java', 'utf8');
           const gradle = fs.readFileSync('app/build.gradle', 'utf8');
-          assert(gradle.includes('versionCode 4') && gradle.includes("versionName '1.2.1'"), 'Android update version must increase for installation over previous builds');
+          assert(gradle.includes('versionCode 5') && gradle.includes("versionName '1.2.2'"), 'Android update version must increase for installation over previous builds');
           assert(java.includes('public void requestNotificationPermission()'), 'Native notification permission bridge missing');
           assert(!/if\s*\(Build\.VERSION\.SDK_INT\s*>=\s*33[\s\S]{0,220}requestPermissions\(/.test(java.slice(java.indexOf('protected void onCreate'), java.indexOf('private void scheduleNextInterstitialWindow'))), 'Notification permission must not be requested immediately during app startup');
           assert(java.includes('shouldOverrideUrlLoading(WebView view, WebResourceRequest request)') && java.includes('appassets.androidplatform.net') && java.includes('startsWith("/assets/")'), 'WebView must keep only packaged HTTPS app assets inside the native bridge');
@@ -102,7 +103,7 @@ jobs:
           test -n "$APKSIGNER"
           test -n "$AAPT"
           "$APKSIGNER" verify --verbose --print-certs "$APK"
-          "$AAPT" dump badging "$APK" | grep -F "name='com.tutorhisab.app' versionCode='4' versionName='1.2.1'"
+          "$AAPT" dump badging "$APK" | grep -F "name='com.tutorhisab.app' versionCode='5' versionName='1.2.2'"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
