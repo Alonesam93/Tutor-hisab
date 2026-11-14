@@ -67,7 +67,12 @@ jobs:
           const storeEnd = html.indexOf('</section>', storeStart);
           const store = html.slice(storeStart, storeEnd);
           for (const label of ['SMS Packages','Pro','Elite','Coming Soon']) assert(store.includes(label), 'Missing Store item/status: '+label);
+          assert([...store.matchAll(/class="store-product"/g)].length === 3, 'My Store must contain exactly three products');
           assert(!store.includes('Remove Ad'), 'Remove Ad must not appear in My Store');
+          const notificationStart = html.indexOf('id="notificationScreen"');
+          const notificationEnd = html.indexOf('</section>', notificationStart);
+          const notification = html.slice(notificationStart, notificationEnd);
+          for (const label of ['SMS Packages','Pro','Elite','Coming Soon']) assert(notification.includes(label), 'Missing notification service status: '+label);
           assert(html.includes('id="notificationList"') && html.includes('Service status') && html.includes('অ্যাপ আপডেট'), 'Notification screen must include due/payment updates, service status and app updates');
           assert(html.includes('id="notificationCount"') && html.includes('const count=due.length+recent.length'), 'Notification count badge must reflect actual due and payment notifications');
           assert(html.includes('onclick="backup()"') && html.includes('id="restoreFile"'), 'Backup/restore must remain in Settings');
