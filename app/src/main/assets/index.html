@@ -739,7 +739,20 @@ async function emailSignIn(){
  }finally{setAuthBusy(false);}
 }
 async function emailSignUp(){setAuthMode("signup");}
-async function resetLoginPassword(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const email=$("loginEmail").value.trim();if(!email){showLoginError("আগে আপনার ইমেইল লিখুন।");return;}try{await auth.sendPasswordResetEmail(email);showLoginError("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।",true);}catch(x){showLoginError("রিসেট ইমেইল পাঠানো যায়নি: "+x.message);}}
+async function resetLoginPassword(){
+ const bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn";
+ if(!auth){showLoginError(bn?"Firebase সংযোগ পাওয়া যায়নি।":"Firebase connection is unavailable.");return;}
+ const email=$("loginEmail").value.trim();
+ if(!email){showLoginError(bn?"আগে আপনার ইমেইল লিখুন।":"Enter your email first.");$("loginEmail").focus();return;}
+ if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){showLoginError(bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.");$("loginEmail").focus();return;}
+ try{
+  await auth.sendPasswordResetEmail(email);
+  showLoginError(bn?"পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।":"A password reset link has been sent to your email.",true);
+ }catch(x){
+  const messages={"auth/invalid-email":bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.","auth/user-not-found":bn?"এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।":"No account was found for this email.","auth/network-request-failed":bn?"ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।":"Check your internet connection and try again.","auth/too-many-requests":bn?"অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।":"Too many attempts. Please try again later."};
+  showLoginError(messages[x.code]||(bn?"রিসেট ইমেইল পাঠানো যায়নি। আবার চেষ্টা করুন।":"Could not send the reset email. Please try again."));
+ }
+}
 async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
 async function readCloudData(uid){
  const base=db.collection("users").doc(uid);
