@@ -744,7 +744,7 @@ async function resetLoginPassword(){
  if(!auth){showLoginError(bn?"Firebase সংযোগ পাওয়া যায়নি।":"Firebase connection is unavailable.");return;}
  const email=$("loginEmail").value.trim();
  if(!email){showLoginError(bn?"আগে আপনার ইমেইল লিখুন।":"Enter your email first.");$("loginEmail").focus();return;}
- if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){showLoginError(bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.");$("loginEmail").focus();return;}
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showLoginError(bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.");$("loginEmail").focus();return;}
  try{
   await auth.sendPasswordResetEmail(email);
   showLoginError(bn?"পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।":"A password reset link has been sent to your email.",true);
