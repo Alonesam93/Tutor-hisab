@@ -69,7 +69,7 @@ jobs:
           for (const label of ['SMS Packages','Remove Ad','Coming Soon']) assert(store.includes(label), 'Missing Store item/status: '+label);
           assert(!store.includes('<b>Pro</b>') && !store.includes('<b>Elite</b>'), 'Pro and Elite must not appear in My Store');
           assert(html.includes('id="notificationList"') && html.includes('Service status') && html.includes('অ্যাপ আপডেট'), 'Notification screen must include due/payment updates, service status and app updates');
-          assert(html.includes('id="notificationCount"') && html.includes('querySelectorAll(".student").length'), 'Notification count badge must reflect the number of notification cards');
+          assert(html.includes('id="notificationCount"') && html.includes('const count=due.length+recent.length'), 'Notification count badge must reflect actual due and payment notifications');
           assert(html.includes('onclick="backup()"') && html.includes('id="restoreFile"'), 'Backup/restore must remain in Settings');
           assert(html.includes('id="loginEmail"') && html.includes('id="loginPassword"') && html.includes('id="confirmPassword"'), 'Email/password authentication fields missing');
           assert(html.includes('prefers-reduced-motion') && html.includes('min-height:48px'), 'Accessibility sizing or reduced-motion support missing');
