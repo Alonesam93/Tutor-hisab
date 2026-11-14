@@ -14,6 +14,7 @@ on:
       - fix/ui-navigation-language-branding
       - fix/back-login-polish-2026-11-13
       - feat/professional-design-system-2026-11-13
+      - fix/auth-profile-guard-and-validation-2026-11-14
 
 jobs:
   build:
