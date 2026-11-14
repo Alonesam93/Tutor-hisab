@@ -62,6 +62,8 @@ jobs:
           tabs = re.findall(r'data-tab="([^"]+)"', html)
           if tabs != ["home", "store", "notification", "profile", "settings"]:
               raise SystemExit("Bottom navigation must contain the five required tabs in order")
+          if len(re.findall(r"class="nav-label"", html)) != 5:
+              raise SystemExit("All five bottom-navigation tabs must show visible text labels")
           home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
           if home_tabs != ["students", "payments", "studentList", "reports"]:
               raise SystemExit("Homepage must contain all four required sections in order")
