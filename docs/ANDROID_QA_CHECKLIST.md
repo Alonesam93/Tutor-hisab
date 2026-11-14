@@ -16,7 +16,7 @@
 - [ ] Android debug APK builds and is packaged as a workflow artifact
 
 ## Physical-device checks
-- [ ] First-run notification permission and language selection
+- [ ] First-run notification prompt leads directly to Sign In / Sign Up; English is the default and language can be changed in Settings
 - [ ] Email/password sign-up, automatic sign-in, sign-in and email password reset
 - [ ] Optional profile photo, mobile, institution and designation persist to the right teacher account
 - [ ] External Privacy, Contact and Feedback links open in the system browser
@@ -27,6 +27,7 @@
 - [ ] Download backup, restore it, reject malformed and other-account backups
 - [ ] All five tabs, Homepage panels, Android Back button and predictive Back gesture
 - [ ] Keyboard, small screens, large text, TalkBack labels and touch target sizes
+- [ ] Publish the repository firestore.rules to the Firebase project before live Cloud Sync tests
 - [ ] Offline/online transitions and Firestore sync conflict/retry behavior
 
 A successful debug build is not proof that the physical-device checks passed. Record device model, Android version, test account type, steps, and result for each manual check.
