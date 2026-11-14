@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function userData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function studentExistsAfter(userId, studentId) {
+      return existsAfter(/databases/$(database)/documents/users/$(userId)/students/$(studentId));
+    }
+
+    function studentStartMonthAfter(userId, studentId) {
+      return getAfter(/databases/$(database)/documents/users/$(userId)/students/$(studentId)).data.start;
+    }
+
+    match /users/{userId} {
+      allow read, create, update: if isOwner(userId);
+      allow delete: if false;
+
+      match /students/{studentId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.id == studentId
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.fee is number
+          && request.resource.data.fee > 0
+          && request.resource.data.start is string
+          && request.resource.data.start.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+          && request.resource.data.opening is number
+          && request.resource.data.opening >= 0
+          && !(studentId in userData(userId).get('deletedStudentIds', []));
+      }
+
+      match /payments/{paymentId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.id == paymentId
+          && request.resource.data.studentId is string
+          && studentExistsAfter(userId, request.resource.data.studentId)
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && request.resource.data.month is string
+          && request.resource.data.month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+          && request.resource.data.date is string
+          && request.resource.data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+          && request.resource.data.month >= studentStartMonthAfter(userId, request.resource.data.studentId)
+          && !(paymentId in userData(userId).get('deletedPaymentIds', []))
+          && !(request.resource.data.studentId in userData(userId).get('deletedStudentIds', []));
+      }
+    }
+  }
+}
