@@ -47,12 +47,7 @@ service cloud.firestore {
           && request.resource.data.month is string
           && request.resource.data.month.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
           && request.resource.data.date is string
-          && request.resource.data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])
-          && !(request.resource.data.studentId in userData(userId).get('deletedStudentIds', []));
-      }
-    }
-  }
-})
+          && request.resource.data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
           && request.resource.data.month >= studentStartMonthAfter(userId, request.resource.data.studentId)
           && !(paymentId in userData(userId).get('deletedPaymentIds', []))
           && !(request.resource.data.studentId in userData(userId).get('deletedStudentIds', []));
