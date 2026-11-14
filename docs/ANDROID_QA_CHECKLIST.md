@@ -3,7 +3,7 @@
 ## Automated checks
 - [ ] Embedded JavaScript parses with Node.js
 - [ ] Five-tab navigation and four Homepage panels are present
-- [ ] First-run notification explanation precedes language selection; permission is not requested at cold start
+- [ ] First-run notification explanation precedes Sign In / Sign Up; English is the default and language changes remain available in Settings; permission is not requested at cold start
 - [ ] Sign-up profile photo is resized/compressed and saved with the correct account
 - [ ] Offline profile updates are retried after network recovery
 - [ ] WebView external navigation cannot access the native JavaScript bridges
