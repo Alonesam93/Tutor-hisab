@@ -137,7 +137,8 @@ for (const document of [privacyHtml, termsHtml, html, rootHtml]) {
   assert.ok(!document.includes("tutorhisab.support@gmail.com"), "Unverified support email must not be published");
   assert.ok(!document.includes("01872466893"), "Unverified support phone must not be published");
 }
-assert.ok(html.includes("github.com/Alonesam93/Tutor-hisab/issues"), "Contact and feedback links must point to the verified project issue tracker");
+assert.ok(html.includes('href="contact.html"') && html.includes('href="feedback.html"'), "Contact and feedback links must open the packaged in-app support pages");
+assert.ok(fs.existsSync("app/src/main/assets/contact.html") && fs.existsSync("app/src/main/assets/feedback.html"), "Packaged Contact and Feedback pages must exist");
 
 const androidJava = fs.readFileSync("app/src/main/java/com/tutorhisab/app/MainActivity.java", "utf8");
 assert.ok(androidJava.includes("BuildConfig.DEBUG"), "Debug and release ad configuration must be separated");
