@@ -370,7 +370,7 @@ try{
 }catch(migrationError){console.error("Tutor Hisab local data migration will retry:",migrationError);}
 let STORAGE_KEY="tutorHisabData";
 const $=id=>document.getElementById(id);
-if(!localStorage.getItem("tutorHisabLanguage"))localStorage.setItem("tutorHisabLanguage","en");
+if(localStorage.getItem("tutorHisabEnglishDefaultV123")!=="yes"){localStorage.setItem("tutorHisabLanguage","en");localStorage.setItem("tutorHisabEnglishDefaultV123","yes");}
 const numberLocale=()=>((localStorage.getItem("tutorHisabLanguage")||"bn")==="bn"?"bn-BD":"en-US");
 const money=n=>"৳"+Number(n||0).toLocaleString(numberLocale(),{maximumFractionDigits:2});
 const today=new Date();
