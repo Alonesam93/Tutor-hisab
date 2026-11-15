@@ -13,6 +13,7 @@ on:
       - fix/ui-navigation-language-branding
       - fix/back-login-polish-2026-11-13
       - release/tutor-hisab-android-2026-11-14
+      - fix/workflow-python-syntax-2026-11-16
 
 jobs:
   build:
@@ -63,7 +64,7 @@ jobs:
           tabs = re.findall(r'data-tab="([^"]+)"', html)
           if tabs != ["home", "store", "notification", "profile", "settings"]:
               raise SystemExit("Bottom navigation must contain the five required tabs in order")
-          if len(re.findall(r"class="nav-label"", html)) != 5:
+          if len(re.findall(r'class="nav-label"', html)) != 5:
               raise SystemExit("All five bottom-navigation tabs must show visible text labels")
           home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
           if home_tabs != ["students", "payments", "studentList", "reports"]:
