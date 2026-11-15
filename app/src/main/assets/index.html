@@ -112,6 +112,21 @@ body{padding-bottom:75px}
 .bottom-nav .nav-icon{font-size:21px!important;line-height:1}
 .bottom-nav .nav-label{display:none!important}
 body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+
+/* Professional settings cards, consistent line icons and theme-aware surfaces. */
+.settings-heading{display:flex;align-items:center;gap:14px;margin:4px 0 18px;padding:6px 2px}.settings-heading-icon{width:54px;height:54px;border-radius:17px;background:linear-gradient(145deg,#51418f,#8069bd);display:grid;place-items:center;box-shadow:0 8px 18px #51418f28;flex:none}.settings-heading-icon svg{width:29px;height:29px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.settings-heading h2{margin:0;color:#32245f;font-size:23px}.settings-heading p{margin:4px 0 0;color:#81778d;font-size:13px}
+.settings-group{background:#fff;border:1px solid #e8e1f1;border-radius:18px;padding:15px;margin:0 0 14px;box-shadow:0 5px 18px #32245f09}.settings-group-title{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#8a7da0;margin:1px 0 9px}
+.settings-row,.settings-link{display:flex;align-items:center;gap:12px;min-height:66px;padding:10px 2px;border-bottom:1px solid #f0edf4;color:inherit;text-decoration:none}.settings-row:last-child,.settings-link:last-child{border-bottom:0}
+.settings-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none;background:#eee8fa;color:#51418f}.settings-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.theme-icon{background:#fff1dc;color:#b76c19}.language-icon{background:#e8f3ff;color:#3976b9}.backup-icon{background:#e8f7ef;color:#248354}.privacy-icon{background:#e8f3ff;color:#3976b9}.terms-icon{background:#f0eafb;color:#6650a2}.contact-icon{background:#e5f6f3;color:#218779}.feedback-icon{background:#fff0ec;color:#c56a54}.about-icon{background:#edf0ff;color:#5d65b1}.share-icon{background:#e8f7ef;color:#248354}.rate-icon{background:#fff5dc;color:#b78321}
+.settings-row-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.settings-row-copy b{font-size:14px;color:#342b43}.settings-row-copy span{font-size:12px;color:#898194;line-height:1.35}.settings-row select{width:auto;min-width:112px;max-width:126px;margin:0;padding:9px 8px;font-size:13px;background:#faf9fc}.settings-chevron{font-size:25px;color:#a69bb5;line-height:1}
+.settings-action{margin:10px 0 4px;min-height:46px;border-radius:12px;background:#51418f}.settings-file-label{display:block;font-size:13px;font-weight:700;margin:12px 0 3px;color:#514767}.settings-group input[type=file]{font-size:13px;background:#faf9fc}.settings-static{cursor:default}
+.theme-switch{display:flex;gap:4px;padding:4px;background:#f2eff7;border-radius:12px;flex:none}.theme-choice{width:auto;min-height:34px;margin:0;padding:7px 9px;border-radius:9px;font-size:12px;background:transparent;color:#6f657c;white-space:nowrap}.theme-choice.active{background:#fff;color:#51418f;box-shadow:0 2px 6px #32245f16}
+.field-label{display:block;margin:13px 0 3px;font-size:13px;font-weight:750;color:#40345d}.field-label span{font-weight:500;color:#8b8297}.field-label .required-mark{color:#c0392b;font-weight:800}
+#homeStudentsPanel input{min-height:48px;border:1px solid #d9d2e4;border-radius:11px;background:#fff;padding:12px 13px}#homeStudentsPanel input:focus{outline:3px solid #e4dcf3;border-color:#7560b0}#homeStudentsPanel .card{padding:18px;border:1px solid #e9e3f0;border-radius:17px}#homeStudentsPanel #studentSaveBtn{min-height:48px;border-radius:12px;background:linear-gradient(135deg,#51418f,#7560b0);box-shadow:0 7px 15px #51418f22}
+#settingsScreen a:focus-visible,#settingsScreen button:focus-visible,#settingsScreen select:focus-visible{outline:3px solid #bcaee0;outline-offset:2px}
+body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode header{background:#25213b;color:#f6f2ff}body.dark-mode .card,body.dark-mode .settings-group,body.dark-mode .student{background:#1c1f29;color:#e9e7ef;border-color:#343747;box-shadow:none}body.dark-mode .stat{background:#29253b;color:#f0ebff}body.dark-mode input,body.dark-mode select{background:#252936;color:#f3f1f8;border-color:#44495a}body.dark-mode input::placeholder{color:#a5a8b7}body.dark-mode .bottom-nav{background:#1b1e28;border-color:#343747}body.dark-mode .bottom-nav button{color:#c2bbd8}body.dark-mode .bottom-nav button.active{background:#37304f;color:#e6ddff;outline-color:#7663a6}body.dark-mode .settings-heading h2,body.dark-mode .settings-row-copy b,body.dark-mode .field-label{color:#f0edf7}body.dark-mode .settings-heading p,body.dark-mode .settings-row-copy span,body.dark-mode .settings-group-title,body.dark-mode .field-label span{color:#aaa5b7}body.dark-mode .settings-row,body.dark-mode .settings-link{border-color:#343747;color:#e9e7ef}body.dark-mode .settings-row select,body.dark-mode .settings-group input[type=file]{background:#252936;color:#f3f1f8}body.dark-mode .theme-switch{background:#292d3a}body.dark-mode .theme-choice{color:#c2bbd8}body.dark-mode .theme-choice.active{background:#51418f;color:#fff}body.dark-mode #homeStudentsPanel input{background:#252936;color:#f3f1f8;border-color:#44495a}body.dark-mode .small,body.dark-mode .notice{color:#c4bfd0}body.dark-mode hr{border-color:#343747}
+
 </style>
 </head>
 <body>
@@ -170,11 +185,11 @@ body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
 <div id="homeStudentsPanel">
  <div class="card">
   <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
-  <input id="name" placeholder="Student Name (optional)" maxlength="100">
-  <input id="className" placeholder="Class *" maxlength="50" required>
-  <input id="phone" type="tel" placeholder="Mobile Number *" inputmode="tel" maxlength="20" required>
-  <input id="fee" type="number" min="1" step="0.01" placeholder="Monthly Fee *" required>
-  <label>Fee calculation start month</label>
+  <label class="field-label" for="name">Student Name <span>(Optional)</span></label><input id="name" type="text" placeholder="Enter student name" maxlength="100" autocomplete="off">
+  <label class="field-label" for="className">Class <span class="required-mark">*</span></label><input id="className" type="text" placeholder="e.g. Class 8, SSC" maxlength="50" required pattern="[A-Za-z0-9 .()/-]+" title="Use English letters and numbers only" autocomplete="off">
+  <label class="field-label" for="phone">Mobile Number <span class="required-mark">*</span></label><input id="phone" type="tel" placeholder="e.g. 01712345678" inputmode="numeric" maxlength="15" required pattern="[0-9]{7,15}" title="Enter 7 to 15 English digits only" autocomplete="tel">
+  <label class="field-label" for="fee">Monthly Fee <span class="required-mark">*</span></label><input id="fee" type="number" inputmode="decimal" min="1" step="0.01" placeholder="Enter monthly fee" required>
+  <label class="field-label" for="start">Fee calculation start month <span class="required-mark">*</span></label>
   <input id="start" type="month">
   <input id="opening" type="number" min="0" step="0.01" value="0" placeholder="আগের বকেয়া (টাকা)">
   <button id="studentSaveBtn" onclick="addStudent()">শিক্ষার্থী সংরক্ষণ করুন</button>
@@ -240,24 +255,23 @@ body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
  <button type="button" class="danger profile-signout" onclick="emailSignOut()">লগ আউট</button>
 </div></section>
 <section id="settingsScreen" class="tab-screen" hidden>
- <div class="card"><h3>⚙️ সেটিংস</h3>
-  <h4>💾 আপনার অগ্রগতি সংরক্ষণ</h4>
-  <div class="card">
-<h3>💾 ব্যাকআপ ও রিস্টোর</h3>
-<button onclick="backup()">ব্যাকআপ ডাউনলোড করুন</button>
-<label>ব্যাকআপ ফাইল থেকে তথ্য ফিরিয়ে আনুন</label>
-<input type="file" id="restoreFile" accept=".json,application/json">
-<button class="secondary" onclick="restore()">ব্যাকআপ রিস্টোর করুন</button>
-</div>
-  <hr><h4>ভাষা</h4><select id="languageSelect" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select>
-  <hr><h4>নির্দেশিকা</h4><p>শিক্ষার্থী যোগ করুন, মাসিক বেতন নির্ধারণ করুন এবং জমার তথ্য সংরক্ষণ করুন।</p>
-  <hr><h4>সহায়তা</h4>
-  <p><a href="privacy.html">গোপনীয়তা নীতি</a></p>
-  <p><a href="terms.html">ব্যবহারের শর্তাবলি</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com">যোগাযোগ</a></p>
-  <p><a href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback">মতামত</a></p><p><a href="about.html">পরিচিতি / About Tutor Hisab</a></p>
-  <p><a href="#" onclick="shareTutorHisab(event)">শেয়ার করুন / Share</a></p>
-  <p>রেটিং দিন / Rate Us — শীঘ্রই আসছে</p>
+ <div class="settings-heading"><div class="settings-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3H3.7a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg></div><div><h2>Settings</h2><p>Manage your app preferences</p></div></div>
+ <div class="settings-group"><div class="settings-group-title">Appearance</div>
+  <div class="settings-row"><div class="settings-icon theme-icon"><svg viewBox="0 0 24 24"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg></div><div class="settings-row-copy"><b>Theme Mode</b><span>Choose light or dark appearance</span></div><div class="theme-switch" role="group" aria-label="Theme mode"><button type="button" id="lightModeBtn" class="theme-choice" aria-pressed="true">☀ Light</button><button type="button" id="darkModeBtn" class="theme-choice" aria-pressed="false">☾ Dark</button></div></div>
+  <div class="settings-row"><div class="settings-icon language-icon"><svg viewBox="0 0 24 24"><path d="m4 5 8 0M8 3v2c0 5-2.5 8-5 10m2-6c1 2 3 4 5 5m2 6 4.5-11L21 20m-8-3h7"/></svg></div><div class="settings-row-copy"><b>Language</b><span>Choose your preferred language</span></div><select id="languageSelect" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select></div>
+ </div>
+ <div class="settings-group"><div class="settings-group-title">Data & Backup</div>
+  <div class="settings-row"><div class="settings-icon backup-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></div><div class="settings-row-copy"><b>Save Your Progress</b><span>Download or restore your student records</span></div></div>
+  <button class="settings-action" onclick="backup()">Download Backup</button><label class="settings-file-label" for="restoreFile">Restore from backup file</label><input type="file" id="restoreFile" accept=".json,application/json"><button class="secondary settings-action" onclick="restore()">Restore Backup</button>
+ </div>
+ <div class="settings-group"><div class="settings-group-title">Help & Information</div>
+  <a class="settings-link" href="privacy.html"><span class="settings-icon privacy-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="settings-row-copy"><b>Privacy Policy</b><span>How your information is handled</span></span><span class="settings-chevron">›</span></a>
+  <a class="settings-link" href="terms.html"><span class="settings-icon terms-icon"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7m-7 4h7"/></svg></span><span class="settings-row-copy"><b>Terms of Service</b><span>App usage terms and conditions</span></span><span class="settings-chevron">›</span></a>
+  <a class="settings-link" href="mailto:tutorhisab.support@gmail.com"><span class="settings-icon contact-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="m4 7 8 6 8-6"/></svg></span><span class="settings-row-copy"><b>Contact Us</b><span>Get help from our support team</span></span><span class="settings-chevron">›</span></a>
+  <a class="settings-link" href="mailto:tutorhisab.support@gmail.com?subject=Tutor%20Hisab%20Feedback"><span class="settings-icon feedback-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H9l-5 4z"/><path d="M8 9h8m-8 4h5"/></svg></span><span class="settings-row-copy"><b>Feedback</b><span>Share your suggestions</span></span><span class="settings-chevron">›</span></a>
+  <a class="settings-link" href="about.html"><span class="settings-icon about-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg></span><span class="settings-row-copy"><b>About Tutor Hisab</b><span>App information and version</span></span><span class="settings-chevron">›</span></a>
+  <a class="settings-link" href="#" onclick="shareTutorHisab(event)"><span class="settings-icon share-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m9 11 6-5m-6 8 6 4"/></svg></span><span class="settings-row-copy"><b>Share Tutor Hisab</b><span>Invite another teacher</span></span><span class="settings-chevron">›</span></a>
+  <div class="settings-link settings-static"><span class="settings-icon rate-icon"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span class="settings-row-copy"><b>Rate Us</b><span>Coming soon</span></span></div>
  </div>
 </section>
 <nav class="bottom-nav" aria-label="Main navigation">
@@ -306,7 +320,10 @@ function dueFor(s,upto=currentMonth){
 }
 function addStudent(){
  const name=$("name").value.trim(),className=$("className").value.trim(),phone=$("phone").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
- if(!className||!phone||!Number.isFinite(fee)||fee<=0||!validMonth(start)){alert("Class, Mobile Number, Monthly Fee and Fee calculation start month are required.");return;}
+ if(!className||!/^[A-Za-z0-9 .()\/-]+$/.test(className)){alert("Class is required. Use English letters and numbers only.");$("className").focus();return;}
+ if(!/^[0-9]{7,15}$/.test(phone)){alert("Mobile Number is required. Enter 7 to 15 English digits only.");$("phone").focus();return;}
+ if(!Number.isFinite(fee)||fee<=0){alert("Enter a valid Monthly Fee using English digits.");$("fee").focus();return;}
+ if(!validMonth(start)){alert("Fee calculation start month is required.");$("start").focus();return;}
  if(!Number.isFinite(opening)||opening<0){alert("আগের বকেয়া শূন্য বা তার বেশি হতে হবে।");return;}
  if(editingStudentId){
   const old=data.students.find(s=>s.id===editingStudentId);if(!old){alert("শিক্ষার্থীটি পাওয়া যায়নি।");cancelStudentEdit();return;}
@@ -356,11 +373,11 @@ function render(){
  const totalPaid=data.payments.filter(p=>String(p.month||"")===currentMonth).reduce((s,p)=>s+Number(p.amount||0),0),totalDue=data.students.reduce((s,p)=>s+dueFor(p),0);
  $("count").textContent=data.students.length.toLocaleString(numberLocale());$("paid").textContent=money(totalPaid);$("due").textContent=money(totalDue);$("monthly").textContent=money(data.students.reduce((s,p)=>s+Number(p.fee||0),0));
  $("students").innerHTML=data.students.length?data.students.map(s=>`
- <div class="student"><b>${esc(s.name)}</b> <span class="small">${esc(s.className||"")}</span>
+ <div class="student"><b>${esc(s.name||"Unnamed Student")}</b> <span class="small">${esc(s.className||"")}</span>
  <div class="small">মোবাইল: ${esc(s.phone||"নেই")}</div><div>মাসিক বেতন: ${money(s.fee)}</div><div>মোট জমা: ${money(paidFor(s.id))}</div>
  <div><b>বর্তমান বকেয়া: ${money(dueFor(s))}</b></div><div class="small">হিসাব শুরুর মাস: ${esc(s.start)} | আগের বকেয়া: ${money(s.opening)}</div>
  <button class="secondary" data-edit-id="${esc(s.id)}">সম্পাদনা</button><button class="danger" data-remove-id="${esc(s.id)}">শিক্ষার্থী মুছুন</button></div>`).join(""):"এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।";
- $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+ $("payStudent").innerHTML='<option value="">শিক্ষার্থী নির্বাচন করুন</option>'+data.students.map(s=>`<option value="${esc(s.id)}">${esc(s.name||"Unnamed Student")}</option>`).join("");
  const history=[...data.payments].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
  $("paymentHistory").innerHTML=history.length?history.map(p=>{const st=data.students.find(s=>s.id===p.studentId);return '<div class="student"><b>'+esc(st?st.name:"শিক্ষার্থী নেই")+'</b><div>পরিমাণ: '+money(p.amount)+' | মাস: '+esc(p.month)+' | তারিখ: '+esc(p.date)+'</div><button class="secondary" data-payment-edit="'+esc(p.id)+'">জমা সম্পাদনা</button><button class="danger" data-payment-remove="'+esc(p.id)+'">জমা মুছুন</button></div>';}).join(""):"এখনো কোনো জমা নেই।";
  renderNotifications();
@@ -660,6 +677,15 @@ async function saveProfile(){if(!currentUser){alert("আগে Sign In করু
 window.addEventListener("online",()=>{if(currentUser&&db)syncCloud();});
 if(auth){auth.onAuthStateChanged(async u=>{appNavigationStack.length=0;currentUser=u||null;window.__tutorHisabSignedIn=!!u;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const legacyKey="tutorHisabData";const migrationFlag="tutorHisabLegacyMigrationDone";const migrationDone=localStorage.getItem(migrationFlag)==="yes";const legacyRaw=localStorage.getItem(legacyKey);STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);if(saved){data=loadData();}else if(!migrationDone&&legacyRaw){try{const legacy=JSON.parse(legacyRaw);data=legacy&&Array.isArray(legacy.students)&&Array.isArray(legacy.payments)?{...legacy,deletedStudentIds:Array.isArray(legacy.deletedStudentIds)?legacy.deletedStudentIds:[],deletedPaymentIds:Array.isArray(legacy.deletedPaymentIds)?legacy.deletedPaymentIds:[]}:emptyData();}catch(e){data=emptyData();}save(false);}else{data=emptyData();save(false);}if(!migrationDone){if(saved&&legacyRaw)localStorage.setItem("tutorHisabLegacyBackup",legacyRaw);localStorage.setItem(migrationFlag,"yes");localStorage.removeItem(legacyKey);}if(saved)render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;showTab("home",false);}else{currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile",false);$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;showLoginError("");}});}else{authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");}
 
+function applyTheme(mode){
+ const dark=mode==="dark";document.body.classList.toggle("dark-mode",dark);localStorage.setItem("tutorHisabTheme",dark?"dark":"light");
+ const light=$("lightModeBtn"),night=$("darkModeBtn");if(light&&night){light.classList.toggle("active",!dark);night.classList.toggle("active",dark);light.setAttribute("aria-pressed",String(!dark));night.setAttribute("aria-pressed",String(dark));}
+ const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=dark?"#25213b":"#51418f";
+}
+function initTheme(){const saved=localStorage.getItem("tutorHisabTheme")||"light";applyTheme(saved);$("lightModeBtn")?.addEventListener("click",()=>applyTheme("light"));$("darkModeBtn")?.addEventListener("click",()=>applyTheme("dark"));}
+function enforceEnglishStudentInputs(){
+ const c=$("className"),p=$("phone");c?.addEventListener("input",()=>{c.value=c.value.replace(/[^A-Za-z0-9 .()\/-]/g,"");});p?.addEventListener("input",()=>{p.value=p.value.replace(/[^0-9]/g,"").slice(0,15);});
+}
 function shareTutorHisab(event){
  if(event)event.preventDefault();
  const title="Tutor Hisab",message="Tutor Hisab — শিক্ষার্থী, মাসিক বেতন, জমা ও বকেয়ার হিসাব রাখুন।";
@@ -697,6 +723,8 @@ setAuthMode("signin");
 $("firstRunOverlay").hidden=false;
 $("firstAuthStep").hidden=false;
 
+initTheme();
+enforceEnglishStudentInputs();
 render();
 </script>
 </body>
