@@ -14,6 +14,7 @@ on:
       - fix/back-login-polish-2026-11-13
       - release/tutor-hisab-android-2026-11-14
       - fix/workflow-python-syntax-2026-11-16
+      - fix/nov15-user-reported-ui
 
 jobs:
   build:
@@ -64,8 +65,19 @@ jobs:
           tabs = re.findall(r'data-tab="([^"]+)"', html)
           if tabs != ["home", "store", "notification", "profile", "settings"]:
               raise SystemExit("Bottom navigation must contain the five required tabs in order")
-          if len(re.findall(r'class="nav-label"', html)) != 5:
-              raise SystemExit("All five bottom-navigation tabs must show visible text labels")
+          if len(re.findall(r'class="nav-icon"', html)) != 5 or 'class="nav-label"' in html:
+              raise SystemExit("Bottom navigation must contain exactly five icon-only tabs")
+          if any(x in html for x in ("firstLanguageStep", "firstAccountStep", "data-first-language")):
+              raise SystemExit("First-launch language and welcome screens must be removed")
+          if 'id="firstAuthStep"' not in html or 'localStorage.setItem("tutorHisabLanguage","en")' not in html:
+              raise SystemExit("First launch must open the English sign-in page directly")
+          for field in ('id="className" placeholder="Class *"', 'id="phone" type="tel" placeholder="Mobile Number *"', 'id="fee" type="number" min="1" step="0.01" placeholder="Monthly Fee *"'):
+              if field not in html:
+                  raise SystemExit("Required English student field missing: " + field)
+          if 'if(!className||!phone||!Number.isFinite(fee)||fee<=0||!validMonth(start))' not in html:
+              raise SystemExit("Student form must validate class, mobile and fee without requiring a name")
+          if 'showTab("home",false);showHomePanel("students",false);' not in html:
+              raise SystemExit("Student List edit must open the student form directly")
           home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
           if home_tabs != ["students", "payments", "studentList", "reports"]:
               raise SystemExit("Homepage must contain all four required sections in order")
