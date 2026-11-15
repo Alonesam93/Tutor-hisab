@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -14,23 +15,47 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 import android.graphics.Color;
 import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.view.View;
+import android.view.ViewGroup;
+import android.util.DisplayMetrics;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.AdError;
+
 public class MainActivity extends Activity {
     private WebView webView;
+    private AdView bannerAdView;
+    private InterstitialAd interstitialAd;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
     private boolean backDispatchPending = false;
+
+    // Google test IDs only. Replace all three with Tutor Hisab's own AdMob IDs before production.
+    private static final String BANNER_TEST_ID = "ca-app-pub-3940256099942544/9214589741";
+    private static final String INTERSTITIAL_TEST_ID = "ca-app-pub-3940256099942544/1033173712";
+    private static final long INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L;
+    private long nextInterstitialAt = 0L;
 
     public class ShareBridge {
         @JavascriptInterface
@@ -46,6 +71,13 @@ public class MainActivity extends Activity {
                     Toast.makeText(MainActivity.this, "শেয়ার করা যায়নি। আবার চেষ্টা করুন।", Toast.LENGTH_LONG).show();
                 }
             });
+        }
+    }
+
+    public class AdsBridge {
+        @JavascriptInterface
+        public void onNavigation() {
+            runOnUiThread(() -> showInterstitialIfDue());
         }
     }
 
@@ -94,6 +126,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(Color.rgb(81, 65, 143));
         getWindow().setNavigationBarColor(Color.rgb(50, 36, 95));
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.WHITE);
+
         webView = new WebView(this);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -103,7 +140,17 @@ public class MainActivity extends Activity {
         settings.setAllowContentAccess(true);
         webView.addJavascriptInterface(new BackupBridge(), "Android");
         webView.addJavascriptInterface(new ShareBridge(), "Share");
-        webView.setWebViewClient(new WebViewClient());
+        webView.addJavascriptInterface(new AdsBridge(), "Ads");
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return handleExternalScheme(request.getUrl());
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleExternalScheme(Uri.parse(url));
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
@@ -130,7 +177,29 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        setContentView(webView);
+        root.addView(webView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        bannerAdView = new AdView(this);
+        bannerAdView.setAdUnitId(BANNER_TEST_ID);
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int widthDp = Math.max(1, (int) (metrics.widthPixels / metrics.density));
+        bannerAdView.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, widthDp));
+        bannerAdView.setVisibility(View.GONE);
+        bannerAdView.setAdListener(new AdListener() {
+            @Override public void onAdLoaded() { bannerAdView.setVisibility(View.VISIBLE); }
+            @Override public void onAdFailedToLoad(LoadAdError error) { bannerAdView.setVisibility(View.GONE); }
+        });
+        root.addView(bannerAdView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        setContentView(root);
+
+        MobileAds.initialize(this, initializationStatus -> runOnUiThread(() -> {
+            nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+            bannerAdView.loadAd(new AdRequest.Builder().build());
+            loadInterstitial();
+        }));
+
         if (Build.VERSION.SDK_INT >= 33) {
             backInvokedCallback = this::dispatchBackAction;
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
@@ -145,6 +214,59 @@ public class MainActivity extends Activity {
         } else {
             webView.restoreState(savedInstanceState);
         }
+    }
+
+    private boolean handleExternalScheme(Uri uri) {
+        String scheme = uri.getScheme();
+        if (scheme == null) return false;
+        if ("mailto".equalsIgnoreCase(scheme)) {
+            try {
+                startActivity(new Intent(Intent.ACTION_SENDTO, uri));
+            } catch (Exception e) {
+                Toast.makeText(this, "ইমেইল অ্যাপ পাওয়া যায়নি।", Toast.LENGTH_LONG).show();
+            }
+            return true;
+        }
+        if ("tel".equalsIgnoreCase(scheme)) {
+            try {
+                startActivity(new Intent(Intent.ACTION_DIAL, uri));
+            } catch (Exception e) {
+                Toast.makeText(this, "কল করার অ্যাপ পাওয়া যায়নি।", Toast.LENGTH_LONG).show();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void loadInterstitial() {
+        InterstitialAd.load(this, INTERSTITIAL_TEST_ID, new AdRequest.Builder().build(),
+                new InterstitialAdLoadCallback() {
+                    @Override public void onAdLoaded(InterstitialAd ad) {
+                        interstitialAd = ad;
+                        interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                            @Override public void onAdDismissedFullScreenContent() {
+                                interstitialAd = null;
+                                nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+                                loadInterstitial();
+                            }
+                            @Override public void onAdFailedToShowFullScreenContent(AdError error) {
+                                interstitialAd = null;
+                                loadInterstitial();
+                            }
+                        });
+                    }
+                    @Override public void onAdFailedToLoad(LoadAdError error) {
+                        interstitialAd = null;
+                    }
+                });
+    }
+
+    private void showInterstitialIfDue() {
+        if (isFinishing() || isDestroyed() || interstitialAd == null) return;
+        if (nextInterstitialAt == 0L || SystemClock.elapsedRealtime() < nextInterstitialAt) return;
+        InterstitialAd ready = interstitialAd;
+        interstitialAd = null;
+        ready.show(this);
     }
 
     @Override
@@ -162,7 +284,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        webView.saveState(outState);
+        if (webView != null) webView.saveState(outState);
         super.onSaveInstanceState(outState);
     }
 
@@ -179,7 +301,6 @@ public class MainActivity extends Activity {
                     backDispatchPending = false;
                     if (isFinishing()) return;
                     if (!"true".equals(value)) {
-                        // Legal/help pages are normal WebView pages; return to the app first.
                         if (webView != null && webView.canGoBack()) webView.goBack();
                         else finish();
                     }
@@ -193,7 +314,20 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (bannerAdView != null) bannerAdView.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        if (bannerAdView != null) bannerAdView.pause();
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
+        if (bannerAdView != null) bannerAdView.destroy();
         if (Build.VERSION.SDK_INT >= 33 && backInvokedCallback != null) {
             getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backInvokedCallback);
         }
