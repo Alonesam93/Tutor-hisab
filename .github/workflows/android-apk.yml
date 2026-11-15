@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - main
+      - release/tutor-hisab-android-2026-11-14
   push:
     branches:
       - fix/audit-and-data-integrity
