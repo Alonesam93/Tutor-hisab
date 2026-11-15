@@ -15,6 +15,19 @@ service cloud.firestore {
         allow read, create, update, delete: if request.auth != null
           && request.auth.uid == userId;
       }
+
+      // Durable deletion markers prevent stale offline devices from restoring deleted records.
+      match /deletedStudents/{studentId} {
+        allow read, create: if request.auth != null
+          && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+
+      match /deletedPayments/{paymentId} {
+        allow read, create: if request.auth != null
+          && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
     }
   }
 }
