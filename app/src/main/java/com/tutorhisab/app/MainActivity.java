@@ -51,9 +51,10 @@ public class MainActivity extends Activity {
     private OnBackInvokedCallback backInvokedCallback;
     private boolean backDispatchPending = false;
 
-    // Google test IDs only. Replace all three with Tutor Hisab's own AdMob IDs before production.
-    private static final String BANNER_TEST_ID = "ca-app-pub-3940256099942544/9214589741";
-    private static final String INTERSTITIAL_TEST_ID = "ca-app-pub-3940256099942544/1033173712";
+    // Tutor Hisab production AdMob ad-unit IDs supplied by the app owner.
+    private static final String BANNER_AD_UNIT_ID = "ca-app-pub-7526847355861260/7040429257";
+    // Ad unit name in AdMob: TutorHisab_Interstitial
+    private static final String INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-7526847355861260/9835226943";
     private static final long INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L;
     private long nextInterstitialAt = 0L;
 
@@ -181,7 +182,7 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         bannerAdView = new AdView(this);
-        bannerAdView.setAdUnitId(BANNER_TEST_ID);
+        bannerAdView.setAdUnitId(BANNER_AD_UNIT_ID);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         int widthDp = Math.max(1, (int) (metrics.widthPixels / metrics.density));
         bannerAdView.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, widthDp));
@@ -239,7 +240,7 @@ public class MainActivity extends Activity {
     }
 
     private void loadInterstitial() {
-        InterstitialAd.load(this, INTERSTITIAL_TEST_ID, new AdRequest.Builder().build(),
+        InterstitialAd.load(this, INTERSTITIAL_AD_UNIT_ID, new AdRequest.Builder().build(),
                 new InterstitialAdLoadCallback() {
                     @Override public void onAdLoaded(InterstitialAd ad) {
                         interstitialAd = ad;
