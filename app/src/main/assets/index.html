@@ -612,66 +612,58 @@ async function emailSignIn(){
 async function emailSignUp(){setAuthMode("signup");}
 async function resetLoginPassword(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const email=$("loginEmail").value.trim();if(!email){showLoginError("আগে আপনার ইমেইল লিখুন।");return;}try{await auth.sendPasswordResetEmail(email);showLoginError("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।",true);}catch(x){showLoginError("রিসেট ইমেইল পাঠানো যায়নি: "+x.message);}}
 async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
-async function readCloudData(uid){const base=db.collection("users").doc(uid),r=await Promise.all([base.get(),base.collection("students").get(),base.collection("payments").get()]),v=r[0].exists?r[0].data():{};return{students:r[1].docs.map(x=>({id:x.id,...x.data()})),payments:r[2].docs.map(x=>({id:x.id,...x.data()})),profile:v.profile||{}};}
-function stableRecord(value){
- const keys=Object.keys(value||{}).sort();
- const normalized={};keys.forEach(k=>normalized[k]=value[k]);
- return JSON.stringify(normalized);
+async function readCloudData(uid){
+ const base=db.collection("users").doc(uid);
+ const r=await Promise.all([base.get(),base.collection("students").get(),base.collection("payments").get(),base.collection("deletedStudents").get(),base.collection("deletedPayments").get()]);
+ const v=r[0].exists?r[0].data():{};
+ return{students:r[1].docs.map(x=>({id:x.id,...x.data()})),payments:r[2].docs.map(x=>({id:x.id,...x.data()})),deletedStudentIds:r[3].docs.map(x=>x.id),deletedPaymentIds:r[4].docs.map(x=>x.id),profile:v.profile||{}};
 }
 async function syncCloud(){
  if(!currentUser||!db)return;
  if(cloudSyncInProgress){cloudSyncPending=true;return;}
- cloudSyncInProgress=true;
- const syncUid=currentUser.uid;
+ cloudSyncInProgress=true;const syncUid=currentUser.uid;
  cloudMessage("Cloud-এর তথ্য নিরাপদে মিলিয়ে দেখা হচ্ছে…");
  try{
-  const base=db.collection("users").doc(syncUid);
-  const cloud=await readCloudData(syncUid);
+  const base=db.collection("users").doc(syncUid),cloud=await readCloudData(syncUid);
   if(!currentUser||currentUser.uid!==syncUid)return;
   const local=JSON.parse(JSON.stringify(data));
-  const localStudents=new Map(local.students.map(x=>[String(x.id),x]));
-  const localPayments=new Map(local.payments.map(x=>[String(x.id),x]));
-  const cloudStudents=new Map(cloud.students.map(x=>[String(x.id),x]));
-  const cloudPayments=new Map(cloud.payments.map(x=>[String(x.id),x]));
-  const deletedStudents=new Set(local.deletedStudentIds||[]);
-  const deletedPayments=new Set(local.deletedPaymentIds||[]);
+  const localStudents=new Map(local.students.map(x=>[String(x.id),x])),localPayments=new Map(local.payments.map(x=>[String(x.id),x]));
+  const cloudStudents=new Map(cloud.students.map(x=>[String(x.id),x])),cloudPayments=new Map(cloud.payments.map(x=>[String(x.id),x]));
+  const deletedStudents=new Set([...(local.deletedStudentIds||[]),...(cloud.deletedStudentIds||[])].map(String));
+  const deletedPayments=new Set([...(local.deletedPaymentIds||[]),...(cloud.deletedPaymentIds||[])].map(String));
   for(const [id,p] of cloudPayments){if(deletedStudents.has(String(p.studentId)))deletedPayments.add(id);}
+  for(const [id,p] of localPayments){if(deletedStudents.has(String(p.studentId)))deletedPayments.add(id);}
+  const cloudDeletedStudents=new Set((cloud.deletedStudentIds||[]).map(String)),cloudDeletedPayments=new Set((cloud.deletedPaymentIds||[]).map(String));
   const writes=[];
-  for(const id of deletedStudents)writes.push(batch=>batch.delete(base.collection("students").doc(id)));
-  for(const id of deletedPayments)writes.push(batch=>batch.delete(base.collection("payments").doc(id)));
-  // Local edits are written back to the same teacher-scoped document IDs.
-  for(const [id,item] of localStudents)writes.push(batch=>batch.set(base.collection("students").doc(id),item));
-  for(const [id,item] of localPayments)writes.push(batch=>batch.set(base.collection("payments").doc(id),item));
-  // Firestore batches are limited; commit in safe chunks.
-  for(let i=0;i<writes.length;i+=450){
-   const batch=db.batch();writes.slice(i,i+450).forEach(write=>write(batch));await batch.commit();
+  for(const id of deletedStudents){
+   if(!cloudDeletedStudents.has(id))writes.push(batch=>batch.set(base.collection("deletedStudents").doc(id),{deletedAt:firebase.firestore.FieldValue.serverTimestamp()}));
+   writes.push(batch=>batch.delete(base.collection("students").doc(id)));
   }
+  for(const id of deletedPayments){
+   if(!cloudDeletedPayments.has(id))writes.push(batch=>batch.set(base.collection("deletedPayments").doc(id),{deletedAt:firebase.firestore.FieldValue.serverTimestamp()}));
+   writes.push(batch=>batch.delete(base.collection("payments").doc(id)));
+  }
+  for(const [id,item] of localStudents){if(!deletedStudents.has(id))writes.push(batch=>batch.set(base.collection("students").doc(id),item));}
+  for(const [id,item] of localPayments){if(!deletedPayments.has(id)&&!deletedStudents.has(String(item.studentId)))writes.push(batch=>batch.set(base.collection("payments").doc(id),item));}
+  for(let i=0;i<writes.length;i+=450){const batch=db.batch();writes.slice(i,i+450).forEach(write=>write(batch));await batch.commit();}
   if(!currentUser||currentUser.uid!==syncUid)return;
-  // Keep any edits made while this sync was running; a follow-up sync will send them.
   const latest=JSON.parse(JSON.stringify(data));
-  const latestDeletedStudents=new Set(latest.deletedStudentIds||[]);
-  const latestDeletedPayments=new Set(latest.deletedPaymentIds||[]);
+  const latestDeletedStudents=new Set([...(latest.deletedStudentIds||[]),...deletedStudents].map(String));
+  const latestDeletedPayments=new Set([...(latest.deletedPaymentIds||[]),...deletedPayments].map(String));
   const mergedStudents=new Map(cloudStudents),mergedPayments=new Map(cloudPayments);
-  for(const id of deletedStudents)mergedStudents.delete(id);
-  for(const id of deletedPayments)mergedPayments.delete(id);
-  for(const [id,item] of localStudents)mergedStudents.set(id,item);
-  for(const [id,item] of localPayments)mergedPayments.set(id,item);
   for(const id of latestDeletedStudents)mergedStudents.delete(id);
   for(const id of latestDeletedPayments)mergedPayments.delete(id);
-  for(const [id,item] of (latest.students||[]).map(x=>[String(x.id),x]))mergedStudents.set(id,item);
-  for(const [id,item] of (latest.payments||[]).map(x=>[String(x.id),x]))mergedPayments.set(id,item);
-  for(const [id,p] of mergedPayments){if(latestDeletedStudents.has(String(p.studentId)))mergedPayments.delete(id);}
-  data={...latest,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],
-   deletedStudentIds:[...latestDeletedStudents].filter(id=>!deletedStudents.has(id)),
-   deletedPaymentIds:[...latestDeletedPayments].filter(id=>!deletedPayments.has(id))};
+  for(const [id,item] of localStudents){if(!latestDeletedStudents.has(id))mergedStudents.set(id,item);}
+  for(const [id,item] of localPayments){if(!latestDeletedPayments.has(id)&&!latestDeletedStudents.has(String(item.studentId)))mergedPayments.set(id,item);}
+  for(const [id,item] of (latest.students||[]).map(x=>[String(x.id),x])){if(!latestDeletedStudents.has(id))mergedStudents.set(id,item);}
+  for(const [id,item] of (latest.payments||[]).map(x=>[String(x.id),x])){if(!latestDeletedPayments.has(id)&&!latestDeletedStudents.has(String(item.studentId)))mergedPayments.set(id,item);}
+  for(const [id,p] of mergedPayments){if(latestDeletedStudents.has(String(p.studentId))||latestDeletedPayments.has(id))mergedPayments.delete(id);}
+  data={...latest,students:[...mergedStudents.values()],payments:[...mergedPayments.values()],deletedStudentIds:[...latestDeletedStudents],deletedPaymentIds:[...latestDeletedPayments]};
   save(false);
   await base.set({email:currentUser.email||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  cloudMessage("Cloud Sync সম্পন্ন। নতুন ও সম্পাদিত তথ্য সংরক্ষণ হয়েছে; মুছে ফেলা রেকর্ডও সিঙ্ক হয়েছে।");
+  cloudMessage("Cloud Sync সম্পন্ন। নতুন ও সম্পাদিত তথ্য সংরক্ষণ হয়েছে; মুছে ফেলা রেকর্ডও সব ডিভাইসে সিঙ্ক হয়েছে।");
  }catch(e){console.error("Safe Cloud Sync:",e);if(currentUser&&currentUser.uid===syncUid)cloudMessage("Cloud Sync সম্পন্ন হয়নি: "+e.message);}
- finally{
-  cloudSyncInProgress=false;
-  if(cloudSyncPending){cloudSyncPending=false;Promise.resolve().then(syncCloud);}
- }
+ finally{cloudSyncInProgress=false;if(cloudSyncPending){cloudSyncPending=false;Promise.resolve().then(syncCloud);}}
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}const profile=profileValues();savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+currentUser.uid,JSON.stringify(profile));$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home",false);}try{await db.collection("users").doc(currentUser.uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল ডিভাইসে সংরক্ষিত হয়েছে; Cloud-এ পাঠানো যায়নি: "+e.message);}}
 window.addEventListener("online",()=>{if(currentUser&&db)syncCloud();});
