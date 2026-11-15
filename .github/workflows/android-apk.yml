@@ -72,11 +72,22 @@ jobs:
               raise SystemExit("First-launch language and welcome screens must be removed")
           if 'id="firstAuthStep"' not in html or 'localStorage.setItem("tutorHisabLanguage","en")' not in html:
               raise SystemExit("First launch must open the English sign-in page directly")
-          for field in ('id="className" placeholder="Class *"', 'id="phone" type="tel" placeholder="Mobile Number *"', 'id="fee" type="number" min="1" step="0.01" placeholder="Monthly Fee *"'):
+          for field in ('for="name">Student Name <span>(Optional)</span>', 'for="className">Class <span class="required-mark">*</span>',
+                        'for="phone">Mobile Number <span class="required-mark">*</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
               if field not in html:
-                  raise SystemExit("Required English student field missing: " + field)
-          if 'if(!className||!phone||!Number.isFinite(fee)||fee<=0||!validMonth(start))' not in html:
-              raise SystemExit("Student form must validate class, mobile and fee without requiring a name")
+                  raise SystemExit("Student field label or requirement missing: " + field)
+          for required in ('pattern="[A-Za-z0-9 .()/-]+"', 'pattern="[0-9]{7,15}"',
+                           'if(!className||!/^[A-Za-z0-9 .()\\/-]+$/.test(className))',
+                           'if(!/^[0-9]{7,15}$/.test(phone))',
+                           'if(!Number.isFinite(fee)||fee<=0)'):
+              if required not in html:
+                  raise SystemExit("English-only student field validation missing: " + required)
+          for required in ('id="lightModeBtn"', 'id="darkModeBtn"', 'function applyTheme(mode)',
+                           'localStorage.setItem("tutorHisabTheme"', 'body.dark-mode'):
+              if required not in html:
+                  raise SystemExit("Theme mode implementation missing: " + required)
+          if 'Student Name <span>(Optional)</span>' not in html:
+              raise SystemExit("Student name must remain optional")
           if 'showTab("home",false);showHomePanel("students",false);' not in html:
               raise SystemExit("Student List edit must open the student form directly")
           home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
