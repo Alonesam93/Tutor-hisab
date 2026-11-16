@@ -87,7 +87,7 @@ jobs:
               raise SystemExit("Profile must be hidden until a signed-in account exists")
           if "#profileSignedOutPanel[hidden],#profileAccountPanel[hidden]{display:none!important}" not in html:
               raise SystemExit("CSS must not override hidden profile panel state")
-          if "function openProfileSignIn()" not in html or "window.__tutorHisabSignedIn!==true)return" not in html:
+          if "function openProfileSignIn()" not in html or "window.__tutorHisabSignedIn!==true&&!window.__tutorHisabOfflineMode)return" not in html:
               raise SystemExit("Signed-out profile guard or sign-in action missing")
           if "window.__tutorHisabOfflineMode===true" not in html or "window.__tutorHisabSignedIn!==true&&!window.__tutorHisabOfflineMode" not in html:
               raise SystemExit("Cached teacher profile must remain available during offline access")
