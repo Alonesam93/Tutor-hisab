@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#51418f">
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!-- Firebase SDKs are loaded asynchronously by the app script so a slow network cannot block the startup UI. -->
 <title>Tutor Hisab</title>
 <style>
 *{box-sizing:border-box}
@@ -650,7 +648,18 @@ showTab("home",false);
 const firebaseConfig={apiKey:"AIzaSyCafBcI740GbEfMOIbR8dWhNpaypH-Z8Vw",authDomain:"tutor-hisab.firebaseapp.com",projectId:"tutor-hisab",storageBucket:"tutor-hisab.firebasestorage.app",messagingSenderId:"910571768792",appId:"1:910571768792:web:5e01f9a066b3d40ec600ad"};
 window.__tutorHisabSignedIn=false;
 let auth=null,db=null,currentUser=null,profilePhotoData="",savedProfileData={};
-try{if(window.firebase){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn("Auth persistence:",e));}}catch(e){console.error(e);}
+function loadFirebaseSdk(){
+ const load=src=>new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  script.src=src;
+  script.onload=resolve;
+  script.onerror=()=>reject(new Error("Firebase SDK could not be loaded: "+src));
+  document.head.appendChild(script);
+ });
+ return load("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js")
+  .then(()=>load("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"))
+  .then(()=>load("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"));
+}
 function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
 function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
 function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim(),photoData:profilePhotoData,email:currentUser?.email||""};}
@@ -764,10 +773,10 @@ setTimeout(()=>{
   showLoginError("সেশন যাচাই করতে দেরি হচ্ছে। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।");
  }
 },10000);
-if(auth){
+function startFirebaseAuthListener(){
+ if(auth){
  // Firebase onAuthStateChanged already delivers the initial persisted state; do not block UI on authStateReady.
  let initialAuthStateHandled=false;
- const initialAuthReady=typeof auth.authStateReady==="function"?auth.authStateReady():Promise.resolve();
  auth.onAuthStateChanged(async u=>{
   if(!initialAuthStateHandled){initialAuthStateHandled=true;}
   // Release the startup overlay before localStorage migration, large renders, or Firestore work.
@@ -784,7 +793,20 @@ if(auth){
    $("firstRunOverlay").hidden=false;
    $("firstAuthStep").hidden=false;
   }
-  appNavigationStack.length=0;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const legacyKey="tutorHisabData";const migrationFlag="tutorHisabLegacyMigrationDone";const migrationDone=localStorage.getItem(migrationFlag)==="yes";const legacyRaw=localStorage.getItem(legacyKey);STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);if(saved){data=loadData();}else if(!migrationDone&&legacyRaw){try{const legacy=JSON.parse(legacyRaw);data=legacy&&Array.isArray(legacy.students)&&Array.isArray(legacy.payments)?{...legacy,deletedStudentIds:Array.isArray(legacy.deletedStudentIds)?legacy.deletedStudentIds:[],deletedPaymentIds:Array.isArray(legacy.deletedPaymentIds)?legacy.deletedPaymentIds:[]}:emptyData();}catch(e){data=emptyData();}save(false);}else{data=emptyData();save(false);}if(!migrationDone){if(saved&&legacyRaw)localStorage.setItem("tutorHisabLegacyBackup",legacyRaw);localStorage.setItem(migrationFlag,"yes");localStorage.removeItem(legacyKey);}if(saved)render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);$("sessionRestoreOverlay").hidden=true;showTab("home",false);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;$("sessionRestoreOverlay").hidden=true;showTab("home",false);}else{$("sessionRestoreOverlay").hidden=true;currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile",false);$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;showLoginError("");}});}else{ $("sessionRestoreOverlay").hidden=true;authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;}
+  appNavigationStack.length=0;if(u){localStorage.setItem("tutorHisabOnboardingDone","yes");$("firstRunOverlay").hidden=true;const legacyKey="tutorHisabData";const migrationFlag="tutorHisabLegacyMigrationDone";const migrationDone=localStorage.getItem(migrationFlag)==="yes";const legacyRaw=localStorage.getItem(legacyKey);STORAGE_KEY="tutorHisabData_"+u.uid;const saved=localStorage.getItem(STORAGE_KEY);if(saved){data=loadData();}else if(!migrationDone&&legacyRaw){try{const legacy=JSON.parse(legacyRaw);data=legacy&&Array.isArray(legacy.students)&&Array.isArray(legacy.payments)?{...legacy,deletedStudentIds:Array.isArray(legacy.deletedStudentIds)?legacy.deletedStudentIds:[],deletedPaymentIds:Array.isArray(legacy.deletedPaymentIds)?legacy.deletedPaymentIds:[]}:emptyData();}catch(e){data=emptyData();}save(false);}else{data=emptyData();save(false);}if(!migrationDone){if(saved&&legacyRaw)localStorage.setItem("tutorHisabLegacyBackup",legacyRaw);localStorage.setItem(migrationFlag,"yes");localStorage.removeItem(legacyKey);}if(saved)render();authMessage("Sign In: "+u.email);let profile={};try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+u.uid)||"{}");}catch(e){}profilePhotoData=profile.photoData||"";savedProfileData={...profile};$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);$("sessionRestoreOverlay").hidden=true;showTab("home",false);try{const cloud=await readCloudData(u.uid);profile={...profile,...(cloud.profile||{})};savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+u.uid,JSON.stringify(profile));profilePhotoData=profile.photoData||"";$("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";$("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";setProfilePhoto(profilePhotoData);await syncCloud();}catch(e){cloudMessage("Cloud তথ্য পড়া যায়নি: "+e.message);}updateProfileView();window.__tutorHisabProfileSetupRequired=false;$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;$("sessionRestoreOverlay").hidden=true;showTab("home",false);}else{$("sessionRestoreOverlay").hidden=true;currentUser=null;profilePhotoData="";savedProfileData={};STORAGE_KEY="tutorHisabData";data=loadData();render();["profileName","profileMobile","profileInstitution","profileDesignation"].forEach(id=>$(id).value="");updateProfileView();authMessage("Sign In করা নেই।");cloudMessage("Cloud Sync করতে Sign In করুন।");showTab("profile",false);$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;showLoginError("");}});}else{ $("sessionRestoreOverlay").hidden=true;authMessage("Firebase SDK পাওয়া যায়নি।");showTab("profile");$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;}}
+loadFirebaseSdk().then(()=>{
+ try{
+  if(!window.firebase)throw new Error("Firebase SDK unavailable after loading.");
+  firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();
+  db=firebase.firestore();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn("Auth persistence:",e));
+ }catch(e){console.error("Firebase initialization:",e);}
+ startFirebaseAuthListener();
+}).catch(e=>{
+ console.error("Firebase SDK loading:",e);
+ startFirebaseAuthListener();
+});
 
 function applyTheme(mode){
  const dark=mode==="dark";document.body.classList.toggle("dark-mode",dark);localStorage.setItem("tutorHisabTheme",dark?"dark":"light");
