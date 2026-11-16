@@ -295,11 +295,7 @@ window.addEventListener("error", function(event) {
  const panel = existing || document.createElement("div");
  panel.id = "thRuntimeError";
  panel.style.cssText = "position:fixed;inset:0;z-index:9999;background:#fff;color:#32245f;padding:28px;display:flex;align-items:center;justify-content:center;text-align:center;font:16px Arial,sans-serif;white-space:pre-wrap";
- panel.textContent = "Tutor Hisab
-
-অ্যাপ চালু হতে সমস্যা হয়েছে। আবার চেষ্টা করুন।
-
-" + String(event.message || "Unknown startup error");
+ panel.textContent = "Tutor Hisab\\n\\nঅ্যাপ চালু হতে সমস্যা হয়েছে। আবার চেষ্টা করুন।\\n\\n" + String(event.message || "Unknown startup error");
  if (!existing) document.body.appendChild(panel);
 });
 let STORAGE_KEY="tutorHisabData";
