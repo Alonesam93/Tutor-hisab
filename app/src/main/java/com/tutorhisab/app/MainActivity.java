@@ -227,20 +227,22 @@ public class MainActivity extends Activity {
                 // Native failsafe: recover the visible login/app surface even if the inline
                 // application script throws before it can dismiss the session overlay.
                 view.postDelayed(() -> view.evaluateJavascript(
-                        "(function(){var overlay=document.getElementById('sessionRestoreOverlay');" +
-                        "if(!overlay||overlay.hidden)return 'already-released';" +
-                        "overlay.hidden=true;" +
-                        "var signedIn=window.__tutorHisabSignedIn===true;" +
-                        "var firstRun=document.getElementById('firstRunOverlay');" +
-                        "if(firstRun&&!signedIn){firstRun.hidden=false;" +
-                        "var needsLanguage=localStorage.getItem('tutorHisabOnboardingDone')!=='yes'&&localStorage.getItem('tutorHisabLanguageChosen')!=='yes';" +
-                        "var language=document.getElementById('firstLanguageStep');if(language)language.hidden=!needsLanguage;" +
-                        "var authStep=document.getElementById('firstAuthStep');if(authStep)authStep.hidden=needsLanguage;}" +
+                        "(function(){try{" +
+                        "if(window.__tutorHisabAppReady===true)return 'app-ready';" +
+                        "var overlay=document.getElementById('sessionRestoreOverlay');if(overlay)overlay.hidden=true;" +
+                        "if(window.__tutorHisabSignedIn!==true){" +
+                        "var firstRun=document.getElementById('firstRunOverlay');if(firstRun)firstRun.hidden=false;" +
+                        "var language=document.getElementById('firstLanguageStep');" +
+                        "var authStep=document.getElementById('firstAuthStep');" +
+                        "var chosen=false;try{chosen=localStorage.getItem('tutorHisabOnboardingDone')==='yes'||localStorage.getItem('tutorHisabLanguageChosen')==='yes';}catch(storageError){}" +
+                        "if(language)language.hidden=chosen;if(authStep)authStep.hidden=!chosen;" +
+                        "}" +
                         "var panel=document.getElementById('thNativeStartupRecovery');" +
                         "if(!panel){panel=document.createElement('div');panel.id='thNativeStartupRecovery';" +
                         "panel.style.cssText='position:fixed;left:10px;right:10px;bottom:80px;z-index:10000;background:#fff4d6;color:#624500;padding:10px;border-radius:9px;font:13px Arial,sans-serif';" +
-                        "panel.textContent='অ্যাপ চালু হতে সমস্যা হয়েছে। লগইন/স্ক্রিন আবার চেষ্টা করুন।';document.body.appendChild(panel);}" +
-                        "return 'native-recovery-shown';})()",
+                        "panel.textContent='অ্যাপের স্ক্রিন চালু করতে সমস্যা হয়েছে। লগইন পর্দা দেখানো হয়েছে।';document.body.appendChild(panel);}" +
+                        "return 'native-recovery-shown';" +
+                        "}catch(e){return 'native-recovery-error:'+String(e);}})()",
                         value -> android.util.Log.w("TutorHisabWebView", "Startup failsafe: " + value)), 8000);
             }
             @Override
