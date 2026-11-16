@@ -802,7 +802,7 @@ async function syncCloud(){
  finally{cloudSyncInProgress=false;if(cloudSyncPending){cloudSyncPending=false;Promise.resolve().then(syncCloud);}}
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}const profile=profileValues();savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+currentUser.uid,JSON.stringify(profile));$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home",false);}try{await db.collection("users").doc(currentUser.uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল ডিভাইসে সংরক্ষিত হয়েছে; Cloud-এ পাঠানো যায়নি: "+e.message);}}
-window.addEventListener("online",()=>{if(window.__tutorHisabOfflineMode){location.reload();return;}if(currentUser&&db)syncCloud();});
+window.addEventListener("online",()=>{if(window.__tutorHisabOfflineMode||!auth||!db){location.reload();return;}if(currentUser&&db)syncCloud();});
 // Universal startup failsafe also runs when the Firebase SDK itself is unavailable.
 // Do not leave the WebView behind the session overlay indefinitely.
 setTimeout(()=>{
