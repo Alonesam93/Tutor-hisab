@@ -101,6 +101,10 @@ jobs:
                   raise SystemExit("Theme mode implementation missing: " + required)
           if 'Student Name <span>(Optional)</span>' not in html:
               raise SystemExit("Student name must remain optional")
+          if 'else{try{localStorage.removeItem("tutorHisabLastUid");}catch(e){}' not in html:
+              raise SystemExit("Confirmed sign-out must clear the cached account UID")
+          if '(s.name!=null&&typeof s.name!=="string")' not in html or 'students:d.students.map(s=>({...s,name:String(s.name||"")}))' not in html:
+              raise SystemExit("Backup restore must accept optional student names")
           if 'showTab("home",false);showHomePanel("students",false);' not in html:
               raise SystemExit("Student List edit must open the student form directly")
           home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
