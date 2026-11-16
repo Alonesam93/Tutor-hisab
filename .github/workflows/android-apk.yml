@@ -18,6 +18,7 @@ on:
       - fix/nov15-user-reported-ui
       - fix/session-restore-immediate-ui-nov16
       - fix/firebase-sdk-nonblocking-nov16
+      - fix/white-screen-webview-recovery-nov16
 
 jobs:
   build:
