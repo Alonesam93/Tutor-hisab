@@ -70,6 +70,8 @@ jobs:
                            'STORAGE_KEY="tutorHisabData_"+u.uid', 'showTab("home",false)'):
               if required not in html:
                   raise SystemExit("Required app flow missing: " + required)
+          if "observer.disconnect();" not in html or "observer.observe(document.body,config);" not in html:
+              raise SystemExit("Language observer self-mutation guard missing")
           if "Native failsafe: recover the visible login/app surface" not in java:
               raise SystemExit("Native WebView startup recovery missing")
           if "window.handleAppBack ? window.handleAppBack()" not in java:
