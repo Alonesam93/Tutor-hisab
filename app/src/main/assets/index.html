@@ -147,6 +147,9 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
    <h3 id="authHeading" style="text-align:center;color:#32245f;margin-bottom:5px">Sign in</h3>
    <p id="authSubtitle" class="login-subtitle">Use your email and password to access your account</p>
    <div id="signupFields" hidden>
+    <label class="login-label" for="signupPhotoInput">Profile Photo (optional)</label>
+    <input class="login-input" id="signupPhotoInput" type="file" accept="image/*" onchange="handleSignupPhoto(event)">
+    <img id="signupPhotoPreview" class="profile-avatar" alt="Profile photo preview" hidden>
     <label class="login-label" for="signupName">Your Name</label>
     <input class="login-input" id="signupName" type="text" autocomplete="name" placeholder="Your full name">
     <label class="login-label" for="signupMobile">Mobile Number (optional)</label>
@@ -679,9 +682,16 @@ function updateProfileView(){const p=profileValues(),lang=localStorage.getItem("
 function editProfile(){$("profileView").hidden=true;$("profileEditForm").hidden=false;$("profileEditBtn").hidden=true;}
 function cancelProfileEdit(){if(window.__tutorHisabProfileSetupRequired){alert("অ্যাকাউন্ট চালু করতে আপনার নাম লিখে প্রোফাইল সংরক্ষণ করুন।");$("profileName").focus();return;}$("profileName").value=savedProfileData.name||"";$("profileMobile").value=savedProfileData.mobile||"";$("profileInstitution").value=savedProfileData.institution||"";$("profileDesignation").value=savedProfileData.designation||"";setProfilePhoto(savedProfileData.photoData||"");$("profilePhotoInput").value="";$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();}
 function handleProfilePhoto(event){const file=event.target.files&&event.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");return;}if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");return;}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);setProfilePhoto(canvas.toDataURL("image/jpeg",.72));};img.src=reader.result;};reader.readAsDataURL(file);}
+function handleSignupPhoto(event){
+ const file=event.target.files&&event.target.files[0];if(!file)return;
+ if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");event.target.value="";return;}
+ if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");event.target.value="";return;}
+ const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext("2d");if(!ctx){alert("ছবিটি প্রক্রিয়া করা যায়নি।");return;}ctx.drawImage(img,0,0,canvas.width,canvas.height);signupPhotoData=canvas.toDataURL("image/jpeg",.72);$("signupPhotoPreview").src=signupPhotoData;$("signupPhotoPreview").hidden=false;};img.onerror=()=>alert("ছবিটি খোলা যায়নি। অন্য ছবি নির্বাচন করুন।");img.src=reader.result;};reader.readAsDataURL(file);
+}
 function loginValues(){return{email:$("loginEmail").value.trim(),password:$("loginPassword").value};}
 function showLoginError(message,success=false){const box=$("loginError");box.textContent=message||"";box.style.color=success?"#18794e":"#b42318";}
 let authMode="signin";
+let signupPhotoData="";
 function setAuthMode(mode){authMode=mode;authBusy=false;const bn=(localStorage.getItem("tutorHisabLanguage")||"en")==="bn",signup=mode==="signup";$("authHeading").textContent=signup?(bn?"নতুন অ্যাকাউন্ট তৈরি করুন":"Create your account"):(bn?"লগইন করুন":"Sign in");$("authSubtitle").textContent=signup?(bn?"আপনার তথ্য দিয়ে Tutor Hisab-এ যোগ দিন":"Enter your details to join Tutor Hisab"):(bn?"আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন":"Enter your account details to continue");$("signupFields").hidden=!signup;$("confirmPasswordWrap").hidden=!signup;$("loginSignIn").textContent=signup?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");$("authModePrompt").textContent=signup?(bn?"আগে থেকেই অ্যাকাউন্ট আছে?":"Already have an account?"):(bn?"অ্যাকাউন্ট নেই?":"Don't have an account?");$("loginSignUp").textContent=signup?(bn?"সাইন ইন করুন":"Sign in"):(bn?"রেজিস্ট্রেশন করুন":"Register");$("forgotPassword").hidden=signup;$("loginPassword").autocomplete=signup?"new-password":"current-password";$("loginPassword").type="password";$("confirmPassword").type="password";$("togglePassword").textContent=bn?"পাসওয়ার্ড দেখুন":"Show password";showLoginError("");}
 let authBusy=false;
 function setAuthBusy(busy){authBusy=busy;const btn=$("loginSignIn"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn";btn.disabled=busy;btn.setAttribute("aria-busy",busy?"true":"false");if(busy)btn.textContent=bn?"অপেক্ষা করুন…":"Please wait…";else btn.textContent=authMode==="signup"?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");}
@@ -700,7 +710,7 @@ async function emailSignIn(){
  try{
   await auth.setPersistence($("rememberMe").checked?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION);
   if(authMode==="signup"){
-   const profile={name:$("signupName").value.trim(),mobile:$("signupMobile").value.trim(),institution:$("signupInstitution").value.trim(),designation:$("signupDesignation").value.trim(),photoData:"",email};
+   const profile={name:$("signupName").value.trim(),mobile:$("signupMobile").value.trim(),institution:$("signupInstitution").value.trim(),designation:$("signupDesignation").value.trim(),photoData:signupPhotoData,email};
    const credential=await auth.createUserWithEmailAndPassword(email,password);
    localStorage.setItem("tutorHisabProfile_"+credential.user.uid,JSON.stringify(profile));
    try{await db.collection("users").doc(credential.user.uid).set({email:credential.user.email,profile,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
