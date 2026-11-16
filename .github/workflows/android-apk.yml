@@ -20,6 +20,7 @@ on:
       - fix/firebase-sdk-nonblocking-nov16
       - fix/white-screen-webview-recovery-nov16
       - fix/native-startup-failsafe-nov16
+      - fix/login-language-profile-guard-nov16
 
 jobs:
   build:
@@ -72,6 +73,14 @@ jobs:
                   raise SystemExit("Required app flow missing: " + required)
           if "observer.disconnect();" not in html or "observer.observe(document.body,config);" not in html:
               raise SystemExit("Language observer self-mutation guard missing")
+          if "const languageOriginalTextNodes=new WeakMap()" not in html or "function getLanguageMap(lang)" not in html:
+              raise SystemExit("Idempotent bilingual translation guard missing")
+          if 'id="rememberMeLabel"' not in html or '"Remember me":"আমাকে মনে রাখুন"' not in html:
+              raise SystemExit("Remember-me label translation missing")
+          if 'id="profileAccountPanel" class="card" hidden' not in html or 'id="profileSignedOutPanel"' not in html:
+              raise SystemExit("Profile must be hidden until a signed-in account exists")
+          if "function openProfileSignIn()" not in html or "window.__tutorHisabSignedIn!==true)return" not in html:
+              raise SystemExit("Signed-out profile guard or sign-in action missing")
           if "Native failsafe: recover the visible login/app surface" not in java:
               raise SystemExit("Native WebView startup recovery missing")
           if "window.handleAppBack ? window.handleAppBack()" not in java:
