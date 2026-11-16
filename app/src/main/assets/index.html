@@ -217,7 +217,7 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
 <div id="homeStudentsPanel">
  <div class="card">
   <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
-  <label class="field-label" for="name">Student Name <span>(Optional)</span></label><input id="name" type="text" placeholder="Enter student name" maxlength="100" autocomplete="off">
+  <label class="field-label" for="name">Student Name <span class="required-mark">*</span></label><input id="name" type="text" placeholder="Enter student name" maxlength="80" required autocomplete="off">
   <label class="field-label" for="className">Class <span class="required-mark">*</span></label><input id="className" type="text" placeholder="e.g. Class 8, SSC" maxlength="50" required pattern="[A-Za-z0-9 .()/-]+" title="Use English letters and numbers only" autocomplete="off">
   <label class="field-label" for="phone">Mobile Number <span class="required-mark">*</span></label><input id="phone" type="tel" placeholder="e.g. 01712345678" inputmode="numeric" maxlength="15" required pattern="[0-9]{7,15}" title="Enter 7 to 15 English digits only" autocomplete="tel">
   <label class="field-label" for="fee">Monthly Fee <span class="required-mark">*</span></label><input id="fee" type="number" inputmode="decimal" min="1" step="0.01" placeholder="Enter monthly fee" required>
@@ -370,6 +370,7 @@ function dueFor(s,upto=currentMonth){
 }
 function addStudent(){
  const name=$("name").value.trim(),className=$("className").value.trim(),phone=$("phone").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
+ if(!name||name.length>80){alert("শিক্ষার্থীর নাম লিখুন (সর্বোচ্চ ৮০ অক্ষর)।");$("name").focus();return;}
  if(!className||!/^[A-Za-z0-9 .()\/-]+$/.test(className)){alert("Class is required. Use English letters and numbers only.");$("className").focus();return;}
  if(!/^[0-9]{7,15}$/.test(phone)){alert("Mobile Number is required. Enter 7 to 15 English digits only.");$("phone").focus();return;}
  if(!Number.isFinite(fee)||fee<=0){alert("Enter a valid Monthly Fee using English digits.");$("fee").focus();return;}
