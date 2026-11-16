@@ -91,6 +91,10 @@ jobs:
               raise SystemExit("Student name must be required and limited to 80 characters")
           if "Native failsafe: recover the visible login/app surface" not in java:
               raise SystemExit("Native WebView startup recovery missing")
+          if "restoredWebViewState = webView.restoreState(savedInstanceState) != null;" not in java or "if (!restoredWebViewState)" not in java:
+              raise SystemExit("WebView must reload the local app when saved state cannot be restored")
+          if "অ্যাপ চালু হতে সমস্যা হয়েছে। আবার চেষ্টা করতে এখানে চাপ দিন।" not in java or "if (!pageReady && startupFallback != null)" not in java:
+              raise SystemExit("Native retry action must appear when the app script fails to finish startup")
           if "window.handleAppBack ? window.handleAppBack()" not in java:
               raise SystemExit("Android Back button is not connected to the app navigation handler")
           tabs = re.findall(r'data-tab="([^"]+)"', html)
