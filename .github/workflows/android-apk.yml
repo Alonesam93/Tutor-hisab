@@ -127,6 +127,10 @@ jobs:
               raise SystemExit("Homepage must contain all four required sections in order")
           if "request.auth.uid == userId" not in rules:
               raise SystemExit("Firestore rules do not enforce per-user ownership")
+          for required in ("match /students/{studentId}", "match /payments/{paymentId}",
+                           "allow read, create, update, delete: if request.auth != null"):
+              if required not in rules:
+                  raise SystemExit("Firestore student/payment subcollection permissions missing: " + required)
           for required in ("match /deletedStudents/{studentId}", "match /deletedPayments/{paymentId}",
                            "allow update, delete: if false"):
               if required not in rules:
