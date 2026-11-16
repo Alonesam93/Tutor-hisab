@@ -75,6 +75,8 @@ jobs:
               raise SystemExit("Language observer self-mutation guard missing")
           if "const languageOriginalTextNodes=new WeakMap()" not in html or "function getLanguageMap(lang)" not in html:
               raise SystemExit("Idempotent bilingual translation guard missing")
+          if "applyLanguage();\ninitTheme();\nenforceEnglishStudentInputs();\nrender();" not in html:
+              raise SystemExit("Default language must be applied before the first-run UI is marked ready")
           if 'id="rememberMeLabel"' not in html or '"Remember me":"আমাকে মনে রাখুন"' not in html:
               raise SystemExit("Remember-me label translation missing")
           if 'id="profileAccountPanel" class="card" hidden' not in html or 'id="profileSignedOutPanel"' not in html:
