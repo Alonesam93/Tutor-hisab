@@ -55,6 +55,8 @@ jobs:
           html = Path("app/src/main/assets/index.html").read_text(encoding="utf-8")
           if r"}\n.bottom-nav" in html:
               raise SystemExit("Literal escaped newline found in CSS selector sequence")
+          if "th-startup-failsafe" not in html or "@keyframes th-startup-failsafe" not in html:
+              raise SystemExit("CSS startup overlay failsafe missing")
           java = Path("app/src/main/java/com/tutorhisab/app/MainActivity.java").read_text(encoding="utf-8")
           rules = Path("firestore.rules").read_text(encoding="utf-8")
           if r"/^[^\s@]+@[^\s@]+\.[^\s@]+$/" not in html:
@@ -67,6 +69,8 @@ jobs:
                            'STORAGE_KEY="tutorHisabData_"+u.uid', 'showTab("home",false)'):
               if required not in html:
                   raise SystemExit("Required app flow missing: " + required)
+          if "Native failsafe: recover the visible login/app surface" not in java:
+              raise SystemExit("Native WebView startup recovery missing")
           if "window.handleAppBack ? window.handleAppBack()" not in java:
               raise SystemExit("Android Back button is not connected to the app navigation handler")
           tabs = re.findall(r'data-tab="([^"]+)"', html)
