@@ -47,6 +47,9 @@ import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.AdError;
+import com.google.android.ump.ConsentInformation;
+import com.google.android.ump.ConsentRequestParameters;
+import com.google.android.ump.UserMessagingPlatform;
 
 public class MainActivity extends Activity {
     private WebView webView;
@@ -55,9 +58,16 @@ public class MainActivity extends Activity {
     private boolean pageCommitted = false;
     private AdView bannerAdView;
     private InterstitialAd interstitialAd;
+    private ConsentInformation consentInformation;
     private final Handler adHandler = new Handler(Looper.getMainLooper());
     private int bannerRetryCount = 0;
     private int interstitialRetryCount = 0;
+    private boolean adsInitialized = false;
+    private boolean appContentVisible = false;
+    private boolean bannerLoaded = false;
+    private boolean bannerRequestInProgress = false;
+    private boolean interstitialLoadInProgress = false;
+    private boolean interstitialTimerStarted = false;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
@@ -89,8 +99,16 @@ public class MainActivity extends Activity {
 
     public class AdsBridge {
         @JavascriptInterface
+        public void setAppContentVisible(boolean visible) {
+            runOnUiThread(() -> setAdsContentVisible(visible));
+        }
+        @JavascriptInterface
+        public void showPrivacyOptions() {
+            runOnUiThread(() -> showAdPrivacyOptions());
+        }
+        @JavascriptInterface
         public void onNavigation() {
-            runOnUiThread(() -> showInterstitialIfDue());
+            runOnUiThread(() -> { if (appContentVisible) showInterstitialIfDue(); });
         }
     }
 
@@ -276,12 +294,16 @@ public class MainActivity extends Activity {
         bannerAdView.setVisibility(View.GONE);
         bannerAdView.setAdListener(new AdListener() {
             @Override public void onAdLoaded() {
+                bannerLoaded = true;
+                bannerRequestInProgress = false;
                 bannerRetryCount = 0;
-                bannerAdView.setVisibility(View.VISIBLE);
+                bannerAdView.setVisibility(appContentVisible ? View.VISIBLE : View.GONE);
             }
             @Override public void onAdFailedToLoad(LoadAdError error) {
+                bannerLoaded = false;
+                bannerRequestInProgress = false;
                 bannerAdView.setVisibility(View.GONE);
-                scheduleBannerRetry();
+                if (appContentVisible) scheduleBannerRetry();
             }
         });
         root.addView(bannerAdView, new LinearLayout.LayoutParams(
@@ -307,11 +329,8 @@ public class MainActivity extends Activity {
             }
         }, 12000);
 
-        MobileAds.initialize(this, initializationStatus -> runOnUiThread(() -> {
-            nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
-            bannerAdView.loadAd(new AdRequest.Builder().build());
-            loadInterstitial();
-        }));
+        // Ads are initialized only after the notification permission prompt and UMP consent flow.
+
 
         if (Build.VERSION.SDK_INT >= 33) {
             backInvokedCallback = this::dispatchBackAction;
@@ -321,7 +340,15 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
+        } else {
+            initializeAdsPrivacy();
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 2002) initializeAdsPrivacy();
     }
 
     private boolean handleExternalScheme(Uri uri) {
@@ -346,10 +373,89 @@ public class MainActivity extends Activity {
         return false;
     }
 
+    private void initializeAdsPrivacy() {
+        consentInformation = UserMessagingPlatform.getConsentInformation(this);
+        ConsentRequestParameters params = new ConsentRequestParameters.Builder().build();
+        // Refresh consent status on every app launch before requesting any ads.
+        consentInformation.requestConsentInfoUpdate(
+                this,
+                params,
+                () -> UserMessagingPlatform.loadAndShowConsentFormIfRequired(this, formError -> {
+                    if (formError != null) {
+                        android.util.Log.w("TutorHisabAds", "Consent form: " + formError.getMessage());
+                    }
+                    startMobileAdsIfAllowed();
+                }),
+                requestError -> {
+                    android.util.Log.w("TutorHisabAds", "Consent info update: " + requestError.getMessage());
+                    // UMP may still allow requests based on a valid prior consent decision.
+                    startMobileAdsIfAllowed();
+                });
+    }
+
+    private void startMobileAdsIfAllowed() {
+        if (isFinishing() || isDestroyed() || adsInitialized || consentInformation == null
+                || !consentInformation.canRequestAds()) return;
+        MobileAds.initialize(this, initializationStatus -> runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            adsInitialized = true;
+            if (appContentVisible) {
+                startInterstitialTimerIfNeeded();
+                loadBannerAd();
+                loadInterstitial();
+            }
+        }));
+    }
+
+    private void setAdsContentVisible(boolean visible) {
+        appContentVisible = visible;
+        if (bannerAdView == null) return;
+        if (!visible) {
+            bannerAdView.setVisibility(View.GONE);
+            return;
+        }
+        if (adsInitialized) {
+            startInterstitialTimerIfNeeded();
+            loadBannerAd();
+            if (interstitialAd == null) loadInterstitial();
+        }
+    }
+
+    private void startInterstitialTimerIfNeeded() {
+        if (interstitialTimerStarted) return;
+        interstitialTimerStarted = true;
+        nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+    }
+
+    private void loadBannerAd() {
+        if (!adsInitialized || !appContentVisible || bannerAdView == null
+                || bannerLoaded || bannerRequestInProgress) return;
+        bannerRequestInProgress = true;
+        bannerAdView.loadAd(new AdRequest.Builder().build());
+    }
+
+    private void showAdPrivacyOptions() {
+        if (consentInformation == null
+                || consentInformation.getPrivacyOptionsRequirementStatus()
+                != ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED) {
+            Toast.makeText(this, "বর্তমানে আলাদা বিজ্ঞাপন-গোপনীয়তা অপশন প্রয়োজন নেই।", Toast.LENGTH_LONG).show();
+            return;
+        }
+        UserMessagingPlatform.showPrivacyOptionsForm(this, formError -> {
+            if (formError != null) {
+                Toast.makeText(this, "বিজ্ঞাপন গোপনীয়তার সেটিংস খোলা যায়নি।", Toast.LENGTH_LONG).show();
+            }
+            startMobileAdsIfAllowed();
+        });
+    }
+
     private void loadInterstitial() {
+        if (!adsInitialized || !appContentVisible || interstitialAd != null || interstitialLoadInProgress) return;
+        interstitialLoadInProgress = true;
         InterstitialAd.load(this, INTERSTITIAL_AD_UNIT_ID, new AdRequest.Builder().build(),
                 new InterstitialAdLoadCallback() {
                     @Override public void onAdLoaded(InterstitialAd ad) {
+                        interstitialLoadInProgress = false;
                         interstitialAd = ad;
                         interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                             @Override public void onAdDismissedFullScreenContent() {
@@ -365,8 +471,9 @@ public class MainActivity extends Activity {
                         });
                     }
                     @Override public void onAdFailedToLoad(LoadAdError error) {
+                        interstitialLoadInProgress = false;
                         interstitialAd = null;
-                        scheduleInterstitialRetry();
+                        if (appContentVisible) scheduleInterstitialRetry();
                     }
                 });
     }
@@ -377,17 +484,17 @@ public class MainActivity extends Activity {
     }
 
     private void scheduleBannerRetry() {
-        if (isFinishing() || isDestroyed() || bannerAdView == null) return;
+        if (isFinishing() || isDestroyed() || bannerAdView == null || !appContentVisible || !adsInitialized) return;
         long delay = adRetryDelay(bannerRetryCount++);
         adHandler.postDelayed(() -> {
             if (!isFinishing() && !isDestroyed() && bannerAdView != null) {
-                bannerAdView.loadAd(new AdRequest.Builder().build());
+                loadBannerAd();
             }
         }, delay);
     }
 
     private void scheduleInterstitialRetry() {
-        if (isFinishing() || isDestroyed()) return;
+        if (isFinishing() || isDestroyed() || !appContentVisible || !adsInitialized) return;
         long delay = adRetryDelay(interstitialRetryCount++);
         adHandler.postDelayed(() -> {
             if (!isFinishing() && !isDestroyed() && interstitialAd == null) loadInterstitial();
@@ -395,8 +502,8 @@ public class MainActivity extends Activity {
     }
 
     private void showInterstitialIfDue() {
-        if (isFinishing() || isDestroyed() || interstitialAd == null) return;
-        if (nextInterstitialAt == 0L || SystemClock.elapsedRealtime() < nextInterstitialAt) return;
+        if (isFinishing() || isDestroyed() || !appContentVisible || interstitialAd == null) return;
+        if (!interstitialTimerStarted || nextInterstitialAt == 0L || SystemClock.elapsedRealtime() < nextInterstitialAt) return;
         InterstitialAd ready = interstitialAd;
         interstitialAd = null;
         ready.show(this);
