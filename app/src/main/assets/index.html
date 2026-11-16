@@ -478,6 +478,7 @@ function backup(){
  const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
  a.href=url;a.download="tutor-hisab-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+// Restore only into the currently authenticated teacher's UID-scoped local store; never into the shared signed-out store.
 function restore(){
  if(!currentUser||!window.__tutorHisabSignedIn||window.__tutorHisabOfflineMode){alert("ব্যাকআপ রিস্টোর করতে আগে আপনার অ্যাকাউন্টে Sign In করুন।");return;}
  const file=$("restoreFile").files[0];if(!file){alert("ব্যাকআপ ফাইল নির্বাচন করুন");return;}
