@@ -401,7 +401,7 @@ function addStudent(){
   cancelStudentEdit();save();alert("শিক্ষার্থীর তথ্য সম্পাদনা করে সংরক্ষণ করা হয়েছে।");return;
  }
  data.students.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString()+"-"+Math.random().toString(36).slice(2),name,className:$("className").value.trim(),phone:$("phone").value.trim(),fee,start,opening});
- ["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";save();
+ ["name","className","phone","fee"].forEach(id=>$(id).value="");$("start").value=currentMonth;$("opening").value="0";save();
 }
 function addPayment(){
  const id=$("payStudent").value,amount=Number($("payAmount").value),month=$("payMonth").value,date=$("payDate").value,student=data.students.find(s=>s.id===id);
@@ -427,7 +427,7 @@ function editStudent(id){
  $("studentFormTitle").textContent="✏️ শিক্ষার্থীর তথ্য সম্পাদনা করুন";$("studentSaveBtn").textContent="পরিবর্তন সংরক্ষণ করুন";$("studentCancelBtn").style.display="block";
  $("name").scrollIntoView({behavior:"smooth",block:"center"});
 }
-function cancelStudentEdit(){editingStudentId=null;["name","className","phone","fee"].forEach(id=>$(id).value="");$("opening").value="0";$("studentFormTitle").textContent="➕ নতুন শিক্ষার্থী যোগ করুন";$("studentSaveBtn").textContent="শিক্ষার্থী সংরক্ষণ করুন";$("studentCancelBtn").style.display="none";}
+function cancelStudentEdit(){editingStudentId=null;["name","className","phone","fee"].forEach(id=>$(id).value="");$("start").value=currentMonth;$("opening").value="0";$("studentFormTitle").textContent="➕ নতুন শিক্ষার্থী যোগ করুন";$("studentSaveBtn").textContent="শিক্ষার্থী সংরক্ষণ করুন";$("studentCancelBtn").style.display="none";}
 function removeStudent(id){
  if(!confirm("শিক্ষার্থী ও তার পেমেন্টের তথ্য মুছে ফেলবেন?"))return;
  const removedPayments=data.payments.filter(p=>p.studentId===id);
