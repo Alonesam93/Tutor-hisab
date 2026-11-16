@@ -77,6 +77,8 @@ jobs:
               raise SystemExit("Idempotent bilingual translation guard missing")
           if "applyLanguage();\ninitTheme();\nenforceEnglishStudentInputs();\nrender();" not in html:
               raise SystemExit("Default language must be applied before the first-run UI is marked ready")
+          if 'map=getLanguageMap(lang)' not in html or 'map=lang==="en"?translations:reverseTranslations' in html:
+              raise SystemExit("Help pages must use the shared bilingual translation map without undefined reverseTranslations")
           if 'id="rememberMeLabel"' not in html or '"Remember me":"আমাকে মনে রাখুন"' not in html:
               raise SystemExit("Remember-me label translation missing")
           if 'id="profileAccountPanel" class="card" hidden' not in html or 'id="profileSignedOutPanel"' not in html:
