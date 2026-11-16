@@ -68,6 +68,9 @@ public class MainActivity extends Activity {
     private boolean bannerRequestInProgress = false;
     private boolean interstitialLoadInProgress = false;
     private boolean interstitialTimerStarted = false;
+    private boolean consentInfoUpdated = false;
+    private boolean consentUpdateSucceeded = false;
+    private boolean consentFormFlowStarted = false;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
@@ -380,17 +383,34 @@ public class MainActivity extends Activity {
         consentInformation.requestConsentInfoUpdate(
                 this,
                 params,
-                () -> UserMessagingPlatform.loadAndShowConsentFormIfRequired(this, formError -> {
-                    if (formError != null) {
-                        android.util.Log.w("TutorHisabAds", "Consent form: " + formError.getMessage());
-                    }
-                    startMobileAdsIfAllowed();
-                }),
+                () -> {
+                    consentInfoUpdated = true;
+                    consentUpdateSucceeded = true;
+                    continueConsentFlowIfNeeded();
+                },
                 requestError -> {
+                    consentInfoUpdated = true;
+                    consentUpdateSucceeded = false;
                     android.util.Log.w("TutorHisabAds", "Consent info update: " + requestError.getMessage());
                     // UMP may still allow requests based on a valid prior consent decision.
-                    startMobileAdsIfAllowed();
+                    continueConsentFlowIfNeeded();
                 });
+    }
+
+    private void continueConsentFlowIfNeeded() {
+        if (!appContentVisible || !consentInfoUpdated || isFinishing() || isDestroyed()) return;
+        if (!consentUpdateSucceeded) {
+            startMobileAdsIfAllowed();
+            return;
+        }
+        if (consentFormFlowStarted) return;
+        consentFormFlowStarted = true;
+        UserMessagingPlatform.loadAndShowConsentFormIfRequired(this, formError -> {
+            if (formError != null) {
+                android.util.Log.w("TutorHisabAds", "Consent form: " + formError.getMessage());
+            }
+            startMobileAdsIfAllowed();
+        });
     }
 
     private void startMobileAdsIfAllowed() {
@@ -418,6 +438,10 @@ public class MainActivity extends Activity {
             startInterstitialTimerIfNeeded();
             loadBannerAd();
             if (interstitialAd == null) loadInterstitial();
+        } else {
+            // Keep first-run language and sign-in screens uninterrupted; request consent
+            // only after the authenticated app becomes visible.
+            continueConsentFlowIfNeeded();
         }
     }
 
