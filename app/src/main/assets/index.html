@@ -933,8 +933,20 @@ function closeHelpPage(){const overlay=$("helpPageOverlay");if(!overlay||overlay
 function startLanguageObserver(){
  if(!window.MutationObserver||!document.body)return;
  let scheduled=false;
- const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;Promise.resolve().then(()=>{scheduled=false;applyLanguage();});});
- observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["placeholder","aria-label","title","alt"]});
+ const config={subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["placeholder","aria-label","title","alt"]};
+ const observer=new MutationObserver(()=>{
+  if(scheduled)return;
+  scheduled=true;
+  requestAnimationFrame(()=>{
+   scheduled=false;
+   // applyLanguage() edits text and attributes itself. Disconnect while it runs so
+   // the observer cannot observe its own edits and schedule an endless update loop.
+   observer.disconnect();
+   try{applyLanguage();}catch(e){console.warn("Language refresh:",e);}
+   observer.observe(document.body,config);
+  });
+ });
+ observer.observe(document.body,config);
 }
 function finishOnboarding(tab){
  $("firstRunOverlay").hidden=true;
