@@ -231,7 +231,14 @@ public class MainActivity extends Activity {
                 });
                 // Native failsafe: recover the visible login/app surface even if the inline
                 // application script throws before it can dismiss the session overlay.
-                view.postDelayed(() -> view.evaluateJavascript(
+                view.postDelayed(() -> {
+                    // If the document committed but its app script never finished, keep a
+                    // native retry action visible instead of leaving a white/blocked screen.
+                    if (!pageReady && startupFallback != null) {
+                        startupFallback.setText("Tutor Hisab — অ্যাপ চালু হতে সমস্যা হয়েছে। আবার চেষ্টা করতে এখানে চাপ দিন।");
+                        startupFallback.setVisibility(View.VISIBLE);
+                    }
+                    view.evaluateJavascript(
                         "(function(){try{" +
                         "if(window.__tutorHisabAppReady===true)return 'app-ready';" +
                         "var overlay=document.getElementById('sessionRestoreOverlay');if(overlay)overlay.hidden=true;" +
@@ -248,7 +255,8 @@ public class MainActivity extends Activity {
                         "panel.textContent='অ্যাপের স্ক্রিন চালু করতে সমস্যা হয়েছে। লগইন পর্দা দেখানো হয়েছে।';document.body.appendChild(panel);}" +
                         "return 'native-recovery-shown';" +
                         "}catch(e){return 'native-recovery-error:'+String(e);}})()",
-                        value -> android.util.Log.w("TutorHisabWebView", "Startup failsafe: " + value)), 8000);
+                        value -> android.util.Log.w("TutorHisabWebView", "Startup failsafe: " + value));
+                }, 8000);
             }
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
@@ -280,10 +288,16 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         setContentView(root);
 
-        if (savedInstanceState == null) {
+        boolean restoredWebViewState = false;
+        if (savedInstanceState != null) {
+            // WebView.restoreState can return null when Android has discarded the old renderer.
+            // Never leave a newly created WebView blank in that case.
+            restoredWebViewState = webView.restoreState(savedInstanceState) != null;
+        }
+        if (!restoredWebViewState) {
+            pageReady = false;
+            pageCommitted = false;
             webView.loadUrl("file:///android_asset/index.html");
-        } else {
-            webView.restoreState(savedInstanceState);
         }
         webView.postDelayed(() -> {
             // Only show a retry notice if the local HTML document itself never committed.
