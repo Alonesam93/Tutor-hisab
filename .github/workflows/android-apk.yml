@@ -17,6 +17,7 @@ on:
       - fix/workflow-python-syntax-2026-11-16
       - fix/nov15-user-reported-ui
       - fix/session-restore-immediate-ui-nov16
+      - fix/firebase-sdk-nonblocking-nov16
 
 jobs:
   build:
