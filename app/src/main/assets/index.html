@@ -76,6 +76,7 @@ body{padding-bottom:75px}
 #profileSignedOutPanel[hidden],#profileAccountPanel[hidden]{display:none!important}
 .profile-signed-out h3{margin:4px 0}.profile-signed-out p{margin:0;color:#71667d;line-height:1.6}.profile-signed-out .login-primary{max-width:280px}
 body.auth-onboarding #appHeader{display:none!important}
+body.auth-onboarding #homeScreen,body.auth-onboarding .bottom-nav{visibility:hidden!important;pointer-events:none!important}
 .profile-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
 .profile-avatar,.profile-avatar-fallback{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #e7d9f5;background:#f2e9fa;display:grid;place-items:center;font-size:34px;flex:none}
 .profile-head-main{flex:1;min-width:140px}
@@ -166,7 +167,7 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
    <button type="button" class="login-primary" onclick="chooseLanguage('bn')">বাংলা</button>
    <button type="button" class="login-secondary" onclick="chooseLanguage('en')">English</button>
   </section>
-  <section id="firstAuthStep">
+  <section id="firstAuthStep" hidden>
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
    <h3 id="authHeading" style="text-align:center;color:#32245f;margin-bottom:5px">Sign in</h3>
    <p id="authSubtitle" class="login-subtitle">Use your email and password to access your account</p>
