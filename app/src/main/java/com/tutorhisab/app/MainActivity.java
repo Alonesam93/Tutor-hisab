@@ -23,6 +23,9 @@ import android.window.OnBackInvokedDispatcher;
 import android.graphics.Color;
 import android.widget.Toast;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.view.Gravity;
+import android.widget.FrameLayout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.util.DisplayMetrics;
@@ -44,6 +47,8 @@ import com.google.android.gms.ads.AdError;
 
 public class MainActivity extends Activity {
     private WebView webView;
+    private TextView startupFallback;
+    private boolean pageReady = false;
     private AdView bannerAdView;
     private InterstitialAd interstitialAd;
     private ValueCallback<Uri[]> filePathCallback;
@@ -142,16 +147,6 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new BackupBridge(), "Android");
         webView.addJavascriptInterface(new ShareBridge(), "Share");
         webView.addJavascriptInterface(new AdsBridge(), "Ads");
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return handleExternalScheme(request.getUrl());
-            }
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return handleExternalScheme(Uri.parse(url));
-            }
-        });
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
@@ -178,8 +173,51 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        root.addView(webView, new LinearLayout.LayoutParams(
+        FrameLayout webContainer = new FrameLayout(this);
+        webContainer.addView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        startupFallback = new TextView(this);
+        startupFallback.setText("Tutor Hisab\n\nঅ্যাপের স্ক্রিন লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করে এখানে চাপ দিয়ে আবার চেষ্টা করুন।");
+        startupFallback.setTextColor(Color.rgb(50, 36, 95));
+        startupFallback.setTextSize(17);
+        startupFallback.setGravity(Gravity.CENTER);
+        startupFallback.setPadding(32, 32, 32, 32);
+        startupFallback.setBackgroundColor(Color.WHITE);
+        startupFallback.setVisibility(View.GONE);
+        startupFallback.setOnClickListener(v -> {
+            pageReady = false;
+            startupFallback.setVisibility(View.GONE);
+            webView.reload();
+        });
+        webContainer.addView(startupFallback, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        root.addView(webContainer, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return handleExternalScheme(request.getUrl());
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleExternalScheme(Uri.parse(url));
+            }
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                view.evaluateJavascript("window.__tutorHisabAppReady === true", value -> {
+                    pageReady = "true".equals(value);
+                    startupFallback.setVisibility(pageReady ? View.GONE : View.VISIBLE);
+                });
+            }
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
+                if (request.isForMainFrame()) {
+                    pageReady = false;
+                    startupFallback.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
         bannerAdView = new AdView(this);
         bannerAdView.setAdUnitId(BANNER_AD_UNIT_ID);
@@ -195,6 +233,17 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         setContentView(root);
 
+        if (savedInstanceState == null) {
+            webView.loadUrl("file:///android_asset/index.html");
+        } else {
+            webView.restoreState(savedInstanceState);
+        }
+        webView.postDelayed(() -> {
+            if (!pageReady && startupFallback != null && startupFallback.getVisibility() != View.VISIBLE) {
+                startupFallback.setVisibility(View.VISIBLE);
+            }
+        }, 12000);
+
         MobileAds.initialize(this, initializationStatus -> runOnUiThread(() -> {
             nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
             bannerAdView.loadAd(new AdRequest.Builder().build());
@@ -209,11 +258,6 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
-        }
-        if (savedInstanceState == null) {
-            webView.loadUrl("file:///android_asset/index.html");
-        } else {
-            webView.restoreState(savedInstanceState);
         }
     }
 
