@@ -301,11 +301,12 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
 <script>
 window.__tutorHisabAppReady = false;
 window.addEventListener("error", function(event) {
+ // Runtime diagnostics must never replace or cover the working local app screen.
  const existing = document.getElementById("thRuntimeError");
  const panel = existing || document.createElement("div");
  panel.id = "thRuntimeError";
- panel.style.cssText = "position:fixed;inset:0;z-index:9999;background:#fff;color:#32245f;padding:28px;display:flex;align-items:center;justify-content:center;text-align:center;font:16px Arial,sans-serif;white-space:pre-wrap";
- panel.textContent = "Tutor Hisab\\n\\nঅ্যাপ চালু হতে সমস্যা হয়েছে। আবার চেষ্টা করুন।\\n\\n" + String(event.message || "Unknown startup error");
+ panel.style.cssText = "position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:9999;background:#fff7e8;color:#6b4300;border:1px solid #e7c98b;border-radius:12px;padding:12px;display:block;text-align:left;font:13px Arial,sans-serif;white-space:pre-wrap;max-height:25vh;overflow:auto;box-shadow:0 4px 16px #0002";
+ panel.textContent = "Tutor Hisab — একটি স্ক্রিপ্টে সমস্যা হয়েছে।\\n" + String(event.message || "Unknown runtime error");
  if (!existing) document.body.appendChild(panel);
 });
 let STORAGE_KEY="tutorHisabData";
@@ -678,9 +679,14 @@ function loadFirebaseSdk(){
   script.onerror=()=>reject(new Error("Firebase SDK could not be loaded: "+src));
   document.head.appendChild(script);
  });
- return load("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js")
+ const sdkLoad=load("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js")
   .then(()=>load("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"))
   .then(()=>load("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"));
+ let timeoutId;
+ const timeout=new Promise((_,reject)=>{
+  timeoutId=setTimeout(()=>reject(new Error("Firebase SDK loading timed out after 8 seconds.")),8000);
+ });
+ return Promise.race([sdkLoad,timeout]).finally(()=>clearTimeout(timeoutId));
 }
 function authMessage(s){if($("authStatus"))$("authStatus").textContent=s;}
 function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
@@ -877,7 +883,12 @@ loadFirebaseSdk().then(()=>{
   auth=firebase.auth();
   db=firebase.firestore();
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn("Auth persistence:",e));
- }catch(e){console.error("Firebase initialization:",e);}
+ }catch(e){
+  console.error("Firebase initialization:",e);
+  startFirebaseAuthListener();
+  enterOfflineModeIfCached();
+  return;
+ }
  startFirebaseAuthListener();
 }).catch(e=>{
  console.error("Firebase SDK loading:",e);
