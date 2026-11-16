@@ -368,6 +368,22 @@ function dueFor(s,upto=currentMonth){
  const paid=data.payments.filter(p=>p.studentId===s.id&&validMonth(p.month)&&p.month<=upto).reduce((v,p)=>v+Number(p.amount||0),0);
  return Math.max(0,accrued-paid);
 }
+function paymentOverpaymentMonth(student,candidate,excludedPaymentId=null){
+ const payments=data.payments.filter(p=>p.studentId===student.id&&p.id!==excludedPaymentId);
+ payments.push(candidate);
+ const byMonth=new Map();
+ for(const payment of payments){
+  if(!validMonth(payment.month)||!Number.isFinite(Number(payment.amount))||Number(payment.amount)<=0)return payment.month||"invalid";
+  byMonth.set(payment.month,(byMonth.get(payment.month)||0)+Number(payment.amount));
+ }
+ let cumulative=0;
+ for(const month of [...byMonth.keys()].sort()){
+  cumulative+=byMonth.get(month);
+  const accrued=Number(student.opening||0)+Number(student.fee||0)*monthsBetween(student.start,month);
+  if(!Number.isFinite(accrued)||accrued<0||cumulative>accrued+0.000001)return month;
+ }
+ return null;
+}
 function addStudent(){
  const name=$("name").value.trim(),className=$("className").value.trim(),phone=$("phone").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
  if(!name||name.length>80){alert("শিক্ষার্থীর নাম লিখুন (সর্বোচ্চ ৮০ অক্ষর)।");$("name").focus();return;}
@@ -396,8 +412,12 @@ function addPayment(){
  const outstanding=Math.max(0,accrued-otherPayments);
  if(outstanding<=0){alert("নির্বাচিত মাস পর্যন্ত কোনো বকেয়া নেই।");return;}
  if(amount>outstanding){alert("এই মাস পর্যন্ত অবশিষ্ট বকেয়া "+money(outstanding)+"। এর বেশি জমা নেওয়া যাবে না।");return;}
- if(editingPaymentId){const old=data.payments.find(p=>p.id===editingPaymentId);if(!old){cancelPaymentEdit();alert("জমার তথ্য পাওয়া যায়নি।");return;}Object.assign(old,{studentId:id,amount,month,date});cancelPaymentEdit();save();alert("জমার তথ্য সম্পাদনা হয়েছে।");return;}
- data.payments.push({id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(),studentId:id,amount,month,date});
+ const paymentId=editingPaymentId||(crypto.randomUUID?crypto.randomUUID():Date.now().toString()+"-"+Math.random().toString(36).slice(2));
+ const candidate={id:paymentId,studentId:id,amount,month,date};
+ const overpaidAt=paymentOverpaymentMonth(student,candidate,editingPaymentId);
+ if(overpaidAt){alert("এই জমা যোগ বা সম্পাদনা করলে "+overpaidAt+" মাস পর্যন্ত মোট জমা নির্ধারিত বেতনের চেয়ে বেশি হবে। আগের জমার তথ্য যাচাই করুন।");return;}
+ if(editingPaymentId){const old=data.payments.find(p=>p.id===editingPaymentId);if(!old){cancelPaymentEdit();alert("জমার তথ্য পাওয়া যায়নি।");return;}Object.assign(old,candidate);cancelPaymentEdit();save();alert("জমার তথ্য সম্পাদনা হয়েছে।");return;}
+ data.payments.push(candidate);
  $("payAmount").value="";save();alert("জমা সংরক্ষণ হয়েছে।");
 }
 function editStudent(id){
