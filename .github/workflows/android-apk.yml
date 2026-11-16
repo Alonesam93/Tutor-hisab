@@ -85,6 +85,8 @@ jobs:
               raise SystemExit("Signed-out profile guard or sign-in action missing")
           if "if(!currentUser||currentUser.uid!==u.uid)return;profile={...profile,...(cloud.profile||{})};" not in html:
               raise SystemExit("Stale Firebase auth callback can overwrite the active account profile")
+          if 'if(!name||name.length>80)' not in html or 'Student Name <span class="required-mark">*</span>' not in html:
+              raise SystemExit("Student name must be required and limited to 80 characters")
           if "Native failsafe: recover the visible login/app surface" not in java:
               raise SystemExit("Native WebView startup recovery missing")
           if "window.handleAppBack ? window.handleAppBack()" not in java:
