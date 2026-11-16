@@ -479,17 +479,28 @@ function backup(){
  a.href=url;a.download="tutor-hisab-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function restore(){
+ if(!currentUser||!window.__tutorHisabSignedIn||window.__tutorHisabOfflineMode){alert("ব্যাকআপ রিস্টোর করতে আগে আপনার অ্যাকাউন্টে Sign In করুন।");return;}
  const file=$("restoreFile").files[0];if(!file){alert("ব্যাকআপ ফাইল নির্বাচন করুন");return;}
+ const restoreUid=currentUser.uid;
  const reader=new FileReader();reader.onload=()=>{
   try{
-   const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error("invalid");if(d.accountUid&&currentUser&&d.accountUid!==currentUser.uid)throw Error("wrong account");
-   const ids=new Set();
+   if(!currentUser||currentUser.uid!==restoreUid||!window.__tutorHisabSignedIn)throw Error("account-changed");
+   const d=JSON.parse(reader.result);if(!d||!Array.isArray(d.students)||!Array.isArray(d.payments))throw Error("invalid");
+   if(d.accountUid&&d.accountUid!==restoreUid)throw Error("wrong-account");
+   const ids=new Set(),paymentIds=new Set();
    for(const s of d.students){if(!s||typeof s.id!=="string"||!s.id||ids.has(s.id)||(s.name!=null&&typeof s.name!=="string")||!validMonth(s.start)||!Number.isFinite(Number(s.fee))||Number(s.fee)<=0||!Number.isFinite(Number(s.opening||0))||Number(s.opening||0)<0)throw Error("student");ids.add(s.id);}
-   for(const p of d.payments){const student=d.students.find(s=>s.id===p.studentId);if(!p||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date)||p.month<student.start)throw Error("payment");}
+   for(const p of d.payments){const student=d.students.find(s=>s.id===p.studentId);if(!p||typeof p.id!=="string"||!p.id||paymentIds.has(p.id)||typeof p.studentId!=="string"||!ids.has(p.studentId)||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0||!validMonth(p.month)||!validDate(p.date)||p.month<student.start)throw Error("payment");paymentIds.add(p.id);}
    for(const s of d.students){const months=[...new Set(d.payments.filter(p=>p.studentId===s.id).map(p=>p.month))].sort();for(const m of months){const accrued=Number(s.opening||0)+Number(s.fee)*monthsBetween(s.start,m);const paid=d.payments.filter(p=>p.studentId===s.id&&p.month<=m).reduce((sum,p)=>sum+Number(p.amount),0);if(paid>accrued)throw Error("overpaid");}}
    if(!confirm("বর্তমান তথ্যের জায়গায় ব্যাকআপের তথ্য বসবে। চালিয়ে যাবেন?"))return;
-   data={...d,students:d.students.map(s=>({...s,name:String(s.name||"")})),deletedStudentIds:Array.isArray(d.deletedStudentIds)?d.deletedStudentIds:[],deletedPaymentIds:Array.isArray(d.deletedPaymentIds)?d.deletedPaymentIds:[]};save();alert("ব্যাকআপ রিস্টোর হয়েছে।");
-  }catch(e){alert("ব্যাকআপ ফাইলটি সঠিক নয় বা এতে ভুল তথ্য আছে।");}
+   const restoredStudents=d.students.map(s=>({...s,name:String(s.name||"")}));
+   const restoredStudentIds=new Set(restoredStudents.map(s=>String(s.id))),restoredPaymentIds=new Set(d.payments.map(p=>String(p.id)));
+   const deletedStudentIds=new Set([...(data.deletedStudentIds||[]),...(d.deletedStudentIds||[])].map(String));
+   const deletedPaymentIds=new Set([...(data.deletedPaymentIds||[]),...(d.deletedPaymentIds||[])].map(String));
+   for(const s of data.students||[])if(!restoredStudentIds.has(String(s.id)))deletedStudentIds.add(String(s.id));
+   for(const p of data.payments||[])if(!restoredPaymentIds.has(String(p.id)))deletedPaymentIds.add(String(p.id));
+   data={...d,students:restoredStudents,payments:d.payments,deletedStudentIds:[...deletedStudentIds],deletedPaymentIds:[...deletedPaymentIds]};
+   save();$("restoreFile").value="";alert("ব্যাকআপ রিস্টোর হয়েছে এবং Cloud Sync শুরু হয়েছে।");
+  }catch(e){console.error("Backup restore validation:",e);alert(e.message==="wrong-account"?"এই ব্যাকআপটি অন্য অ্যাকাউন্টের। নিজের অ্যাকাউন্টের ব্যাকআপ নির্বাচন করুন।":"ব্যাকআপ ফাইলটি সঠিক নয়, অন্য অ্যাকাউন্টের, অথবা এতে ভুল তথ্য আছে।");}
  };reader.readAsText(file);
 }
 
@@ -912,19 +923,11 @@ setTimeout(()=>{
  }
 },10000);
 function enterOfflineModeIfCached(){
- // Keep student records available when Firebase cannot load; cloud operations resume after reconnect.
+ // Offline access is allowed only for the last explicitly authenticated UID.
+ // Never guess an account by scanning cached user keys: that can expose another teacher's data.
  let uid="";
- try{
-  uid=localStorage.getItem("tutorHisabLastUid")||"";
-  if(!uid){
-   const cached=[];
-   for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i)||"";
-    if(key.startsWith("tutorHisabData_"))cached.push(key.slice("tutorHisabData_".length));
-   }
-   if(cached.length)uid=cached[cached.length-1];
-  }
- }catch(e){console.warn("Offline cache lookup:",e);}
+ try{uid=localStorage.getItem("tutorHisabLastUid")||"";}
+ catch(e){console.warn("Offline cache lookup:",e);}
  if(!uid)return;
  window.__tutorHisabOfflineMode=true;
  window.__tutorHisabSignedIn=false;
