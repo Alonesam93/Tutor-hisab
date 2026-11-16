@@ -74,10 +74,10 @@ jobs:
               raise SystemExit("Bottom navigation must contain the five required tabs in order")
           if len(re.findall(r'class="nav-icon"', html)) != 5 or 'class="nav-label"' in html:
               raise SystemExit("Bottom navigation must contain exactly five icon-only tabs")
-          if any(x in html for x in ("firstLanguageStep", "firstAccountStep", "data-first-language")):
-              raise SystemExit("First-launch language and welcome screens must be removed")
-          if 'id="firstAuthStep"' not in html or 'localStorage.setItem("tutorHisabLanguage","en")' not in html:
-              raise SystemExit("First launch must open the English sign-in page directly")
+          if 'id="firstLanguageStep"' not in html or 'function chooseLanguage(lang)' not in html:
+              raise SystemExit("First launch must show the language chooser before sign-in")
+          if 'localStorage.setItem("tutorHisabLanguageChosen","yes")' not in html or 'id="firstAuthStep"' not in html:
+              raise SystemExit("Language selection must be saved before opening sign-in")
           for field in ('for="name">Student Name <span>(Optional)</span>', 'for="className">Class <span class="required-mark">*</span>',
                         'for="phone">Mobile Number <span class="required-mark">*</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
               if field not in html:
