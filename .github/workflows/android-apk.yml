@@ -127,7 +127,7 @@ jobs:
               raise SystemExit("Student name must be required")
           if 'else{try{localStorage.removeItem("tutorHisabLastUid");}catch(e){}' not in html:
               raise SystemExit("Confirmed sign-out must clear the cached account UID")
-          if '(s.name!=null&&typeof s.name!=="string")' not in html or 'students:d.students.map(s=>({...s,name:String(s.name||"")}))' not in html:
+          if '(s.name!=null&&typeof s.name!=="string")' not in html or 'const restoredStudents=d.students.map(s=>({...s,name:String(s.name||"")}));' not in html:
               raise SystemExit("Backup restore must accept optional student names")
           if 'if(!currentUser||!window.__tutorHisabSignedIn||window.__tutorHisabOfflineMode)' not in html:
               raise SystemExit("Backup restore must require an authenticated online account")
