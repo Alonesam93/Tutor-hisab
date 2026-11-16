@@ -21,6 +21,7 @@ on:
       - fix/white-screen-webview-recovery-nov16
       - fix/native-startup-failsafe-nov16
       - fix/login-language-profile-guard-nov16
+      - fix/final-account-backup-integrity-nov16
 
 jobs:
   build:
@@ -128,6 +129,17 @@ jobs:
               raise SystemExit("Confirmed sign-out must clear the cached account UID")
           if '(s.name!=null&&typeof s.name!=="string")' not in html or 'students:d.students.map(s=>({...s,name:String(s.name||"")}))' not in html:
               raise SystemExit("Backup restore must accept optional student names")
+          if 'if(!currentUser||!window.__tutorHisabSignedIn||window.__tutorHisabOfflineMode)' not in html:
+              raise SystemExit("Backup restore must require an authenticated online account")
+          if 'if(d.accountUid&&d.accountUid!==restoreUid)' not in html:
+              raise SystemExit("Backup restore must reject backups from another account")
+          if 'for(const s of data.students||[])if(!restoredStudentIds.has(String(s.id)))deletedStudentIds.add(String(s.id));' not in html:
+              raise SystemExit("Backup restore must tombstone removed students before cloud sync")
+          if 'for(const p of data.payments||[])if(!restoredPaymentIds.has(String(p.id)))deletedPaymentIds.add(String(p.id));' not in html:
+              raise SystemExit("Backup restore must tombstone removed payments before cloud sync")
+          offline = html[html.index("function enterOfflineModeIfCached()"):html.index("function startFirebaseAuthListener()")]
+          if 'localStorage.getItem("tutorHisabLastUid")' not in offline or 'for(let i=0;i<localStorage.length;i++)' in offline:
+              raise SystemExit("Offline recovery must never guess a teacher account from cached UID keys")
           if 'showTab("home",false);showHomePanel("students",false);' not in html:
               raise SystemExit("Student List edit must open the student form directly")
           home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
