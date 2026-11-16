@@ -131,6 +131,19 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
 .help-overlay{position:fixed;inset:0;z-index:150;background:#171323b8;display:flex;align-items:stretch;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.help-overlay[hidden]{display:none}.help-dialog{width:100%;height:100%;max-width:760px;background:#fff;display:flex;flex-direction:column;overflow:hidden}.help-toolbar{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#51418f;color:#fff}.help-toolbar button{width:40px;height:40px;margin:0;padding:0;background:#ffffff20;color:#fff;border-radius:10px;font-size:18px}.help-dialog iframe{border:0;width:100%;height:calc(100% - 54px);flex:1;background:#fff}
 
 .session-restore{position:fixed;inset:0;z-index:180;background:linear-gradient(145deg,#f4effb,#fff7f2);display:flex;align-items:center;justify-content:center;padding:24px;animation:th-startup-failsafe 1ms 8s forwards}.session-restore[hidden]{display:none}@keyframes th-startup-failsafe{to{opacity:0;visibility:hidden;pointer-events:none}}.session-restore-card{display:flex;flex-direction:column;align-items:center;gap:12px;color:#32245f;text-align:center;font-size:17px}.session-restore-card span{font-size:13px;color:#756b83}.session-restore-logo{width:68px;height:68px;border-radius:21px;background:#51418f;color:#fff;display:grid;place-items:center;font-size:34px;box-shadow:0 8px 20px #51418f30}.session-restore-spinner{width:25px;height:25px;border:3px solid #ded5ee;border-top-color:#51418f;border-radius:50%;animation:th-spin .8s linear infinite}@keyframes th-spin{to{transform:rotate(360deg)}}
+
+/* Refined mobile-first onboarding and authentication surface. */
+.onboarding{padding:16px;align-items:center;justify-content:center;background:linear-gradient(145deg,#17142bdb,#3a3159c9)}
+.onboarding-card{width:min(100%,460px);max-width:460px;height:auto;min-height:0;max-height:calc(100dvh - 32px);border-radius:26px;padding:28px 24px;overflow-y:auto;box-shadow:0 24px 70px #17132340}
+.login-card{border:1px solid #e7e0f2;border-radius:26px;background:linear-gradient(165deg,#fff 0%,#fbfaff 70%,#fffaf6 100%)}
+.login-brand{margin-bottom:20px}.login-logo{width:60px;height:60px;border-radius:19px}
+#authHeading{font-size:26px;letter-spacing:-.3px}.login-subtitle{max-width:340px;margin-left:auto;margin-right:auto}
+.login-label{margin-top:14px}.login-input{min-height:50px;border-radius:13px;font-size:16px}
+.login-primary,.login-secondary{min-height:50px;border-radius:13px!important;font-weight:750;letter-spacing:.1px}
+.login-primary{box-shadow:0 9px 20px #51418f24}.login-footer{color:#777087}
+#togglePassword{min-height:38px;padding:7px 12px;font-weight:700;border-radius:10px!important}
+@media(max-height:700px){.onboarding{padding:8px}.onboarding-card{max-height:calc(100dvh - 16px);padding:20px 18px}.login-brand{margin-bottom:12px}.login-subtitle{margin-bottom:12px}}
+
 </style>
 </head>
 <body>
@@ -144,8 +157,8 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
  <div class="onboarding-card login-card">
   <section id="firstLanguageStep" hidden>
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
-   <h3 style="text-align:center;color:#32245f">Choose your language / আপনার ভাষা নির্বাচন করুন</h3>
-   <p class="login-subtitle">Select a language to continue</p>
+   <h3 id="languageHeading" style="text-align:center;color:#32245f">Choose your language / আপনার ভাষা নির্বাচন করুন</h3>
+   <p id="languageSubtitle" class="login-subtitle">Select a language to continue</p>
    <button type="button" class="login-primary" onclick="chooseLanguage('bn')">বাংলা</button>
    <button type="button" class="login-secondary" onclick="chooseLanguage('en')">English</button>
   </section>
@@ -565,6 +578,7 @@ function applyHelpPageLanguage(doc){
 function applyLanguage(){
  const lang=localStorage.getItem("tutorHisabLanguage")||"bn";
  document.documentElement.lang=lang;
+ const languageHeading=document.getElementById("languageHeading"),languageSubtitle=document.getElementById("languageSubtitle");if(languageHeading)languageHeading.textContent=lang==="bn"?"আপনার ভাষা নির্বাচন করুন":"Choose your language";if(languageSubtitle)languageSubtitle.textContent=lang==="bn"?"চালিয়ে যেতে ভাষা নির্বাচন করুন":"Select a language to continue";
  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  for(const node of nodes){let value=node.nodeValue;if(!value.trim())continue;const map=lang==="en"?translations:reverseTranslations;for(const [from,to] of Object.entries(map).sort((a,b)=>b[0].length-a[0].length)){if(from&&from!==to&&value.includes(from))value=value.split(from).join(to);}node.nodeValue=value;}
@@ -615,6 +629,35 @@ Object.assign(translations,{
 "7. Limitation of Liability":"৭. দায়ের সীমা","8. Privacy Policy":"৮. গোপনীয়তা",
 "9. Changes to Terms":"৯. শর্তের পরিবর্তন","10. Contact Us":"১০. যোগাযোগ"
 });
+Object.assign(translations,{
+"Choose your language / আপনার ভাষা নির্বাচন করুন":"আপনার ভাষা নির্বাচন করুন",
+"Select a language to continue":"চালিয়ে যেতে ভাষা নির্বাচন করুন",
+"Sign in":"লগইন করুন","Enter your account details to continue":"আপনার অ্যাকাউন্টে প্রবেশের তথ্য দিন",
+"Email":"ইমেইল","Password":"পাসওয়ার্ড","Show password":"পাসওয়ার্ড দেখুন","Hide password":"পাসওয়ার্ড লুকান",
+"Remember me":"আমাকে মনে রাখুন","Forgot password?":"পাসওয়ার্ড ভুলে গেছেন?","Don't have an account?":"অ্যাকাউন্ট নেই?",
+"Register":"রেজিস্ট্রেশন","Create account":"অ্যাকাউন্ট তৈরি করুন","Sign out":"লগআউট","Not signed in.":"লগইন করা হয়নি।",
+"Sign in to sync with Cloud.":"Cloud Sync করতে লগইন করুন।","Privacy Policy":"গোপনীয়তা নীতি","Contact Us":"যোগাযোগ",
+"About":"পরিচিতি","Profile Photo":"প্রোফাইল ছবি","My Profile":"আমার প্রোফাইল","Edit":"সম্পাদনা",
+"Name":"নাম","Mobile Number":"মোবাইল নম্বর","Institution Name":"প্রতিষ্ঠানের নাম","Designation":"পদবি",
+"Student and monthly tuition records":"শিক্ষার্থী ও মাসিক বেতনের হিসাব",
+"Student and monthly tuition management":"শিক্ষার্থী ও মাসিক বেতনের হিসাব",
+"Choose your language":"আপনার ভাষা নির্বাচন করুন","Select a language":"ভাষা নির্বাচন করুন",
+"Your Name":"আপনার নাম","Mobile Number (optional)":"মোবাইল নম্বর (ঐচ্ছিক)",
+"Institution Name (optional)":"প্রতিষ্ঠানের নাম (ঐচ্ছিক)","Designation (optional)":"পদবি (ঐচ্ছিক)",
+"Confirm Password":"পাসওয়ার্ড নিশ্চিত করুন","Re-enter your password":"পাসওয়ার্ড আবার লিখুন",
+"Use your email and password to access your account":"আপনার অ্যাকাউন্টে প্রবেশ করতে ইমেইল ও পাসওয়ার্ড দিন",
+"Already have an account?":"আগে থেকেই অ্যাকাউন্ট আছে?","Create your account":"আপনার অ্যাকাউন্ট তৈরি করুন",
+"Enter your details to join Tutor Hisab":"Tutor Hisab-এ যোগ দিতে আপনার তথ্য দিন",
+"Enter your email":"আপনার ইমেইল লিখুন","Enter your password":"আপনার পাসওয়ার্ড লিখুন",
+"Student Name":"শিক্ষার্থীর নাম","Class":"শ্রেণি","Monthly Fee":"মাসিক বেতন",
+"Save Student":"শিক্ষার্থী সংরক্ষণ করুন","Record Payment":"টাকা জমা করুন","Payment Amount":"জমার পরিমাণ",
+"Payment Date":"জমার তারিখ","Payment History":"জমার ইতিহাস","Monthly Report":"মাসিক রিপোর্ট",
+"Settings":"সেটিংস","Homepage":"হোমপেজ","Notification":"নোটিফিকেশন","SMS Packages":"SMS প্যাকেজ",
+"Coming Soon":"শীঘ্রই আসছে","Language":"ভাষা","Guideline":"ব্যবহার নির্দেশিকা",
+"Rate Us":"রেটিং দিন","Feedback":"মতামত দিন","Terms of Service":"ব্যবহারের শর্তাবলি",
+"Save Your Progress":"আপনার তথ্যের ব্যাকআপ রাখুন","Backup & Restore":"ব্যাকআপ ও রিস্টোর"
+});
+
 reverseTranslations=Object.fromEntries(Object.entries(translations).map(([bn,en])=>[en,bn]));
 Object.assign(translations,{
 "Appearance":"চেহারা","Manage your app preferences":"অ্যাপের পছন্দসমূহ পরিচালনা করুন","Theme Mode":"থিমের ধরন","Choose light or dark appearance":"হালকা বা গাঢ় থিম বেছে নিন","☀ Light":"☀ হালকা","☾ Dark":"☾ গাঢ়","Data & Backup":"তথ্য ও ব্যাকআপ","Download or restore your student records":"শিক্ষার্থীর তথ্য ডাউনলোড বা পুনরুদ্ধার করুন","Download Backup":"ব্যাকআপ ডাউনলোড","Restore from backup file":"ব্যাকআপ ফাইল থেকে ফিরিয়ে আনুন","Restore Backup":"ব্যাকআপ পুনরুদ্ধার","Help & Information":"সহায়তা ও তথ্য","How your information is handled":"আপনার তথ্য কীভাবে ব্যবহৃত হয়","App usage terms and conditions":"অ্যাপ ব্যবহারের শর্তাবলি","Get help from our support team":"সহায়তা দলের সঙ্গে যোগাযোগ করুন","Share your suggestions":"আপনার মতামত জানান","App information and version":"অ্যাপের তথ্য ও সংস্করণ","Invite another teacher":"অন্য শিক্ষককে আমন্ত্রণ জানান","Rate Us":"রেটিং দিন","Coming Soon":"শীঘ্রই আসছে",
@@ -715,7 +758,7 @@ function loginValues(){return{email:$("loginEmail").value.trim(),password:$("log
 function showLoginError(message,success=false){const box=$("loginError");box.textContent=message||"";box.style.color=success?"#18794e":"#b42318";}
 let authMode="signin";
 let signupPhotoData="";
-function setAuthMode(mode){authMode=mode;authBusy=false;const bn=(localStorage.getItem("tutorHisabLanguage")||"en")==="bn",signup=mode==="signup";$("authHeading").textContent=signup?(bn?"নতুন অ্যাকাউন্ট তৈরি করুন":"Create your account"):(bn?"লগইন করুন":"Sign in");$("authSubtitle").textContent=signup?(bn?"আপনার তথ্য দিয়ে Tutor Hisab-এ যোগ দিন":"Enter your details to join Tutor Hisab"):(bn?"আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন":"Enter your account details to continue");$("signupFields").hidden=!signup;$("confirmPasswordWrap").hidden=!signup;$("loginSignIn").textContent=signup?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");$("authModePrompt").textContent=signup?(bn?"আগে থেকেই অ্যাকাউন্ট আছে?":"Already have an account?"):(bn?"অ্যাকাউন্ট নেই?":"Don't have an account?");$("loginSignUp").textContent=signup?(bn?"সাইন ইন করুন":"Sign in"):(bn?"রেজিস্ট্রেশন করুন":"Register");$("forgotPassword").hidden=signup;$("loginPassword").autocomplete=signup?"new-password":"current-password";$("loginPassword").type="password";$("confirmPassword").type="password";$("togglePassword").textContent=bn?"পাসওয়ার্ড দেখুন":"Show password";showLoginError("");}
+function setAuthMode(mode){const modeChanged=authMode!==mode,passwordVisible=!modeChanged&&$("loginPassword").type==="text";authMode=mode;authBusy=false;const bn=(localStorage.getItem("tutorHisabLanguage")||"en")==="bn",signup=mode==="signup";$("authHeading").textContent=signup?(bn?"নতুন অ্যাকাউন্ট তৈরি করুন":"Create your account"):(bn?"লগইন করুন":"Sign in");$("authSubtitle").textContent=signup?(bn?"আপনার তথ্য দিয়ে Tutor Hisab-এ যোগ দিন":"Enter your details to join Tutor Hisab"):(bn?"আপনার অ্যাকাউন্টে প্রবেশ করতে তথ্য দিন":"Enter your account details to continue");$("signupFields").hidden=!signup;$("confirmPasswordWrap").hidden=!signup;$("loginSignIn").textContent=signup?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");$("authModePrompt").textContent=signup?(bn?"আগে থেকেই অ্যাকাউন্ট আছে?":"Already have an account?"):(bn?"অ্যাকাউন্ট নেই?":"Don't have an account?");$("loginSignUp").textContent=signup?(bn?"সাইন ইন করুন":"Sign in"):(bn?"রেজিস্ট্রেশন করুন":"Register");$("forgotPassword").hidden=signup;$("loginPassword").autocomplete=signup?"new-password":"current-password";$("loginPassword").type=passwordVisible?"text":"password";$("confirmPassword").type=passwordVisible?"text":"password";$("togglePassword").textContent=passwordVisible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password");$("togglePassword").setAttribute("aria-pressed",String(passwordVisible));$("togglePassword").setAttribute("aria-label",passwordVisible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password"));showLoginError("");}
 let authBusy=false;
 function setAuthBusy(busy){authBusy=busy;const btn=$("loginSignIn"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn";btn.disabled=busy;btn.setAttribute("aria-busy",busy?"true":"false");if(busy)btn.textContent=bn?"অপেক্ষা করুন…":"Please wait…";else btn.textContent=authMode==="signup"?(bn?"রেজিস্ট্রেশন করুন":"Create account"):(bn?"প্রবেশ করুন":"Sign in");}
 async function emailSignIn(){
@@ -957,7 +1000,7 @@ $("loginSignIn").addEventListener("click",emailSignIn);
 $("profilePhotoInput").addEventListener("change",handleProfilePhoto);
 $("loginSignUp").addEventListener("click",e=>{e.preventDefault();if(authBusy)return;setAuthMode(authMode==="signin"?"signup":"signin");});
 $("forgotPassword").addEventListener("click",e=>{e.preventDefault();resetLoginPassword();});
-$("togglePassword").addEventListener("click",()=>{const p=$("loginPassword"),confirm=$("confirmPassword"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",visible=p.type==="password";p.type=visible?"text":"password";confirm.type=visible?"text":"password";$("togglePassword").textContent=visible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password");});
+$("togglePassword").addEventListener("click",()=>{const p=$("loginPassword"),confirm=$("confirmPassword"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",visible=p.type==="password";p.type=visible?"text":"password";confirm.type=visible?"text":"password";$("togglePassword").textContent=visible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password");$("togglePassword").setAttribute("aria-pressed",String(visible));$("togglePassword").setAttribute("aria-label",visible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password"));});
 if(!localStorage.getItem("tutorHisabLanguage"))localStorage.setItem("tutorHisabLanguage","en");
 setAuthMode("signin");
 // Show a neutral loading screen while Firebase restores the persisted session.
