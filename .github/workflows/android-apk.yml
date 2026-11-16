@@ -63,6 +63,7 @@ jobs:
               raise SystemExit("Email validation contains the double-escape bug")
           for required in ("signInWithEmailAndPassword", "createUserWithEmailAndPassword",
                            "sendPasswordResetEmail", "window.handleAppBack=handleAppBack",
+                           "id=\\"signupPhotoInput\\"", "photoData:signupPhotoData",
                            'STORAGE_KEY="tutorHisabData_"+u.uid', 'showTab("home",false)'):
               if required not in html:
                   raise SystemExit("Required app flow missing: " + required)
