@@ -83,6 +83,8 @@ jobs:
               raise SystemExit("CSS must not override hidden profile panel state")
           if "function openProfileSignIn()" not in html or "window.__tutorHisabSignedIn!==true)return" not in html:
               raise SystemExit("Signed-out profile guard or sign-in action missing")
+          if "if(!currentUser||currentUser.uid!==u.uid)return;profile={...profile,...(cloud.profile||{})};" not in html:
+              raise SystemExit("Stale Firebase auth callback can overwrite the active account profile")
           if "Native failsafe: recover the visible login/app surface" not in java:
               raise SystemExit("Native WebView startup recovery missing")
           if "window.handleAppBack ? window.handleAppBack()" not in java:
