@@ -89,6 +89,10 @@ jobs:
               raise SystemExit("CSS must not override hidden profile panel state")
           if "function openProfileSignIn()" not in html or "window.__tutorHisabSignedIn!==true)return" not in html:
               raise SystemExit("Signed-out profile guard or sign-in action missing")
+          if "window.__tutorHisabOfflineMode===true" not in html or "window.__tutorHisabSignedIn!==true&&!window.__tutorHisabOfflineMode" not in html:
+              raise SystemExit("Cached teacher profile must remain available during offline access")
+          if "paymentOverpaymentMonth(student,candidate,editingPaymentId)" not in html:
+              raise SystemExit("Payment add/edit must validate cumulative future-month balances")
           if "if(!currentUser||currentUser.uid!==u.uid)return;profile={...profile,...(cloud.profile||{})};" not in html:
               raise SystemExit("Stale Firebase auth callback can overwrite the active account profile")
           if 'if(!name||name.length>80)' not in html or 'Student Name <span class="required-mark">*</span>' not in html:
