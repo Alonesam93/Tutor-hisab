@@ -633,10 +633,12 @@ function applyLanguage(){
  document.querySelectorAll("[placeholder],[aria-label],[title],[alt]").forEach(el=>{
   ["placeholder","aria-label","title","alt"].forEach(attr=>{
    if(!el.hasAttribute(attr))return;
-   const originalKey="thOriginal"+attr.charAt(0).toUpperCase()+attr.slice(1),lastKey="thLast"+attr.charAt(0).toUpperCase()+attr.slice(1),current=el.getAttribute(attr);
-   if(!el.dataset[originalKey]||current!==el.dataset[lastKey])el.dataset[originalKey]=current;
-   const translated=translateLanguageText(el.dataset[originalKey],map);
-   el.setAttribute(attr,translated);el.dataset[lastKey]=translated;
+   // Store attribute snapshots in valid data-* attributes. DOMStringMap keys
+   // cannot contain the hyphen in names such as aria-label.
+   const originalKey="data-th-original-"+attr,lastKey="data-th-last-"+attr,current=el.getAttribute(attr);
+   if(!el.hasAttribute(originalKey)||current!==el.getAttribute(lastKey))el.setAttribute(originalKey,current);
+   const translated=translateLanguageText(el.getAttribute(originalKey)||"",map);
+   el.setAttribute(attr,translated);el.setAttribute(lastKey,translated);
   });
  });
  const select=document.getElementById("languageSelect");if(select&&select.value!==lang)select.value=lang;
