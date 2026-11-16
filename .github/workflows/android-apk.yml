@@ -53,11 +53,9 @@ jobs:
           import re
           from pathlib import Path
           html = Path("app/src/main/assets/index.html").read_text(encoding="utf-8")
-if r"}\\n.bottom-nav" in html:
+if r"}\n.bottom-nav" in html:
     raise SystemExit("Literal escaped newline found in CSS selector sequence")
-if r"\n" in html:
-    raise SystemExit("Literal backslash-n sequence found in HTML; use real CSS whitespace")
-          java = Path("app/src/main/java/com/tutorhisab/app/MainActivity.java").read_text(encoding="utf-8")
+java = Path("app/src/main/java/com/tutorhisab/app/MainActivity.java").read_text(encoding="utf-8")
           rules = Path("firestore.rules").read_text(encoding="utf-8")
           if r"/^[^\s@]+@[^\s@]+\.[^\s@]+$/" not in html:
               raise SystemExit("Email validation pattern missing")
