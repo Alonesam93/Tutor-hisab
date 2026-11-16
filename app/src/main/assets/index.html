@@ -578,7 +578,7 @@ window.alert=message=>nativeAlert(localizeMessage(message));
 window.confirm=message=>nativeConfirm(localizeMessage(message));
 function applyHelpPageLanguage(doc){
  if(!doc||!doc.body)return;
- const lang=localStorage.getItem("tutorHisabLanguage")||"bn",map=lang==="en"?translations:reverseTranslations;
+ const lang=localStorage.getItem("tutorHisabLanguage")||"bn",map=getLanguageMap(lang);
  const walker=doc.createTreeWalker(doc.body,NodeFilter.SHOW_TEXT),nodes=[];
  while(walker.nextNode())nodes.push(walker.currentNode);
  for(const node of nodes){let value=node.nodeValue||"";if(!value.trim())continue;
