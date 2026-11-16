@@ -17,12 +17,16 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.ConsoleMessage;
 import android.webkit.ValueCallback;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 import android.graphics.Color;
 import android.widget.Toast;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.view.Gravity;
+import android.widget.FrameLayout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.util.DisplayMetrics;
@@ -44,6 +48,9 @@ import com.google.android.gms.ads.AdError;
 
 public class MainActivity extends Activity {
     private WebView webView;
+    private TextView startupFallback;
+    private boolean pageReady = false;
+    private boolean pageCommitted = false;
     private AdView bannerAdView;
     private InterstitialAd interstitialAd;
     private ValueCallback<Uri[]> filePathCallback;
@@ -142,17 +149,13 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new BackupBridge(), "Android");
         webView.addJavascriptInterface(new ShareBridge(), "Share");
         webView.addJavascriptInterface(new AdsBridge(), "Ads");
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return handleExternalScheme(request.getUrl());
-            }
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return handleExternalScheme(Uri.parse(url));
-            }
-        });
         webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage message) {
+                android.util.Log.e("TutorHisabWebView", message.message() + " at " +
+                        message.sourceId() + ":" + message.lineNumber());
+                return true;
+            }
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
                                              FileChooserParams params) {
@@ -178,8 +181,59 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        root.addView(webView, new LinearLayout.LayoutParams(
+        FrameLayout webContainer = new FrameLayout(this);
+        webContainer.addView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        startupFallback = new TextView(this);
+        startupFallback.setText("Tutor Hisab — স্থানীয় স্ক্রিন লোড হয়নি। আবার চেষ্টা করতে এখানে চাপ দিন।");
+        startupFallback.setTextColor(Color.rgb(50, 36, 95));
+        startupFallback.setTextSize(14);
+        startupFallback.setGravity(Gravity.CENTER);
+        startupFallback.setPadding(18, 12, 18, 12);
+        startupFallback.setBackgroundColor(Color.rgb(245, 241, 251));
+        startupFallback.setVisibility(View.GONE);
+        startupFallback.setOnClickListener(v -> {
+            pageReady = false;
+            startupFallback.setVisibility(View.GONE);
+            webView.reload();
+        });
+        FrameLayout.LayoutParams fallbackParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
+        webContainer.addView(startupFallback, fallbackParams);
+        root.addView(webContainer, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return handleExternalScheme(request.getUrl());
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleExternalScheme(Uri.parse(url));
+            }
+            @Override
+            public void onPageCommitVisible(WebView view, String url) {
+                pageCommitted = true;
+                startupFallback.setVisibility(View.GONE);
+            }
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                view.evaluateJavascript("window.__tutorHisabAppReady === true", value -> {
+                    pageReady = "true".equals(value);
+                    // A late Firebase/network failure must never cover the locally rendered app.
+                    if (pageCommitted || pageReady) startupFallback.setVisibility(View.GONE);
+                });
+            }
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
+                if (request.isForMainFrame()) {
+                    pageReady = false;
+                    startupFallback.setText("Tutor Hisab — অ্যাপের স্থানীয় ফাইল লোড হয়নি। আবার চেষ্টা করতে এখানে চাপ দিন।");
+                    startupFallback.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
         bannerAdView = new AdView(this);
         bannerAdView.setAdUnitId(BANNER_AD_UNIT_ID);
@@ -195,6 +249,19 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         setContentView(root);
 
+        if (savedInstanceState == null) {
+            webView.loadUrl("file:///android_asset/index.html");
+        } else {
+            webView.restoreState(savedInstanceState);
+        }
+        webView.postDelayed(() -> {
+            // Only show a retry notice if the local HTML document itself never committed.
+            // Do not replace a rendered app with a full-screen network warning.
+            if (!pageCommitted && !pageReady && startupFallback != null) {
+                startupFallback.setVisibility(View.VISIBLE);
+            }
+        }, 12000);
+
         MobileAds.initialize(this, initializationStatus -> runOnUiThread(() -> {
             nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
             bannerAdView.loadAd(new AdRequest.Builder().build());
@@ -209,11 +276,6 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2002);
-        }
-        if (savedInstanceState == null) {
-            webView.loadUrl("file:///android_asset/index.html");
-        } else {
-            webView.restoreState(savedInstanceState);
         }
     }
 
