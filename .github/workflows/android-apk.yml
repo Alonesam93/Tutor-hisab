@@ -100,7 +100,7 @@ jobs:
               raise SystemExit("First launch must show the language chooser before sign-in")
           if 'localStorage.setItem("tutorHisabLanguageChosen","yes")' not in html or 'id="firstAuthStep"' not in html:
               raise SystemExit("Language selection must be saved before opening sign-in")
-          for field in ('for="name">Student Name <span>(Optional)</span>', 'for="className">Class <span class="required-mark">*</span>',
+          for field in ('for="name">Student Name <span class="required-mark">*</span>', 'for="className">Class <span class="required-mark">*</span>',
                         'for="phone">Mobile Number <span class="required-mark">*</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
               if field not in html:
                   raise SystemExit("Student field label or requirement missing: " + field)
@@ -114,8 +114,8 @@ jobs:
                            'localStorage.setItem("tutorHisabTheme"', 'body.dark-mode'):
               if required not in html:
                   raise SystemExit("Theme mode implementation missing: " + required)
-          if 'Student Name <span>(Optional)</span>' not in html:
-              raise SystemExit("Student name must remain optional")
+          if 'Student Name <span class="required-mark">*</span>' not in html:
+              raise SystemExit("Student name must be required")
           if 'else{try{localStorage.removeItem("tutorHisabLastUid");}catch(e){}' not in html:
               raise SystemExit("Confirmed sign-out must clear the cached account UID")
           if '(s.name!=null&&typeof s.name!=="string")' not in html or 'students:d.students.map(s=>({...s,name:String(s.name||"")}))' not in html:
