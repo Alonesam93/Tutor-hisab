@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.ConsoleMessage;
 import android.webkit.ValueCallback;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
@@ -49,6 +50,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private TextView startupFallback;
     private boolean pageReady = false;
+    private boolean pageCommitted = false;
     private AdView bannerAdView;
     private InterstitialAd interstitialAd;
     private ValueCallback<Uri[]> filePathCallback;
@@ -149,6 +151,12 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new AdsBridge(), "Ads");
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
+            public boolean onConsoleMessage(ConsoleMessage message) {
+                android.util.Log.e("TutorHisabWebView", message.message() + " at " +
+                        message.sourceId() + ":" + message.lineNumber());
+                return true;
+            }
+            @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
                                              FileChooserParams params) {
                 if (filePathCallback != null) filePathCallback.onReceiveValue(null);
@@ -177,20 +185,21 @@ public class MainActivity extends Activity {
         webContainer.addView(webView, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         startupFallback = new TextView(this);
-        startupFallback.setText("Tutor Hisab\n\nঅ্যাপের স্ক্রিন লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করে এখানে চাপ দিয়ে আবার চেষ্টা করুন।");
+        startupFallback.setText("Tutor Hisab — স্থানীয় স্ক্রিন লোড হয়নি। আবার চেষ্টা করতে এখানে চাপ দিন।");
         startupFallback.setTextColor(Color.rgb(50, 36, 95));
-        startupFallback.setTextSize(17);
+        startupFallback.setTextSize(14);
         startupFallback.setGravity(Gravity.CENTER);
-        startupFallback.setPadding(32, 32, 32, 32);
-        startupFallback.setBackgroundColor(Color.WHITE);
+        startupFallback.setPadding(18, 12, 18, 12);
+        startupFallback.setBackgroundColor(Color.rgb(245, 241, 251));
         startupFallback.setVisibility(View.GONE);
         startupFallback.setOnClickListener(v -> {
             pageReady = false;
             startupFallback.setVisibility(View.GONE);
             webView.reload();
         });
-        webContainer.addView(startupFallback, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        FrameLayout.LayoutParams fallbackParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
+        webContainer.addView(startupFallback, fallbackParams);
         root.addView(webContainer, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
@@ -204,16 +213,23 @@ public class MainActivity extends Activity {
                 return handleExternalScheme(Uri.parse(url));
             }
             @Override
+            public void onPageCommitVisible(WebView view, String url) {
+                pageCommitted = true;
+                startupFallback.setVisibility(View.GONE);
+            }
+            @Override
             public void onPageFinished(WebView view, String url) {
                 view.evaluateJavascript("window.__tutorHisabAppReady === true", value -> {
                     pageReady = "true".equals(value);
-                    startupFallback.setVisibility(pageReady ? View.GONE : View.VISIBLE);
+                    // A late Firebase/network failure must never cover the locally rendered app.
+                    if (pageCommitted || pageReady) startupFallback.setVisibility(View.GONE);
                 });
             }
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
                 if (request.isForMainFrame()) {
                     pageReady = false;
+                    startupFallback.setText("Tutor Hisab — অ্যাপের স্থানীয় ফাইল লোড হয়নি। আবার চেষ্টা করতে এখানে চাপ দিন।");
                     startupFallback.setVisibility(View.VISIBLE);
                 }
             }
@@ -239,7 +255,9 @@ public class MainActivity extends Activity {
             webView.restoreState(savedInstanceState);
         }
         webView.postDelayed(() -> {
-            if (!pageReady && startupFallback != null && startupFallback.getVisibility() != View.VISIBLE) {
+            // Only show a retry notice if the local HTML document itself never committed.
+            // Do not replace a rendered app with a full-screen network warning.
+            if (!pageCommitted && !pageReady && startupFallback != null) {
                 startupFallback.setVisibility(View.VISIBLE);
             }
         }, 12000);
