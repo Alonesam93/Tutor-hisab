@@ -684,6 +684,7 @@ Object.assign(translations,{
 "Android অ্যাপে Google AdMob-এর ব্যানার ও পূর্ণ-স্ক্রিন বিজ্ঞাপন দেখানো হতে পারে। বিজ্ঞাপন সরবরাহ, পরিমাপ ও সুরক্ষার জন্য Google ডিভাইস শনাক্তকারী, আনুমানিক অবস্থান, ডায়াগনস্টিক এবং বিজ্ঞাপনে ব্যবহার-সংক্রান্ত তথ্য প্রক্রিয়া করতে পারে। এটি Google-এর নীতি ও আপনার ডিভাইস সেটিংসের অধীন। বিস্তারিত: ":"The Android app may display banner and full-screen advertisements provided by Google AdMob. Google may process device identifiers, approximate location, diagnostics and ad interaction data to deliver, measure and protect ads, subject to Google's policies and your device settings. Details: "
 });
 reverseTranslations=Object.fromEntries(Object.entries(translations).map(([bn,en])=>[en,bn]));
+reverseTranslations=Object.fromEntries(Object.entries(translations).map(([bn,en])=>[en,bn]));
 const originalRender=render;
 render=function(){originalRender();applyLanguage();};
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="languageSelect"){localStorage.setItem("tutorHisabLanguage",e.target.value);render();}});
