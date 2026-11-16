@@ -1059,6 +1059,8 @@ setAuthMode("signin");
 $("firstRunOverlay").hidden=true;
 $("firstAuthStep").hidden=false;
 
+// Apply the saved/default language before the first screen becomes interactive.
+applyLanguage();
 initTheme();
 enforceEnglishStudentInputs();
 render();
