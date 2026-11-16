@@ -652,7 +652,7 @@ function rememberCurrentRoute(){const route=currentAppRoute(),last=appNavigation
 function showHomePanel(tab,addHistory=true){const panels={students:$("homeStudentsPanel"),payments:$("homePaymentsPanel"),studentList:$("homeStudentListPanel"),reports:$("homeReportsPanel")};if(!panels[tab])tab="students";if(addHistory&&activeAppTab==="home"&&tab!==activeHomePanel)rememberCurrentRoute();activeHomePanel=tab;Object.entries(panels).forEach(([key,el])=>el.hidden=key!==tab);document.querySelectorAll("[data-home-tab]").forEach(btn=>btn.classList.toggle("active",btn.dataset.homeTab===tab));}
 document.querySelector(".home-tabs").addEventListener("click",e=>{const btn=e.target.closest("[data-home-tab]");if(btn)showHomePanel(btn.dataset.homeTab);});
 function showTab(tab,addHistory=true){
- if(!window.__tutorHisabSignedIn&&tab!=="profile")tab="profile";
+ if(!window.__tutorHisabSignedIn&&!window.__tutorHisabOfflineMode&&tab!=="profile")tab="profile";
  if(addHistory&&tab!==activeAppTab)rememberCurrentRoute();
  activeAppTab=tab;
  const home=$("homeScreen");
@@ -741,7 +741,7 @@ async function emailSignIn(){
 }
 async function emailSignUp(){setAuthMode("signup");}
 async function resetLoginPassword(){if(!auth){showLoginError("Firebase সংযোগ পাওয়া যায়নি।");return;}const email=$("loginEmail").value.trim();if(!email){showLoginError("আগে আপনার ইমেইল লিখুন।");return;}try{await auth.sendPasswordResetEmail(email);showLoginError("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।",true);}catch(x){showLoginError("রিসেট ইমেইল পাঠানো যায়নি: "+x.message);}}
-async function emailSignOut(){if(auth&&currentUser)await auth.signOut();}
+async function emailSignOut(){if(auth&&currentUser&&!window.__tutorHisabOfflineMode){await auth.signOut();return;}window.__tutorHisabOfflineMode=false;window.__tutorHisabSignedIn=false;currentUser=null;localStorage.removeItem("tutorHisabLastUid");STORAGE_KEY="tutorHisabData";data=loadData();render();showTab("profile",false);$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;authMessage("Sign Out করা হয়েছে।");}
 async function readCloudData(uid){
  const base=db.collection("users").doc(uid);
  const r=await Promise.all([base.get(),base.collection("students").get(),base.collection("payments").get(),base.collection("deletedStudents").get(),base.collection("deletedPayments").get()]);
@@ -796,7 +796,7 @@ async function syncCloud(){
  finally{cloudSyncInProgress=false;if(cloudSyncPending){cloudSyncPending=false;Promise.resolve().then(syncCloud);}}
 }
 async function saveProfile(){if(!currentUser){alert("আগে Sign In করুন।");return;}if(!$("profileName").value.trim()){alert("আপনার নাম লিখুন।");$("profileName").focus();return;}const profile=profileValues();savedProfileData={...profile};localStorage.setItem("tutorHisabProfile_"+currentUser.uid,JSON.stringify(profile));$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();if(window.__tutorHisabProfileSetupRequired){window.__tutorHisabProfileSetupRequired=false;showTab("home",false);}try{await db.collection("users").doc(currentUser.uid).set({profile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});authMessage("প্রোফাইল সংরক্ষণ হয়েছে।");}catch(e){cloudMessage("প্রোফাইল ডিভাইসে সংরক্ষিত হয়েছে; Cloud-এ পাঠানো যায়নি: "+e.message);}}
-window.addEventListener("online",()=>{if(currentUser&&db)syncCloud();});
+window.addEventListener("online",()=>{if(window.__tutorHisabOfflineMode){location.reload();return;}if(currentUser&&db)syncCloud();});
 // Universal startup failsafe also runs when the Firebase SDK itself is unavailable.
 // Do not leave the WebView behind the session overlay indefinitely.
 setTimeout(()=>{
@@ -813,6 +813,38 @@ setTimeout(()=>{
   showLoginError("সেশন যাচাই করতে দেরি হচ্ছে। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।");
  }
 },10000);
+function enterOfflineModeIfCached(){
+ // Keep student records available when Firebase cannot load; cloud operations resume after reconnect.
+ let uid="";
+ try{
+  uid=localStorage.getItem("tutorHisabLastUid")||"";
+  if(!uid){
+   const cached=[];
+   for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i)||"";
+    if(key.startsWith("tutorHisabData_"))cached.push(key.slice("tutorHisabData_".length));
+   }
+   if(cached.length)uid=cached[cached.length-1];
+  }
+ }catch(e){console.warn("Offline cache lookup:",e);}
+ if(!uid)return;
+ window.__tutorHisabOfflineMode=true;
+ window.__tutorHisabSignedIn=false;
+ currentUser={uid,email:""};
+ STORAGE_KEY="tutorHisabData_"+uid;
+ data=loadData();render();
+ let profile={};
+ try{profile=JSON.parse(localStorage.getItem("tutorHisabProfile_"+uid)||"{}");}catch(e){}
+ savedProfileData={...profile};profilePhotoData=profile.photoData||"";
+ $("profileName").value=profile.name||"";$("profileMobile").value=profile.mobile||"";
+ $("profileInstitution").value=profile.institution||"";$("profileDesignation").value=profile.designation||"";
+ setProfilePhoto(profilePhotoData);updateProfileView();
+ $("sessionRestoreOverlay").hidden=true;$("firstRunOverlay").hidden=true;
+ $("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;
+ showTab("home",false);
+ authMessage("Offline Mode: স্থানীয় তথ্য ব্যবহার হচ্ছে।");
+ cloudMessage("ইন্টারনেট নেই। স্থানীয় তথ্য ব্যবহার করতে পারবেন; ইন্টারনেট ফিরলে Cloud Sync হবে।");
+}
 function startFirebaseAuthListener(){
  if(auth){
  // Firebase onAuthStateChanged already delivers the initial persisted state; do not block UI on authStateReady.
@@ -822,7 +854,9 @@ function startFirebaseAuthListener(){
   // Release the startup overlay before localStorage migration, large renders, or Firestore work.
   // Synchronous storage and rendering can block the WebView event loop on slower Android devices.
   currentUser=u||null;
+  window.__tutorHisabOfflineMode=false;
   window.__tutorHisabSignedIn=!!u;
+  if(u){try{localStorage.setItem("tutorHisabLastUid",u.uid);}catch(e){}}
   const startupOverlay=$("sessionRestoreOverlay");
   if(startupOverlay)startupOverlay.hidden=true;
   if(u){
@@ -848,6 +882,7 @@ loadFirebaseSdk().then(()=>{
 }).catch(e=>{
  console.error("Firebase SDK loading:",e);
  startFirebaseAuthListener();
+ enterOfflineModeIfCached();
 });
 
 function applyTheme(mode){
