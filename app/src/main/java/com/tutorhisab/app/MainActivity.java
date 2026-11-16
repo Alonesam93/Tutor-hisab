@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.os.Build;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -53,6 +55,9 @@ public class MainActivity extends Activity {
     private boolean pageCommitted = false;
     private AdView bannerAdView;
     private InterstitialAd interstitialAd;
+    private final Handler adHandler = new Handler(Looper.getMainLooper());
+    private int bannerRetryCount = 0;
+    private int interstitialRetryCount = 0;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
@@ -262,8 +267,14 @@ public class MainActivity extends Activity {
         bannerAdView.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, widthDp));
         bannerAdView.setVisibility(View.GONE);
         bannerAdView.setAdListener(new AdListener() {
-            @Override public void onAdLoaded() { bannerAdView.setVisibility(View.VISIBLE); }
-            @Override public void onAdFailedToLoad(LoadAdError error) { bannerAdView.setVisibility(View.GONE); }
+            @Override public void onAdLoaded() {
+                bannerRetryCount = 0;
+                bannerAdView.setVisibility(View.VISIBLE);
+            }
+            @Override public void onAdFailedToLoad(LoadAdError error) {
+                bannerAdView.setVisibility(View.GONE);
+                scheduleBannerRetry();
+            }
         });
         root.addView(bannerAdView, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -329,19 +340,44 @@ public class MainActivity extends Activity {
                         interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                             @Override public void onAdDismissedFullScreenContent() {
                                 interstitialAd = null;
+                                interstitialRetryCount = 0;
                                 nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
                                 loadInterstitial();
                             }
                             @Override public void onAdFailedToShowFullScreenContent(AdError error) {
                                 interstitialAd = null;
-                                loadInterstitial();
+                                scheduleInterstitialRetry();
                             }
                         });
                     }
                     @Override public void onAdFailedToLoad(LoadAdError error) {
                         interstitialAd = null;
+                        scheduleInterstitialRetry();
                     }
                 });
+    }
+
+    private long adRetryDelay(int retryCount) {
+        // Exponential backoff: 30s, 60s, 120s ... capped at 15 minutes.
+        return Math.min(30_000L * (1L << Math.min(retryCount, 5)), 15L * 60L * 1000L);
+    }
+
+    private void scheduleBannerRetry() {
+        if (isFinishing() || isDestroyed() || bannerAdView == null) return;
+        long delay = adRetryDelay(bannerRetryCount++);
+        adHandler.postDelayed(() -> {
+            if (!isFinishing() && !isDestroyed() && bannerAdView != null) {
+                bannerAdView.loadAd(new AdRequest.Builder().build());
+            }
+        }, delay);
+    }
+
+    private void scheduleInterstitialRetry() {
+        if (isFinishing() || isDestroyed()) return;
+        long delay = adRetryDelay(interstitialRetryCount++);
+        adHandler.postDelayed(() -> {
+            if (!isFinishing() && !isDestroyed() && interstitialAd == null) loadInterstitial();
+        }, delay);
     }
 
     private void showInterstitialIfDue() {
@@ -410,6 +446,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        adHandler.removeCallbacksAndMessages(null);
         if (bannerAdView != null) bannerAdView.destroy();
         if (Build.VERSION.SDK_INT >= 33 && backInvokedCallback != null) {
             getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backInvokedCallback);
