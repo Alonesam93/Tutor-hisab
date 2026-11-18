@@ -7,6 +7,7 @@ on:
       - main
       - release/tutor-hisab-android-2026-11-14
       - fix/login-language-profile-guard-nov16
+      - fix/remove-first-language-screen-nov18
   push:
     branches:
       - fix/audit-and-data-integrity
