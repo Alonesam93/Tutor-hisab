@@ -5,6 +5,8 @@ on:
   pull_request:
     branches:
       - main
+      - release/tutor-hisab-android-2026-11-14
+      - fix/login-language-profile-guard-nov16
   push:
     branches:
       - fix/audit-and-data-integrity
@@ -14,6 +16,12 @@ on:
       - fix/back-login-polish-2026-11-13
       - release/tutor-hisab-android-2026-11-14
       - fix/workflow-python-syntax-2026-11-16
+      - fix/nov15-user-reported-ui
+      - fix/session-restore-immediate-ui-nov16
+      - fix/firebase-sdk-nonblocking-nov16
+      - fix/white-screen-webview-recovery-nov16
+      - fix/native-startup-failsafe-nov16
+      - fix/login-language-profile-guard-nov16
 
 jobs:
   build:
@@ -48,6 +56,10 @@ jobs:
           import re
           from pathlib import Path
           html = Path("app/src/main/assets/index.html").read_text(encoding="utf-8")
+          if r"}\n.bottom-nav" in html:
+              raise SystemExit("Literal escaped newline found in CSS selector sequence")
+          if "th-startup-failsafe" not in html or "@keyframes th-startup-failsafe" not in html:
+              raise SystemExit("CSS startup overlay failsafe missing")
           java = Path("app/src/main/java/com/tutorhisab/app/MainActivity.java").read_text(encoding="utf-8")
           rules = Path("firestore.rules").read_text(encoding="utf-8")
           if r"/^[^\s@]+@[^\s@]+\.[^\s@]+$/" not in html:
@@ -56,21 +68,113 @@ jobs:
               raise SystemExit("Email validation contains the double-escape bug")
           for required in ("signInWithEmailAndPassword", "createUserWithEmailAndPassword",
                            "sendPasswordResetEmail", "window.handleAppBack=handleAppBack",
+                           'id="signupPhotoInput"', "photoData:signupPhotoData",
                            'STORAGE_KEY="tutorHisabData_"+u.uid', 'showTab("home",false)'):
               if required not in html:
                   raise SystemExit("Required app flow missing: " + required)
+          if "observer.disconnect();" not in html or "observer.observe(document.body,config);" not in html:
+              raise SystemExit("Language observer self-mutation guard missing")
+          if "const languageOriginalTextNodes=new WeakMap()" not in html or "function getLanguageMap(lang)" not in html:
+              raise SystemExit("Idempotent bilingual translation guard missing")
+          if "applyLanguage();\ninitTheme();\nenforceEnglishStudentInputs();\nrender();" not in html:
+              raise SystemExit("Default language must be applied before the first-run UI is marked ready")
+          if 'map=getLanguageMap(lang)' not in html or 'map=lang==="en"?translations:reverseTranslations' in html:
+              raise SystemExit("Help pages must use the shared bilingual translation map without undefined reverseTranslations")
+          if 'id="rememberMeLabel"' not in html or '"Remember me":"আমাকে মনে রাখুন"' not in html:
+              raise SystemExit("Remember-me label translation missing")
+          if 'id="profileAccountPanel" class="card" hidden' not in html or 'id="profileSignedOutPanel"' not in html:
+              raise SystemExit("Profile must be hidden until a signed-in account exists")
+          if "#profileSignedOutPanel[hidden],#profileAccountPanel[hidden]{display:none!important}" not in html:
+              raise SystemExit("CSS must not override hidden profile panel state")
+          if "function openProfileSignIn()" not in html or "window.__tutorHisabSignedIn!==true)return" not in html:
+              raise SystemExit("Signed-out profile guard or sign-in action missing")
+          if "if(!currentUser||currentUser.uid!==u.uid)return;profile={...profile,...(cloud.profile||{})};" not in html:
+              raise SystemExit("Stale Firebase auth callback can overwrite the active account profile")
+          if 'if(!name||name.length>80)' not in html or 'Student Name <span class="required-mark">*</span>' not in html:
+              raise SystemExit("Student name must be required and limited to 80 characters")
+          if "Native failsafe: recover the visible login/app surface" not in java:
+              raise SystemExit("Native WebView startup recovery missing")
+          if "restoredWebViewState = webView.restoreState(savedInstanceState) != null;" not in java or "if (!restoredWebViewState)" not in java:
+              raise SystemExit("WebView must reload the local app when saved state cannot be restored")
+          if "অ্যাপ চালু হতে সমস্যা হয়েছে। আবার চেষ্টা করতে এখানে চাপ দিন।" not in java or "if (!pageReady && startupFallback != null)" not in java:
+              raise SystemExit("Native retry action must appear when the app script fails to finish startup")
           if "window.handleAppBack ? window.handleAppBack()" not in java:
               raise SystemExit("Android Back button is not connected to the app navigation handler")
           tabs = re.findall(r'data-tab="([^"]+)"', html)
           if tabs != ["home", "store", "notification", "profile", "settings"]:
               raise SystemExit("Bottom navigation must contain the five required tabs in order")
-          if len(re.findall(r'class="nav-label"', html)) != 5:
-              raise SystemExit("All five bottom-navigation tabs must show visible text labels")
+          if len(re.findall(r'class="nav-icon"', html)) != 5 or 'class="nav-label"' in html:
+              raise SystemExit("Bottom navigation must contain exactly five icon-only tabs")
+          if 'id="firstLanguageStep"' not in html or 'function chooseLanguage(lang)' not in html:
+              raise SystemExit("First launch must show the language chooser before sign-in")
+          if '<section id="firstAuthStep" hidden>' not in html:
+              raise SystemExit("Sign-in section must be hidden on first paint until language selection is complete")
+          if "function showSignedOutOnboarding()" not in html:
+              raise SystemExit("Signed-out onboarding helper missing")
+          auth_listener = html[html.index("function startFirebaseAuthListener()"):html.index("loadFirebaseSdk().then")]
+          if "showSignedOutOnboarding();" not in auth_listener or '$("firstAuthStep").hidden=false' in auth_listener:
+              raise SystemExit("First-run language and sign-in screens must be mutually exclusive after auth restore")
+          if "await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)" not in html:
+              raise SystemExit("Firebase LOCAL persistence must resolve before auth listener starts")
+          if "Ads.setAppContentVisible(appVisible)" not in html:
+              raise SystemExit("Native AdMob banner must be hidden during sign-in/onboarding")
+          if "showAdPrivacyOptions()" not in html or "Ad Privacy Choices" not in html:
+              raise SystemExit("UMP privacy options entry point missing")
+          if "body.auth-onboarding .bottom-nav{display:none!important}" not in html or "body.auth-onboarding #homeScreen" not in html:
+              raise SystemExit("First-run authentication must hide app content and bottom navigation behind the overlay")
+          for required in ("initializeAdsPrivacy()", "consentInformation.requestConsentInfoUpdate",
+                           "continueConsentFlowIfNeeded()", "canRequestAds()", "loadAndShowConsentFormIfRequired",
+                           "setAdsContentVisible(boolean visible)", "INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L",
+                           "BANNER_AD_UNIT_ID", "INTERSTITIAL_AD_UNIT_ID"):
+              if required not in java:
+                  raise SystemExit("AdMob/UMP integration requirement missing: " + required)
+          if "ca-app-pub-7526847355861260~8505766194" not in Path("app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
+              raise SystemExit("AdMob application ID missing from manifest")
+          if "com.google.android.ump:user-messaging-platform:4.0.0" not in Path("app/build.gradle").read_text(encoding="utf-8"):
+              raise SystemExit("Google UMP SDK dependency missing")
+          if "#firstLanguageStep[hidden],#firstAuthStep[hidden]" not in html:
+              raise SystemExit("Hidden onboarding steps must not be exposed by author CSS")
+          if 'localStorage.setItem("tutorHisabLanguageChosen","yes")' not in html or 'id="firstAuthStep"' not in html:
+              raise SystemExit("Language selection must be saved before opening sign-in")
+          for field in ('for="name">Student Name <span class="required-mark">*</span>', 'for="className">Class <span class="required-mark">*</span>',
+                        'for="phone">Mobile Number <span class="required-mark">*</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
+              if field not in html:
+                  raise SystemExit("Student field label or requirement missing: " + field)
+          for required in ('pattern="[A-Za-z0-9 .()/-]+"', 'pattern="[0-9]{7,15}"',
+                           'if(!className||!/^[A-Za-z0-9 .()\\/-]+$/.test(className))',
+                           'if(!/^[0-9]{7,15}$/.test(phone))',
+                           'if(!Number.isFinite(fee)||fee<=0)'):
+              if required not in html:
+                  raise SystemExit("English-only student field validation missing: " + required)
+          for required in ('id="lightModeBtn"', 'id="darkModeBtn"', 'function applyTheme(mode)',
+                           'localStorage.setItem("tutorHisabTheme"', 'body.dark-mode'):
+              if required not in html:
+                  raise SystemExit("Theme mode implementation missing: " + required)
+          if 'Student Name <span class="required-mark">*</span>' not in html:
+              raise SystemExit("Student name must be required")
+          if 'else{try{localStorage.removeItem("tutorHisabLastUid");}catch(e){}' not in html:
+              raise SystemExit("Confirmed sign-out must clear the cached account UID")
+          if '(s.name!=null&&typeof s.name!=="string")' not in html or 'students:d.students.map(s=>({...s,name:String(s.name||"")}))' not in html:
+              raise SystemExit("Backup restore must accept optional student names")
+          if 'showTab("home",false);showHomePanel("students",false);' not in html:
+              raise SystemExit("Student List edit must open the student form directly")
           home_tabs = re.findall(r'data-home-tab="([^"]+)"', html)
           if home_tabs != ["students", "payments", "studentList", "reports"]:
               raise SystemExit("Homepage must contain all four required sections in order")
           if "request.auth.uid == userId" not in rules:
               raise SystemExit("Firestore rules do not enforce per-user ownership")
+          for required in ("match /students/{studentId}", "match /payments/{paymentId}",
+                           "allow read, create, update, delete: if request.auth != null"):
+              if required not in rules:
+                  raise SystemExit("Firestore student/payment subcollection permissions missing: " + required)
+          for required in ("match /deletedStudents/{studentId}", "match /deletedPayments/{paymentId}",
+                           "allow update, delete: if false"):
+              if required not in rules:
+                  raise SystemExit("Durable Cloud deletion protection missing: " + required)
+          for required in ('base.collection("deletedStudents").get()', 'base.collection("deletedPayments").get()',
+                           'cloudDeletedStudents.has(id)', 'cloudDeletedPayments.has(id)'):
+              if required not in html:
+                  raise SystemExit("Cross-device deletion tombstone sync missing: " + required)
           PY
 
       - name: Build debug APK
