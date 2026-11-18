@@ -24,6 +24,7 @@ on:
       - fix/white-screen-webview-recovery-nov16
       - fix/native-startup-failsafe-nov16
       - fix/login-language-profile-guard-nov16
+      - fix/remove-first-language-screen-nov18
 
 jobs:
   build:
