@@ -68,6 +68,25 @@ public class MainActivity extends Activity {
     private boolean bannerRequestInProgress = false;
     private boolean interstitialLoadInProgress = false;
     private boolean interstitialTimerStarted = false;
+    private boolean activityResumed = false;
+    private final Runnable interstitialCheckRunnable = new Runnable() {
+        @Override public void run() {
+            if (isFinishing() || isDestroyed()) return;
+            if (!appContentVisible || !activityResumed) {
+                adHandler.postDelayed(this, 30_000L);
+                return;
+            }
+            long remaining = nextInterstitialAt - SystemClock.elapsedRealtime();
+            if (remaining <= 0L) {
+                if (interstitialAd != null) {
+                    showInterstitialIfDue();
+                    return;
+                }
+                loadInterstitial();
+            }
+            adHandler.postDelayed(this, remaining > 0L ? Math.min(30_000L, remaining) : 15_000L);
+        }
+    };
     private boolean consentInfoUpdated = false;
     private boolean consentUpdateSucceeded = false;
     private boolean consentFormFlowStarted = false;
@@ -432,6 +451,7 @@ public class MainActivity extends Activity {
         if (bannerAdView == null) return;
         if (!visible) {
             bannerAdView.setVisibility(View.GONE);
+            adHandler.removeCallbacks(interstitialCheckRunnable);
             return;
         }
         if (adsInitialized) {
@@ -449,6 +469,8 @@ public class MainActivity extends Activity {
         if (interstitialTimerStarted) return;
         interstitialTimerStarted = true;
         nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+        adHandler.removeCallbacks(interstitialCheckRunnable);
+        adHandler.postDelayed(interstitialCheckRunnable, 30_000L);
     }
 
     private void loadBannerAd() {
@@ -487,10 +509,15 @@ public class MainActivity extends Activity {
                                 interstitialRetryCount = 0;
                                 nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
                                 loadInterstitial();
+                                adHandler.removeCallbacks(interstitialCheckRunnable);
+                                adHandler.postDelayed(interstitialCheckRunnable, 30_000L);
                             }
                             @Override public void onAdFailedToShowFullScreenContent(AdError error) {
                                 interstitialAd = null;
+                                nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
                                 scheduleInterstitialRetry();
+                                adHandler.removeCallbacks(interstitialCheckRunnable);
+                                adHandler.postDelayed(interstitialCheckRunnable, 30_000L);
                             }
                         });
                     }
@@ -580,11 +607,18 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        activityResumed = true;
         if (bannerAdView != null) bannerAdView.resume();
+        if (appContentVisible && interstitialTimerStarted) {
+            adHandler.removeCallbacks(interstitialCheckRunnable);
+            adHandler.postDelayed(interstitialCheckRunnable, 1_000L);
+        }
     }
 
     @Override
     protected void onPause() {
+        activityResumed = false;
+        adHandler.removeCallbacks(interstitialCheckRunnable);
         if (bannerAdView != null) bannerAdView.pause();
         super.onPause();
     }
