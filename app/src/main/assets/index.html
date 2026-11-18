@@ -162,14 +162,7 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
 <div id="sessionRestoreOverlay" class="session-restore"><div class="session-restore-card"><div class="session-restore-logo">📚</div><b>Tutor Hisab</b><span id="sessionRestoreText">Restoring your secure session…</span><div class="session-restore-spinner"></div></div></div>
 <div id="firstRunOverlay" class="onboarding" hidden>
  <div class="onboarding-card login-card">
-  <section id="firstLanguageStep" hidden>
-   <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
-   <h3 id="languageHeading" style="text-align:center;color:#32245f">Choose your language / আপনার ভাষা নির্বাচন করুন</h3>
-   <p id="languageSubtitle" class="login-subtitle">Select a language to continue</p>
-   <button type="button" class="login-primary" onclick="chooseLanguage('bn')">বাংলা</button>
-   <button type="button" class="login-secondary" onclick="chooseLanguage('en')">English</button>
-  </section>
-  <section id="firstAuthStep" hidden>
+  <section id="firstAuthStep">
    <div class="login-brand"><div class="login-logo">📚</div><h2>Tutor Hisab</h2></div>
    <h3 id="authHeading" style="text-align:center;color:#32245f;margin-bottom:5px">Sign in</h3>
    <p id="authSubtitle" class="login-subtitle">Use your email and password to access your account</p>
@@ -787,9 +780,9 @@ function cloudMessage(s){if($("cloudStatus"))$("cloudStatus").textContent=s;}
 function profileValues(){return{name:$("profileName").value.trim(),mobile:$("profileMobile").value.trim(),institution:$("profileInstitution").value.trim(),designation:$("profileDesignation").value.trim(),photoData:profilePhotoData,email:currentUser?.email||""};}
 function setProfilePhoto(data){profilePhotoData=data||"";const img=$("profileAvatar"),fallback=$("profileAvatarFallback");if(profilePhotoData){img.src=profilePhotoData;img.hidden=false;fallback.hidden=true;}else{img.removeAttribute("src");img.hidden=true;fallback.hidden=false;}}
 function updateProfileAccess(){const signedIn=window.__tutorHisabSignedIn===true;const account=$("profileAccountPanel"),prompt=$("profileSignedOutPanel"),overlay=$("firstRunOverlay");if(account)account.hidden=!signedIn;if(prompt)prompt.hidden=signedIn;document.body.classList.toggle("auth-onboarding",!!overlay&&!overlay.hidden);const appVisible=(signedIn||window.__tutorHisabOfflineMode===true)&&(!overlay||overlay.hidden);try{if(window.Ads&&typeof Ads.setAppContentVisible==="function")Ads.setAppContentVisible(appVisible);}catch(e){}}
-function showSignedOutOnboarding(){const needsLanguage=localStorage.getItem("tutorHisabOnboardingDone")!=="yes"&&localStorage.getItem("tutorHisabLanguageChosen")!=="yes";$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=!needsLanguage;$("firstAuthStep").hidden=needsLanguage;setAuthMode("signin");updateProfileAccess();}
+function showSignedOutOnboarding(){$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;localStorage.setItem("tutorHisabLanguageChosen","yes");setAuthMode("signin");updateProfileAccess();}
 function showAdPrivacyOptions(){try{if(window.Ads&&typeof Ads.showPrivacyOptions==="function"){Ads.showPrivacyOptions();return;}}catch(e){}alert("Ad privacy settings are not available right now.");}
-function openProfileSignIn(){const chosen=localStorage.getItem("tutorHisabLanguageChosen")==="yes"||localStorage.getItem("tutorHisabOnboardingDone")==="yes";$("firstRunOverlay").hidden=false;$("firstLanguageStep").hidden=chosen;$("firstAuthStep").hidden=!chosen;setAuthMode("signin");updateProfileAccess();}
+function openProfileSignIn(){$("firstRunOverlay").hidden=false;$("firstAuthStep").hidden=false;localStorage.setItem("tutorHisabLanguageChosen","yes");setAuthMode("signin");updateProfileAccess();}
 function updateProfileView(){if(window.__tutorHisabSignedIn!==true)return;const p=profileValues(),lang=localStorage.getItem("tutorHisabLanguage")||"bn";$("profileDisplayName").textContent=p.name||(lang==="bn"?"আমার প্রোফাইল":"My Profile");$("profileDisplayEmail").textContent=currentUser?.email||"";$("profileViewName").textContent=p.name||"—";$("profileViewMobile").textContent=p.mobile||"—";$("profileViewInstitution").textContent=p.institution||"—";$("profileViewDesignation").textContent=p.designation||"—";setProfilePhoto(profilePhotoData);}
 function editProfile(){$("profileView").hidden=true;$("profileEditForm").hidden=false;$("profileEditBtn").hidden=true;}
 function cancelProfileEdit(){if(window.__tutorHisabProfileSetupRequired){alert("অ্যাকাউন্ট চালু করতে আপনার নাম লিখে প্রোফাইল সংরক্ষণ করুন।");$("profileName").focus();return;}$("profileName").value=savedProfileData.name||"";$("profileMobile").value=savedProfileData.mobile||"";$("profileInstitution").value=savedProfileData.institution||"";$("profileDesignation").value=savedProfileData.designation||"";setProfilePhoto(savedProfileData.photoData||"");$("profilePhotoInput").value="";$("profileEditForm").hidden=true;$("profileView").hidden=false;$("profileEditBtn").hidden=false;updateProfileView();}
@@ -799,15 +792,6 @@ function handleSignupPhoto(event){
  if(!file.type.startsWith("image/")){alert("একটি ছবি নির্বাচন করুন।");event.target.value="";return;}
  if(file.size>8*1024*1024){alert("ছবির আকার ৮ MB-এর কম হতে হবে।");event.target.value="";return;}
  const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas"),scale=Math.min(1,420/Math.max(img.width,img.height));canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext("2d");if(!ctx){alert("ছবিটি প্রক্রিয়া করা যায়নি।");return;}ctx.drawImage(img,0,0,canvas.width,canvas.height);signupPhotoData=canvas.toDataURL("image/jpeg",.72);$("signupPhotoPreview").src=signupPhotoData;$("signupPhotoPreview").hidden=false;};img.onerror=()=>alert("ছবিটি খোলা যায়নি। অন্য ছবি নির্বাচন করুন।");img.src=reader.result;};reader.readAsDataURL(file);
-}
-function chooseLanguage(lang){
- if(lang!=="bn"&&lang!=="en")return;
- localStorage.setItem("tutorHisabLanguage",lang);
- localStorage.setItem("tutorHisabLanguageChosen","yes");
- applyLanguage();
- $("firstLanguageStep").hidden=true;
- $("firstAuthStep").hidden=false;
- setAuthMode("signin");
 }
 function loginValues(){return{email:$("loginEmail").value.trim(),password:$("loginPassword").value};}
 function showLoginError(message,success=false){const box=$("loginError");box.textContent=message||"";box.style.color=success?"#18794e":"#b42318";}
@@ -911,9 +895,8 @@ setTimeout(()=>{
  else{
   showTab("profile",false);
   $("firstRunOverlay").hidden=false;
-  const needsLanguage=localStorage.getItem("tutorHisabOnboardingDone")!=="yes"&&localStorage.getItem("tutorHisabLanguageChosen")!=="yes";
-  $("firstLanguageStep").hidden=!needsLanguage;
-  $("firstAuthStep").hidden=needsLanguage;
+  $("firstAuthStep").hidden=false;
+  localStorage.setItem("tutorHisabLanguageChosen","yes");
   showLoginError("সেশন যাচাই করতে দেরি হচ্ছে। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।");
  }
 },10000);
@@ -1058,7 +1041,8 @@ $("profilePhotoInput").addEventListener("change",handleProfilePhoto);
 $("loginSignUp").addEventListener("click",e=>{e.preventDefault();if(authBusy)return;setAuthMode(authMode==="signin"?"signup":"signin");});
 $("forgotPassword").addEventListener("click",e=>{e.preventDefault();resetLoginPassword();});
 $("togglePassword").addEventListener("click",()=>{const p=$("loginPassword"),confirm=$("confirmPassword"),bn=(localStorage.getItem("tutorHisabLanguage")||"bn")==="bn",visible=p.type==="password";p.type=visible?"text":"password";confirm.type=visible?"text":"password";$("togglePassword").textContent=visible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password");$("togglePassword").setAttribute("aria-pressed",String(visible));$("togglePassword").setAttribute("aria-label",visible?(bn?"পাসওয়ার্ড লুকান":"Hide password"):(bn?"পাসওয়ার্ড দেখুন":"Show password"));});
-if(!localStorage.getItem("tutorHisabLanguage"))localStorage.setItem("tutorHisabLanguage","en");
+if(!localStorage.getItem("tutorHisabLanguage"))localStorage.setItem("tutorHisabLanguage","bn");
+localStorage.setItem("tutorHisabLanguageChosen","yes");
 setAuthMode("signin");
 // Show a neutral loading screen while Firebase restores the persisted session.
 // Overlay starts visible in HTML; never re-show it after auth has completed.
