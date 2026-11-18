@@ -466,9 +466,10 @@ public class MainActivity extends Activity {
     }
 
     private void startInterstitialTimerIfNeeded() {
-        if (interstitialTimerStarted) return;
-        interstitialTimerStarted = true;
-        nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+        if (!interstitialTimerStarted) {
+            interstitialTimerStarted = true;
+            nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+        }
         adHandler.removeCallbacks(interstitialCheckRunnable);
         adHandler.postDelayed(interstitialCheckRunnable, 30_000L);
     }
