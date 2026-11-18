@@ -113,7 +113,7 @@ jobs:
           nav_labels = re.findall(r'<span class="nav-label">([^<]+)</span>', html)
           if nav_labels != ["Homepage", "My Store", "Notification", "My Profile", "Settings"]:
               raise SystemExit("Bottom navigation labels or order do not match the required five tabs")
-          if 'id="firstLanguageStep"' in html or 'function chooseLanguage(lang)' in html or "আপনার ভাষা নির্বাচন করুন" in html:
+          if 'id="firstLanguageStep"' in html or 'id="languageHeading"' in html or 'function chooseLanguage(lang)' in html:
               raise SystemExit("First-launch language selection screen must be removed")
           if '<section id="firstAuthStep">' not in html:
               raise SystemExit("Sign-in section must be immediately available when onboarding opens")
