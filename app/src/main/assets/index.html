@@ -215,7 +215,7 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
   <h3 id="studentFormTitle">➕ নতুন শিক্ষার্থী যোগ করুন</h3>
   <label class="field-label" for="name">Student Name <span class="required-mark">*</span></label><input id="name" type="text" placeholder="Enter student name" maxlength="80" required autocomplete="off">
   <label class="field-label" for="className">Class <span class="required-mark">*</span></label><input id="className" type="text" placeholder="e.g. Class 8, SSC" maxlength="50" required pattern="[A-Za-z0-9 .()/-]+" title="Use English letters and numbers only" autocomplete="off">
-  <label class="field-label" for="phone">Mobile Number <span class="required-mark">*</span></label><input id="phone" type="tel" placeholder="e.g. 01712345678" inputmode="numeric" maxlength="15" required pattern="[0-9]{7,15}" title="Enter 7 to 15 English digits only" autocomplete="tel">
+  <label class="field-label" for="phone">Mobile Number <span class="small">(optional)</span></label><input id="phone" type="tel" placeholder="e.g. 01712345678" inputmode="numeric" maxlength="15" pattern="[0-9]{7,15}" title="Enter 7 to 15 English digits only" autocomplete="tel">
   <label class="field-label" for="fee">Monthly Fee <span class="required-mark">*</span></label><input id="fee" type="number" inputmode="decimal" min="1" step="0.01" placeholder="Enter monthly fee" required>
   <label class="field-label" for="start">Fee calculation start month <span class="required-mark">*</span></label>
   <input id="start" type="month">
@@ -369,7 +369,7 @@ function addStudent(){
  const name=$("name").value.trim(),className=$("className").value.trim(),phone=$("phone").value.trim(),fee=Number($("fee").value),start=$("start").value,opening=Number($("opening").value||0);
  if(!name||name.length>80){alert("শিক্ষার্থীর নাম লিখুন (সর্বোচ্চ ৮০ অক্ষর)।");$("name").focus();return;}
  if(!className||!/^[A-Za-z0-9 .()\/-]+$/.test(className)){alert("Class is required. Use English letters and numbers only.");$("className").focus();return;}
- if(!/^[0-9]{7,15}$/.test(phone)){alert("Mobile Number is required. Enter 7 to 15 English digits only.");$("phone").focus();return;}
+ if(phone&&!/^[0-9]{7,15}$/.test(phone)){alert("Mobile Number must contain 7 to 15 English digits only.");$("phone").focus();return;}
  if(!Number.isFinite(fee)||fee<=0){alert("Enter a valid Monthly Fee using English digits.");$("fee").focus();return;}
  if(!validMonth(start)){alert("Fee calculation start month is required.");$("start").focus();return;}
  if(!Number.isFinite(opening)||opening<0){alert("আগের বকেয়া শূন্য বা তার বেশি হতে হবে।");return;}
@@ -823,7 +823,7 @@ async function emailSignIn(){
   }else await auth.signInWithEmailAndPassword(email,password);
  }catch(x){
   const code=x.code||"";
-  const messages={"auth/email-already-in-use":bn?"এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে। সাইন ইন করুন।":"An account already exists for this email. Please sign in.","auth/invalid-email":bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.","auth/weak-password":bn?"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।":"Password must be at least 6 characters.","auth/user-not-found":bn?"এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।":"No account was found for this email.","auth/wrong-password":bn?"পাসওয়ার্ড সঠিক নয়।":"Incorrect password.","auth/invalid-credential":bn?"ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।":"Incorrect email or password.","auth/network-request-failed":bn?"ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।":"Check your internet connection and try again.","auth/too-many-requests":bn?"অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।":"Too many attempts. Please wait and try again."};
+  const messages={"auth/email-already-in-use":bn?"এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে। সাইন ইন করুন।":"An account already exists for this email. Please sign in.","auth/invalid-email":bn?"সঠিক ইমেইল ঠিকানা লিখুন।":"Enter a valid email address.","auth/weak-password":bn?"পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।":"Password must be at least 6 characters.","auth/user-not-found":bn?"এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।":"No account was found for this email.","auth/wrong-password":bn?"পাসওয়ার্ড সঠিক নয়।":"Incorrect password.","auth/invalid-credential":bn?"ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।":"Incorrect email or password.","auth/invalid-login-credentials":bn?"ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।":"Incorrect email or password.","auth/user-disabled":bn?"এই অ্যাকাউন্টটি সাময়িকভাবে বন্ধ রয়েছে।":"This account has been disabled.","auth/operation-not-allowed":bn?"এই লগইন পদ্ধতি চালু নেই।":"This sign-in method is not enabled.","auth/network-request-failed":bn?"ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।":"Check your internet connection and try again.","auth/too-many-requests":bn?"অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।":"Too many attempts. Please wait and try again."};
   showLoginError(messages[code]||(bn?"লগইন করা যায়নি: ":"Sign in failed: ")+x.message);
  }finally{setAuthBusy(false);}
 }
