@@ -76,6 +76,8 @@ jobs:
               raise SystemExit("Language observer self-mutation guard missing")
           if "const languageOriginalTextNodes=new WeakMap()" not in html or "function getLanguageMap(lang)" not in html:
               raise SystemExit("Idempotent bilingual translation guard missing")
+          if 'attr.split("-").map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join("")' not in html or 'el.dataset[originalKey]' not in html or 'el.dataset[lastKey]' not in html:
+              raise SystemExit("Hyphenated accessibility attributes must use valid camelCase dataset keys")
           if "applyLanguage();\ninitTheme();\nenforceEnglishStudentInputs();\nrender();" not in html:
               raise SystemExit("Default language must be applied before the first-run UI is marked ready")
           if 'map=getLanguageMap(lang)' not in html or 'map=lang==="en"?translations:reverseTranslations' in html:
