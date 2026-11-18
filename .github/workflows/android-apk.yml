@@ -102,8 +102,11 @@ jobs:
           tabs = re.findall(r'data-tab="([^"]+)"', html)
           if tabs != ["home", "store", "notification", "profile", "settings"]:
               raise SystemExit("Bottom navigation must contain the five required tabs in order")
-          if len(re.findall(r'class="nav-icon"', html)) != 5 or 'class="nav-label"' in html:
-              raise SystemExit("Bottom navigation must contain exactly five icon-only tabs")
+          if len(re.findall(r'class="nav-icon"', html)) != 5 or len(re.findall(r'class="nav-label"', html)) != 5:
+              raise SystemExit("All five bottom-navigation tabs must show both icons and visible labels")
+          nav_labels = re.findall(r'<span class="nav-label">([^<]+)</span>', html)
+          if nav_labels != ["Homepage", "My Store", "Notification", "My Profile", "Settings"]:
+              raise SystemExit("Bottom navigation labels or order do not match the required five tabs")
           if 'id="firstLanguageStep"' not in html or 'function chooseLanguage(lang)' not in html:
               raise SystemExit("First launch must show the language chooser before sign-in")
           if '<section id="firstAuthStep" hidden>' not in html:
