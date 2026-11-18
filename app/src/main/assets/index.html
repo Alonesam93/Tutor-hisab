@@ -625,7 +625,7 @@ function applyLanguage(){
  document.querySelectorAll("[placeholder],[aria-label],[title],[alt]").forEach(el=>{
   ["placeholder","aria-label","title","alt"].forEach(attr=>{
    if(!el.hasAttribute(attr))return;
-   const originalKey="thOriginal"+attr.charAt(0).toUpperCase()+attr.slice(1),lastKey="thLast"+attr.charAt(0).toUpperCase()+attr.slice(1),current=el.getAttribute(attr);
+   const datasetSuffix=attr.split("-").map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join(""),originalKey="thOriginal"+datasetSuffix,lastKey="thLast"+datasetSuffix,current=el.getAttribute(attr);
    if(!el.dataset[originalKey]||current!==el.dataset[lastKey])el.dataset[originalKey]=current;
    const translated=translateLanguageText(el.dataset[originalKey],map);
    el.setAttribute(attr,translated);el.dataset[lastKey]=translated;
