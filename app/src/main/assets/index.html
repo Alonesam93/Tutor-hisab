@@ -70,7 +70,7 @@ body{padding-bottom:75px}
 .login-row{margin:12px 0 16px;color:#514767}
 .login-footer{line-height:1.8}
 .login-error{margin:8px 0}
-.bottom-nav button{font-size:27px;line-height:1;padding:8px 2px;min-height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#706487;background:transparent;transition:background .18s ease,color .18s ease,transform .18s ease}.bottom-nav button.active{background:#eee8fa;color:#51418f;outline:2px solid #d8c8ef;transform:translateY(-2px)}.bottom-nav button:focus-visible{outline:2px solid #51418f;outline-offset:2px}.coming-soon-screen{min-height:55vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#51418f;background:linear-gradient(145deg,#f4effb,#fff1eb);border:1px solid #e7dcf2;border-radius:22px;padding:28px;box-shadow:0 8px 24px #51418f12}.coming-soon-mark{width:88px;height:88px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(145deg,#51418f,#826bc0);color:#fff;font-size:48px;box-shadow:0 12px 28px #51418f35}.coming-soon-screen h2{font-size:25px;margin:20px 0 8px}.coming-soon-screen p{margin:0;color:#71667d;font-size:14px}
+.bottom-nav button{font-size:27px;line-height:1;padding:6px 2px;min-height:58px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#706487;background:transparent;transition:background .18s ease,color .18s ease,transform .18s ease}.bottom-nav .nav-label{font-size:9px;font-weight:700;line-height:1.1;white-space:nowrap}.bottom-nav button.active{background:#eee8fa;color:#51418f;outline:2px solid #d8c8ef;transform:translateY(-2px)}.bottom-nav button:focus-visible{outline:2px solid #51418f;outline-offset:2px}.coming-soon-screen{min-height:55vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#51418f;background:linear-gradient(145deg,#f4effb,#fff1eb);border:1px solid #e7dcf2;border-radius:22px;padding:28px;box-shadow:0 8px 24px #51418f12}.coming-soon-mark{width:88px;height:88px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(145deg,#51418f,#826bc0);color:#fff;font-size:48px;box-shadow:0 12px 28px #51418f35}.coming-soon-screen h2{font-size:25px;margin:20px 0 8px}.coming-soon-screen p{margin:0;color:#71667d;font-size:14px}
 .bottom-nav button.active{background:#efe7fa;color:#32245f;outline:2px solid #51418f}
 .profile-signed-out{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 20px}
 #profileSignedOutPanel[hidden],#profileAccountPanel[hidden]{display:none!important}
@@ -319,11 +319,11 @@ body.dark-mode{background:#11131a;color:#e9e7ef;color-scheme:dark}body.dark-mode
 </section>
 <div id="helpPageOverlay" class="help-overlay" hidden role="dialog" aria-modal="true" aria-label="Help and information"><div class="help-dialog"><div class="help-toolbar"><b id="helpPageTitle">Help &amp; Information</b><button type="button" onclick="closeHelpPage()" aria-label="Close">✕</button></div><iframe id="helpPageFrame" title="Help and information" src="about:blank"></iframe></div></div>
 <nav class="bottom-nav" aria-label="Main navigation">
- <button type="button" data-tab="home" aria-label="Homepage" title="Homepage"><span class="nav-icon" aria-hidden="true">🏠</span></button>
- <button type="button" data-tab="store" aria-label="My Store" title="My Store"><span class="nav-icon" aria-hidden="true">🛍️</span></button>
- <button type="button" data-tab="notification" aria-label="Notification" title="Notification"><span class="nav-icon" aria-hidden="true">🔔</span></button>
- <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile"><span class="nav-icon" aria-hidden="true">👤</span></button>
- <button type="button" data-tab="settings" aria-label="Settings" title="Settings"><span class="nav-icon" aria-hidden="true">⚙️</span></button>
+ <button type="button" data-tab="home" aria-label="Homepage" title="Homepage"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">Homepage</span></button>
+ <button type="button" data-tab="store" aria-label="My Store" title="My Store"><span class="nav-icon" aria-hidden="true">🛍️</span><span class="nav-label">My Store</span></button>
+ <button type="button" data-tab="notification" aria-label="Notification" title="Notification"><span class="nav-icon" aria-hidden="true">🔔</span><span class="nav-label">Notification</span></button>
+ <button type="button" data-tab="profile" aria-label="My Profile" title="My Profile"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-label">My Profile</span></button>
+ <button type="button" data-tab="settings" aria-label="Settings" title="Settings"><span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-label">Settings</span></button>
 </nav>
 
 <script>
