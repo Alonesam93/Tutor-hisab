@@ -133,7 +133,7 @@ jobs:
               raise SystemExit("First-run authentication must hide app content and bottom navigation behind the overlay")
           for required in ("initializeAdsPrivacy()", "consentInformation.requestConsentInfoUpdate",
                            "continueConsentFlowIfNeeded()", "canRequestAds()", "loadAndShowConsentFormIfRequired",
-                           "setAdsContentVisible(boolean visible)", "INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L",
+                           "setAdsContentVisible(boolean visible)", "INTERSTITIAL_INTERVAL_MS = 5L * 60L * 1000L",
                            "BANNER_AD_UNIT_ID", "INTERSTITIAL_AD_UNIT_ID"):
               if required not in java:
                   raise SystemExit("AdMob/UMP integration requirement missing: " + required)
