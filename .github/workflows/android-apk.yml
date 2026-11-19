@@ -139,6 +139,10 @@ jobs:
                   raise SystemExit("AdMob/UMP integration requirement missing: " + required)
           if "interstitialCheckRunnable" not in java or "activityResumed = true" not in java:
               raise SystemExit("Interstitial ads must be checked periodically while app is foregrounded")
+          if "private void pauseInterstitialTimer()" not in java or "private void resumeInterstitialTimer()" not in java:
+              raise SystemExit("Five-minute ad cadence must pause and resume with foreground visibility")
+          if "Never interrupt data entry" not in java or "!activityResumed || interstitialAd == null" not in java:
+              raise SystemExit("Full-screen ads must wait for a navigation action and a resumed activity")
           if "ca-app-pub-7526847355861260~8505766194" not in Path("app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
               raise SystemExit("AdMob application ID missing from manifest")
           if "com.google.android.ump:user-messaging-platform:4.0.0" not in Path("app/build.gradle").read_text(encoding="utf-8"):
