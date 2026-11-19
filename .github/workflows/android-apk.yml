@@ -9,6 +9,7 @@ on:
       - fix/login-language-profile-guard-nov16
       - fix/language-dataset-attribute-crash-nov18
       - fix/remove-first-language-screen-nov18
+      - fix/admob-final-apk-nov19
   push:
     branches:
       - fix/audit-and-data-integrity
