@@ -9,6 +9,7 @@ on:
       - fix/login-language-profile-guard-nov16
       - fix/language-dataset-attribute-crash-nov18
       - fix/remove-first-language-screen-nov18
+      - fix/admob-final-apk-nov19
   push:
     branches:
       - fix/audit-and-data-integrity
@@ -136,6 +137,8 @@ jobs:
                            "BANNER_AD_UNIT_ID", "INTERSTITIAL_AD_UNIT_ID"):
               if required not in java:
                   raise SystemExit("AdMob/UMP integration requirement missing: " + required)
+          if "interstitialCheckRunnable" not in java or "activityResumed = true" not in java:
+              raise SystemExit("Interstitial ads must be checked periodically while app is foregrounded")
           if "ca-app-pub-7526847355861260~8505766194" not in Path("app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
               raise SystemExit("AdMob application ID missing from manifest")
           if "com.google.android.ump:user-messaging-platform:4.0.0" not in Path("app/build.gradle").read_text(encoding="utf-8"):
@@ -147,15 +150,20 @@ jobs:
           if '$("firstAuthStep").hidden=false' not in html:
               raise SystemExit("Signed-out users must be routed directly to sign-in")
           for field in ('for="name">Student Name <span class="required-mark">*</span>', 'for="className">Class <span class="required-mark">*</span>',
-                        'for="phone">Mobile Number <span class="required-mark">*</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
+                        'for="phone">Mobile Number <span class="small">(optional)</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
               if field not in html:
                   raise SystemExit("Student field label or requirement missing: " + field)
           for required in ('pattern="[A-Za-z0-9 .()/-]+"', 'pattern="[0-9]{7,15}"',
                            'if(!className||!/^[A-Za-z0-9 .()\\/-]+$/.test(className))',
-                           'if(!/^[0-9]{7,15}$/.test(phone))',
+                           'if(phone&&!/^[0-9]{7,15}$/.test(phone))',
                            'if(!Number.isFinite(fee)||fee<=0)'):
               if required not in html:
                   raise SystemExit("English-only student field validation missing: " + required)
+          phone_input = re.search(r'<input id="phone"[^>]*>', html)
+          if not phone_input or "required" in phone_input.group(0):
+              raise SystemExit("Student mobile number must be optional")
+          if '"auth/invalid-login-credentials"' not in html or '"auth/invalid-credential"' not in html:
+              raise SystemExit("Invalid login credentials must show a clear message")
           for required in ('id="lightModeBtn"', 'id="darkModeBtn"', 'function applyTheme(mode)',
                            'localStorage.setItem("tutorHisabTheme"', 'body.dark-mode'):
               if required not in html:
