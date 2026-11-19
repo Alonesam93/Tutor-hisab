@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
     private static final String BANNER_AD_UNIT_ID = "ca-app-pub-7526847355861260/7040429257";
     // Ad unit name in AdMob: TutorHisab_Interstitial
     private static final String INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-7526847355861260/9835226943";
-    private static final long INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L;
+    private static final long INTERSTITIAL_INTERVAL_MS = 5L * 60L * 1000L;
     private long nextInterstitialAt = 0L;
 
     public class ShareBridge {
