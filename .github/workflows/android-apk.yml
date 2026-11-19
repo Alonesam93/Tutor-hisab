@@ -26,6 +26,7 @@ on:
       - fix/native-startup-failsafe-nov16
       - fix/login-language-profile-guard-nov16
       - fix/remove-first-language-screen-nov18
+      - fix/admob-five-minute-frequency-nov19
 
 jobs:
   build:
@@ -131,14 +132,29 @@ jobs:
               raise SystemExit("UMP privacy options entry point missing")
           if "body.auth-onboarding .bottom-nav{display:none!important}" not in html or "body.auth-onboarding #homeScreen" not in html:
               raise SystemExit("First-run authentication must hide app content and bottom navigation behind the overlay")
+          # Verify the production banner is attached persistently and shown only after a successful load.
+          if "root.addView(bannerAdView" not in java or "bannerAdView.loadAd(" not in java:
+              raise SystemExit("Persistent native banner view/load wiring missing")
+          if "bannerAdView.setVisibility(appContentVisible ? View.VISIBLE : View.GONE)" not in java:
+              raise SystemExit("Banner must become visible only after a successful load while app content is visible")
+          if "Ads.onNavigation();" not in html or "showInterstitialIfDue()" not in java:
+              raise SystemExit("Interstitial must be connected to later in-app navigation")
+          if "INTERSTITIAL_AD_UNIT_ID = \"ca-app-pub-7526847355861260/9835226943\"" not in java:
+              raise SystemExit("Production interstitial ad unit ID mismatch")
+          if "BANNER_AD_UNIT_ID = \"ca-app-pub-7526847355861260/7040429257\"" not in java:
+              raise SystemExit("Production banner ad unit ID mismatch")
           for required in ("initializeAdsPrivacy()", "consentInformation.requestConsentInfoUpdate",
                            "continueConsentFlowIfNeeded()", "canRequestAds()", "loadAndShowConsentFormIfRequired",
-                           "setAdsContentVisible(boolean visible)", "INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L",
+                           "setAdsContentVisible(boolean visible)", "INTERSTITIAL_INTERVAL_MS = 5L * 60L * 1000L",
                            "BANNER_AD_UNIT_ID", "INTERSTITIAL_AD_UNIT_ID"):
               if required not in java:
                   raise SystemExit("AdMob/UMP integration requirement missing: " + required)
           if "interstitialCheckRunnable" not in java or "activityResumed = true" not in java:
               raise SystemExit("Interstitial ads must be checked periodically while app is foregrounded")
+          if "private void pauseInterstitialTimer()" not in java or "private void resumeInterstitialTimer()" not in java:
+              raise SystemExit("Five-minute ad cadence must pause and resume with foreground visibility")
+          if "Never interrupt data entry" not in java or "!activityResumed || interstitialAd == null" not in java:
+              raise SystemExit("Full-screen ads must wait for a navigation action and a resumed activity")
           if "ca-app-pub-7526847355861260~8505766194" not in Path("app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
               raise SystemExit("AdMob application ID missing from manifest")
           if "com.google.android.ump:user-messaging-platform:4.0.0" not in Path("app/build.gradle").read_text(encoding="utf-8"):
