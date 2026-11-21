@@ -27,6 +27,7 @@ on:
       - fix/login-language-profile-guard-nov16
       - fix/remove-first-language-screen-nov18
       - fix/admob-five-minute-frequency-nov19
+      - fix/admob-content-visible-after-login-nov21
 
 jobs:
   build:
