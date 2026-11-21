@@ -9,6 +9,7 @@ on:
       - fix/login-language-profile-guard-nov16
       - fix/language-dataset-attribute-crash-nov18
       - fix/remove-first-language-screen-nov18
+      - fix/admob-final-apk-nov19
   push:
     branches:
       - fix/audit-and-data-integrity
@@ -25,6 +26,8 @@ on:
       - fix/native-startup-failsafe-nov16
       - fix/login-language-profile-guard-nov16
       - fix/remove-first-language-screen-nov18
+      - fix/admob-five-minute-frequency-nov19
+      - fix/admob-content-visible-after-login-nov21
 
 jobs:
   build:
@@ -126,20 +129,44 @@ jobs:
               raise SystemExit("Firebase LOCAL persistence must resolve before auth listener starts")
           if "Ads.setAppContentVisible(appVisible)" not in html:
               raise SystemExit("Native AdMob banner must be hidden during sign-in/onboarding")
+          if '$("firstRunOverlay").hidden=true;updateProfileAccess();const legacyKey="tutorHisabData"' not in html:
+              raise SystemExit("Successful sign-in must notify native AdMob that app content is visible")
           if "showAdPrivacyOptions()" not in html or "Ad Privacy Choices" not in html:
               raise SystemExit("UMP privacy options entry point missing")
           if "body.auth-onboarding .bottom-nav{display:none!important}" not in html or "body.auth-onboarding #homeScreen" not in html:
               raise SystemExit("First-run authentication must hide app content and bottom navigation behind the overlay")
+          # Verify the production banner is attached persistently and shown only after a successful load.
+          if "root.addView(bannerAdView" not in java or "bannerAdView.loadAd(" not in java:
+              raise SystemExit("Persistent native banner view/load wiring missing")
+          if "bannerAdView.setVisibility(appContentVisible ? View.VISIBLE : View.GONE)" not in java:
+              raise SystemExit("Banner must become visible only after a successful load while app content is visible")
+          if "Ads.onNavigation();" not in html or "showInterstitialIfDue()" not in java:
+              raise SystemExit("Interstitial must be connected to later in-app navigation")
+          if "INTERSTITIAL_AD_UNIT_ID = \"ca-app-pub-7526847355861260/9835226943\"" not in java:
+              raise SystemExit("Production interstitial ad unit ID mismatch")
+          if "BANNER_AD_UNIT_ID = \"ca-app-pub-7526847355861260/7040429257\"" not in java:
+              raise SystemExit("Production banner ad unit ID mismatch")
           for required in ("initializeAdsPrivacy()", "consentInformation.requestConsentInfoUpdate",
                            "continueConsentFlowIfNeeded()", "canRequestAds()", "loadAndShowConsentFormIfRequired",
-                           "setAdsContentVisible(boolean visible)", "INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L",
+                           "setAdsContentVisible(boolean visible)", "INTERSTITIAL_INTERVAL_MS = 5L * 60L * 1000L",
                            "BANNER_AD_UNIT_ID", "INTERSTITIAL_AD_UNIT_ID"):
               if required not in java:
                   raise SystemExit("AdMob/UMP integration requirement missing: " + required)
+          if "interstitialCheckRunnable" not in java or "activityResumed = true" not in java:
+              raise SystemExit("Interstitial ads must be checked periodically while app is foregrounded")
+          if "private void pauseInterstitialTimer()" not in java or "private void resumeInterstitialTimer()" not in java:
+              raise SystemExit("Five-minute ad cadence must pause and resume with foreground visibility")
+          if "Never interrupt data entry" not in java or "!activityResumed || interstitialAd == null" not in java:
+              raise SystemExit("Full-screen ads must wait for a navigation action and a resumed activity")
           if "ca-app-pub-7526847355861260~8505766194" not in Path("app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
               raise SystemExit("AdMob application ID missing from manifest")
           if "com.google.android.ump:user-messaging-platform:4.0.0" not in Path("app/build.gradle").read_text(encoding="utf-8"):
               raise SystemExit("Google UMP SDK dependency missing")
+          for required in ("scheduleConsentRetry()", "consentRetryRunnable", "consentInformation.canRequestAds()", "Mobile Ads initialized:", "Banner failed: code=", "Interstitial failed: code="):
+              if required not in java:
+                  raise SystemExit("AdMob consent retry or failure diagnostics missing: " + required)
+          if "android.permission.ACCESS_NETWORK_STATE" not in Path("app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
+              raise SystemExit("Network state permission missing for ad network diagnostics")
           if "#firstLanguageStep[hidden],#firstAuthStep[hidden]" not in html:
               raise SystemExit("Hidden onboarding steps must not be exposed by author CSS")
           if 'localStorage.setItem("tutorHisabLanguage","bn")' not in html or 'localStorage.setItem("tutorHisabLanguageChosen","yes")' not in html:
@@ -147,15 +174,20 @@ jobs:
           if '$("firstAuthStep").hidden=false' not in html:
               raise SystemExit("Signed-out users must be routed directly to sign-in")
           for field in ('for="name">Student Name <span class="required-mark">*</span>', 'for="className">Class <span class="required-mark">*</span>',
-                        'for="phone">Mobile Number <span class="required-mark">*</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
+                        'for="phone">Mobile Number <span class="small">(optional)</span>', 'for="fee">Monthly Fee <span class="required-mark">*</span>'):
               if field not in html:
                   raise SystemExit("Student field label or requirement missing: " + field)
           for required in ('pattern="[A-Za-z0-9 .()/-]+"', 'pattern="[0-9]{7,15}"',
                            'if(!className||!/^[A-Za-z0-9 .()\\/-]+$/.test(className))',
-                           'if(!/^[0-9]{7,15}$/.test(phone))',
+                           'if(phone&&!/^[0-9]{7,15}$/.test(phone))',
                            'if(!Number.isFinite(fee)||fee<=0)'):
               if required not in html:
                   raise SystemExit("English-only student field validation missing: " + required)
+          phone_input = re.search(r'<input id="phone"[^>]*>', html)
+          if not phone_input or "required" in phone_input.group(0):
+              raise SystemExit("Student mobile number must be optional")
+          if '"auth/invalid-login-credentials"' not in html or '"auth/invalid-credential"' not in html:
+              raise SystemExit("Invalid login credentials must show a clear message")
           for required in ('id="lightModeBtn"', 'id="darkModeBtn"', 'function applyTheme(mode)',
                            'localStorage.setItem("tutorHisabTheme"', 'body.dark-mode'):
               if required not in html:

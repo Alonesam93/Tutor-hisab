@@ -68,9 +68,29 @@ public class MainActivity extends Activity {
     private boolean bannerRequestInProgress = false;
     private boolean interstitialLoadInProgress = false;
     private boolean interstitialTimerStarted = false;
+    private boolean activityResumed = false;
+    private long interstitialRemainingMs = 5L * 60L * 1000L;
+    private final Runnable interstitialCheckRunnable = new Runnable() {
+        @Override public void run() {
+            if (isFinishing() || isDestroyed()) return;
+            if (!appContentVisible || !activityResumed) {
+                pauseInterstitialTimer();
+                return;
+            }
+            long remaining = nextInterstitialAt - SystemClock.elapsedRealtime();
+            if (remaining <= 0L) {
+                // Never interrupt data entry: a due ad is shown only on a later navigation.
+                if (interstitialAd == null) loadInterstitial();
+                return;
+            }
+            adHandler.postDelayed(this, Math.min(30_000L, remaining));
+        }
+    };
     private boolean consentInfoUpdated = false;
     private boolean consentUpdateSucceeded = false;
     private boolean consentFormFlowStarted = false;
+    private boolean consentRequestInProgress = false;
+    private int consentRetryCount = 0;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
@@ -80,7 +100,7 @@ public class MainActivity extends Activity {
     private static final String BANNER_AD_UNIT_ID = "ca-app-pub-7526847355861260/7040429257";
     // Ad unit name in AdMob: TutorHisab_Interstitial
     private static final String INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-7526847355861260/9835226943";
-    private static final long INTERSTITIAL_INTERVAL_MS = 8L * 60L * 1000L;
+    private static final long INTERSTITIAL_INTERVAL_MS = 5L * 60L * 1000L;
     private long nextInterstitialAt = 0L;
 
     public class ShareBridge {
@@ -306,6 +326,9 @@ public class MainActivity extends Activity {
                 bannerLoaded = false;
                 bannerRequestInProgress = false;
                 bannerAdView.setVisibility(View.GONE);
+                android.util.Log.e("TutorHisabAds", "Banner failed: code=" + error.getCode()
+                        + ", domain=" + error.getDomain() + ", message=" + error.getMessage()
+                        + ", response=" + error.getResponseInfo());
                 if (appContentVisible) scheduleBannerRetry();
             }
         });
@@ -377,25 +400,52 @@ public class MainActivity extends Activity {
     }
 
     private void initializeAdsPrivacy() {
-        consentInformation = UserMessagingPlatform.getConsentInformation(this);
+        if (isFinishing() || isDestroyed() || consentRequestInProgress) return;
+        if (consentInformation == null) {
+            consentInformation = UserMessagingPlatform.getConsentInformation(this);
+        }
+        consentRequestInProgress = true;
         ConsentRequestParameters params = new ConsentRequestParameters.Builder().build();
-        // Refresh consent status on every app launch before requesting any ads.
+        // Refresh consent status on every app launch and retry transient network failures.
         consentInformation.requestConsentInfoUpdate(
                 this,
                 params,
                 () -> {
+                    consentRequestInProgress = false;
                     consentInfoUpdated = true;
                     consentUpdateSucceeded = true;
+                    consentRetryCount = 0;
+                    android.util.Log.i("TutorHisabAds", "UMP consent info updated; canRequestAds="
+                            + consentInformation.canRequestAds());
                     continueConsentFlowIfNeeded();
                 },
                 requestError -> {
+                    consentRequestInProgress = false;
                     consentInfoUpdated = true;
                     consentUpdateSucceeded = false;
-                    android.util.Log.w("TutorHisabAds", "Consent info update: " + requestError.getMessage());
-                    // UMP may still allow requests based on a valid prior consent decision.
+                    android.util.Log.e("TutorHisabAds", "UMP consent update failed: "
+                            + requestError.getErrorCode() + " " + requestError.getMessage()
+                            + "; canRequestAds=" + consentInformation.canRequestAds());
                     continueConsentFlowIfNeeded();
                 });
     }
+
+    private void scheduleConsentRetry() {
+        if (isFinishing() || isDestroyed() || !appContentVisible || consentRequestInProgress) return;
+        long delay = Math.min(30_000L * (1L << Math.min(consentRetryCount++, 5)), 15L * 60L * 1000L);
+        android.util.Log.w("TutorHisabAds", "Retrying UMP consent update in " + delay + " ms");
+        adHandler.removeCallbacks(consentRetryRunnable);
+        adHandler.postDelayed(consentRetryRunnable, delay);
+    }
+
+    private final Runnable consentRetryRunnable = () -> {
+        if (appContentVisible && !adsInitialized && !isFinishing() && !isDestroyed()) {
+            consentInfoUpdated = false;
+            consentUpdateSucceeded = false;
+            consentFormFlowStarted = false;
+            initializeAdsPrivacy();
+        }
+    };
 
     private void continueConsentFlowIfNeeded() {
         if (!appContentVisible || !consentInfoUpdated || isFinishing() || isDestroyed()) return;
@@ -407,18 +457,31 @@ public class MainActivity extends Activity {
         consentFormFlowStarted = true;
         UserMessagingPlatform.loadAndShowConsentFormIfRequired(this, formError -> {
             if (formError != null) {
-                android.util.Log.w("TutorHisabAds", "Consent form: " + formError.getMessage());
+                android.util.Log.e("TutorHisabAds", "UMP consent form failed: "
+                        + formError.getErrorCode() + " " + formError.getMessage());
             }
-            startMobileAdsIfAllowed();
+            if (consentInformation != null && consentInformation.canRequestAds()) {
+                startMobileAdsIfAllowed();
+            } else {
+                consentFormFlowStarted = false;
+                scheduleConsentRetry();
+            }
         });
     }
 
     private void startMobileAdsIfAllowed() {
-        if (isFinishing() || isDestroyed() || adsInitialized || consentInformation == null
-                || !consentInformation.canRequestAds()) return;
+        if (isFinishing() || isDestroyed() || adsInitialized || consentInformation == null) return;
+        if (!consentInformation.canRequestAds()) {
+            android.util.Log.w("TutorHisabAds", "Ad requests are blocked by UMP consent state; waiting and retrying.");
+            scheduleConsentRetry();
+            return;
+        }
+        android.util.Log.i("TutorHisabAds", "Initializing Google Mobile Ads SDK.");
         MobileAds.initialize(this, initializationStatus -> runOnUiThread(() -> {
             if (isFinishing() || isDestroyed()) return;
             adsInitialized = true;
+            android.util.Log.i("TutorHisabAds", "Mobile Ads initialized: "
+                    + initializationStatus.getAdapterStatusMap());
             if (appContentVisible) {
                 startInterstitialTimerIfNeeded();
                 loadBannerAd();
@@ -432,6 +495,7 @@ public class MainActivity extends Activity {
         if (bannerAdView == null) return;
         if (!visible) {
             bannerAdView.setVisibility(View.GONE);
+            pauseInterstitialTimer();
             return;
         }
         if (adsInitialized) {
@@ -446,9 +510,26 @@ public class MainActivity extends Activity {
     }
 
     private void startInterstitialTimerIfNeeded() {
-        if (interstitialTimerStarted) return;
-        interstitialTimerStarted = true;
-        nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+        if (!interstitialTimerStarted) {
+            interstitialTimerStarted = true;
+            interstitialRemainingMs = INTERSTITIAL_INTERVAL_MS;
+        }
+        resumeInterstitialTimer();
+    }
+
+    private void resumeInterstitialTimer() {
+        if (!interstitialTimerStarted || !appContentVisible || !activityResumed || nextInterstitialAt != 0L) return;
+        nextInterstitialAt = SystemClock.elapsedRealtime() + Math.max(0L, interstitialRemainingMs);
+        adHandler.removeCallbacks(interstitialCheckRunnable);
+        adHandler.postDelayed(interstitialCheckRunnable, Math.min(30_000L, Math.max(1_000L, interstitialRemainingMs)));
+    }
+
+    private void pauseInterstitialTimer() {
+        if (nextInterstitialAt != 0L) {
+            interstitialRemainingMs = Math.max(0L, nextInterstitialAt - SystemClock.elapsedRealtime());
+            nextInterstitialAt = 0L;
+        }
+        adHandler.removeCallbacks(interstitialCheckRunnable);
     }
 
     private void loadBannerAd() {
@@ -485,18 +566,26 @@ public class MainActivity extends Activity {
                             @Override public void onAdDismissedFullScreenContent() {
                                 interstitialAd = null;
                                 interstitialRetryCount = 0;
-                                nextInterstitialAt = SystemClock.elapsedRealtime() + INTERSTITIAL_INTERVAL_MS;
+                                interstitialRemainingMs = INTERSTITIAL_INTERVAL_MS;
+                                nextInterstitialAt = 0L;
                                 loadInterstitial();
+                                resumeInterstitialTimer();
                             }
                             @Override public void onAdFailedToShowFullScreenContent(AdError error) {
                                 interstitialAd = null;
+                                interstitialRemainingMs = INTERSTITIAL_INTERVAL_MS;
+                                nextInterstitialAt = 0L;
                                 scheduleInterstitialRetry();
+                                resumeInterstitialTimer();
                             }
                         });
                     }
                     @Override public void onAdFailedToLoad(LoadAdError error) {
                         interstitialLoadInProgress = false;
                         interstitialAd = null;
+                        android.util.Log.e("TutorHisabAds", "Interstitial failed: code=" + error.getCode()
+                                + ", domain=" + error.getDomain() + ", message=" + error.getMessage()
+                                + ", response=" + error.getResponseInfo());
                         if (appContentVisible) scheduleInterstitialRetry();
                     }
                 });
@@ -526,10 +615,12 @@ public class MainActivity extends Activity {
     }
 
     private void showInterstitialIfDue() {
-        if (isFinishing() || isDestroyed() || !appContentVisible || interstitialAd == null) return;
+        if (isFinishing() || isDestroyed() || !appContentVisible || !activityResumed || interstitialAd == null) return;
         if (!interstitialTimerStarted || nextInterstitialAt == 0L || SystemClock.elapsedRealtime() < nextInterstitialAt) return;
         InterstitialAd ready = interstitialAd;
         interstitialAd = null;
+        nextInterstitialAt = 0L;
+        interstitialRemainingMs = 0L;
         ready.show(this);
     }
 
@@ -580,11 +671,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        activityResumed = true;
         if (bannerAdView != null) bannerAdView.resume();
+        if (appContentVisible && interstitialTimerStarted) resumeInterstitialTimer();
     }
 
     @Override
     protected void onPause() {
+        activityResumed = false;
+        pauseInterstitialTimer();
         if (bannerAdView != null) bannerAdView.pause();
         super.onPause();
     }
