@@ -89,6 +89,8 @@ public class MainActivity extends Activity {
     private boolean consentInfoUpdated = false;
     private boolean consentUpdateSucceeded = false;
     private boolean consentFormFlowStarted = false;
+    private boolean consentRequestInProgress = false;
+    private int consentRetryCount = 0;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private OnBackInvokedCallback backInvokedCallback;
@@ -324,6 +326,9 @@ public class MainActivity extends Activity {
                 bannerLoaded = false;
                 bannerRequestInProgress = false;
                 bannerAdView.setVisibility(View.GONE);
+                android.util.Log.e("TutorHisabAds", "Banner failed: code=" + error.getCode()
+                        + ", domain=" + error.getDomain() + ", message=" + error.getMessage()
+                        + ", response=" + error.getResponseInfo());
                 if (appContentVisible) scheduleBannerRetry();
             }
         });
@@ -395,25 +400,53 @@ public class MainActivity extends Activity {
     }
 
     private void initializeAdsPrivacy() {
-        consentInformation = UserMessagingPlatform.getConsentInformation(this);
+        if (isFinishing() || isDestroyed() || consentRequestInProgress) return;
+        if (consentInformation == null) {
+            consentInformation = UserMessagingPlatform.getConsentInformation(this);
+        }
+        consentRequestInProgress = true;
         ConsentRequestParameters params = new ConsentRequestParameters.Builder().build();
-        // Refresh consent status on every app launch before requesting any ads.
+        // Refresh consent status on every app launch and retry transient network failures.
         consentInformation.requestConsentInfoUpdate(
                 this,
                 params,
                 () -> {
+                    consentRequestInProgress = false;
                     consentInfoUpdated = true;
                     consentUpdateSucceeded = true;
+                    consentRetryCount = 0;
+                    android.util.Log.i("TutorHisabAds", "UMP consent info updated; canRequestAds="
+                            + consentInformation.canRequestAds());
                     continueConsentFlowIfNeeded();
                 },
                 requestError -> {
+                    consentRequestInProgress = false;
                     consentInfoUpdated = true;
                     consentUpdateSucceeded = false;
-                    android.util.Log.w("TutorHisabAds", "Consent info update: " + requestError.getMessage());
-                    // UMP may still allow requests based on a valid prior consent decision.
+                    android.util.Log.e("TutorHisabAds", "UMP consent update failed: "
+                            + requestError.getErrorCode() + " " + requestError.getMessage()
+                            + "; canRequestAds=" + consentInformation.canRequestAds());
                     continueConsentFlowIfNeeded();
+                    if (appContentVisible && !consentInformation.canRequestAds()) scheduleConsentRetry();
                 });
     }
+
+    private void scheduleConsentRetry() {
+        if (isFinishing() || isDestroyed() || !appContentVisible || consentRequestInProgress) return;
+        long delay = Math.min(30_000L * (1L << Math.min(consentRetryCount++, 5)), 15L * 60L * 1000L);
+        android.util.Log.w("TutorHisabAds", "Retrying UMP consent update in " + delay + " ms");
+        adHandler.removeCallbacks(consentRetryRunnable);
+        adHandler.postDelayed(consentRetryRunnable, delay);
+    }
+
+    private final Runnable consentRetryRunnable = () -> {
+        if (appContentVisible && !adsInitialized && !isFinishing() && !isDestroyed()) {
+            consentInfoUpdated = false;
+            consentUpdateSucceeded = false;
+            consentFormFlowStarted = false;
+            initializeAdsPrivacy();
+        }
+    };
 
     private void continueConsentFlowIfNeeded() {
         if (!appContentVisible || !consentInfoUpdated || isFinishing() || isDestroyed()) return;
@@ -425,18 +458,31 @@ public class MainActivity extends Activity {
         consentFormFlowStarted = true;
         UserMessagingPlatform.loadAndShowConsentFormIfRequired(this, formError -> {
             if (formError != null) {
-                android.util.Log.w("TutorHisabAds", "Consent form: " + formError.getMessage());
+                android.util.Log.e("TutorHisabAds", "UMP consent form failed: "
+                        + formError.getErrorCode() + " " + formError.getMessage());
             }
-            startMobileAdsIfAllowed();
+            if (consentInformation != null && consentInformation.canRequestAds()) {
+                startMobileAdsIfAllowed();
+            } else {
+                consentFormFlowStarted = false;
+                scheduleConsentRetry();
+            }
         });
     }
 
     private void startMobileAdsIfAllowed() {
-        if (isFinishing() || isDestroyed() || adsInitialized || consentInformation == null
-                || !consentInformation.canRequestAds()) return;
+        if (isFinishing() || isDestroyed() || adsInitialized || consentInformation == null) return;
+        if (!consentInformation.canRequestAds()) {
+            android.util.Log.w("TutorHisabAds", "Ad requests are blocked by UMP consent state; waiting and retrying.");
+            scheduleConsentRetry();
+            return;
+        }
+        android.util.Log.i("TutorHisabAds", "Initializing Google Mobile Ads SDK.");
         MobileAds.initialize(this, initializationStatus -> runOnUiThread(() -> {
             if (isFinishing() || isDestroyed()) return;
             adsInitialized = true;
+            android.util.Log.i("TutorHisabAds", "Mobile Ads initialized: "
+                    + initializationStatus.getAdapterStatusMap());
             if (appContentVisible) {
                 startInterstitialTimerIfNeeded();
                 loadBannerAd();
@@ -538,6 +584,9 @@ public class MainActivity extends Activity {
                     @Override public void onAdFailedToLoad(LoadAdError error) {
                         interstitialLoadInProgress = false;
                         interstitialAd = null;
+                        android.util.Log.e("TutorHisabAds", "Interstitial failed: code=" + error.getCode()
+                                + ", domain=" + error.getDomain() + ", message=" + error.getMessage()
+                                + ", response=" + error.getResponseInfo());
                         if (appContentVisible) scheduleInterstitialRetry();
                     }
                 });
