@@ -162,6 +162,11 @@ jobs:
               raise SystemExit("AdMob application ID missing from manifest")
           if "com.google.android.ump:user-messaging-platform:4.0.0" not in Path("app/build.gradle").read_text(encoding="utf-8"):
               raise SystemExit("Google UMP SDK dependency missing")
+          for required in ("scheduleConsentRetry()", "consentRetryRunnable", "consentInformation.canRequestAds()", "Mobile Ads initialized:", "Banner failed: code=", "Interstitial failed: code="):
+              if required not in java:
+                  raise SystemExit("AdMob consent retry or failure diagnostics missing: " + required)
+          if "android.permission.ACCESS_NETWORK_STATE" not in Path("app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
+              raise SystemExit("Network state permission missing for ad network diagnostics")
           if "#firstLanguageStep[hidden],#firstAuthStep[hidden]" not in html:
               raise SystemExit("Hidden onboarding steps must not be exposed by author CSS")
           if 'localStorage.setItem("tutorHisabLanguage","bn")' not in html or 'localStorage.setItem("tutorHisabLanguageChosen","yes")' not in html:
