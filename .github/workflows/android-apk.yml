@@ -128,6 +128,8 @@ jobs:
               raise SystemExit("Firebase LOCAL persistence must resolve before auth listener starts")
           if "Ads.setAppContentVisible(appVisible)" not in html:
               raise SystemExit("Native AdMob banner must be hidden during sign-in/onboarding")
+          if '$("firstRunOverlay").hidden=true;updateProfileAccess();const legacyKey="tutorHisabData"' not in html:
+              raise SystemExit("Successful sign-in must notify native AdMob that app content is visible")
           if "showAdPrivacyOptions()" not in html or "Ad Privacy Choices" not in html:
               raise SystemExit("UMP privacy options entry point missing")
           if "body.auth-onboarding .bottom-nav{display:none!important}" not in html or "body.auth-onboarding #homeScreen" not in html:
