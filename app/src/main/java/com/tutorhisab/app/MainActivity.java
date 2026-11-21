@@ -427,7 +427,6 @@ public class MainActivity extends Activity {
                             + requestError.getErrorCode() + " " + requestError.getMessage()
                             + "; canRequestAds=" + consentInformation.canRequestAds());
                     continueConsentFlowIfNeeded();
-                    if (appContentVisible && !consentInformation.canRequestAds()) scheduleConsentRetry();
                 });
     }
 
